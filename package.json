@@ -1,17 +1,17 @@
 {
-	"name": "@yodasws/webtoolkit",
-	"version": "0.2.1-alpha",
-	"description": "Sam Grundman's Super Awesome Gulp Web Development Toolkit",
+	"name": "@yodasws/empires-4x",
+	"version": "0.0.1-alpha",
+	"description": "Simple 4x game",
 	"main": "gulpfile.js",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/YodasWs/webtoolkit.git"
+		"url": "git+https://github.com/YodasWs/Empires-4x.git"
 	},
 	"author": "Samuel B Grundman (https://github.com/YodasWs/)",
 	"bugs": {
-		"url": "https://github.com/YodasWs/webtoolkit/issues"
+		"url": "https://github.com/YodasWs/Empires-4x/issues"
 	},
-	"homepage": "https://github.com/YodasWs/webtoolkit#readme",
+	"homepage": "https://github.com/YodasWs/Empires-4x#readme",
 	"devDependencies": {
 		"@babel/core": "^7.5.5",
 		"@babel/preset-env": "^7.5.5",
