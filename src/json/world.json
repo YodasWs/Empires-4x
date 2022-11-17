@@ -1,0 +1,36 @@
+[
+	[
+		{
+			"terrain": "ocean"
+		},
+		{
+			"terrain": "ocean"
+		}
+	],
+	[
+		{
+			"terrain": "grass"
+		},
+		{
+			"terrain": "grass",
+			"river": true
+		}
+	],
+	[
+		{
+			"terrain": "desert"
+		},
+		{
+			"terrain": "desert",
+			"river": true
+		}
+	],
+	[
+		{
+			"terrain": "mountain"
+		},
+		{
+			"terrain": "hill"
+		}
+	]
+]

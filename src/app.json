@@ -1,6 +1,9 @@
 {
-	"name": "@yodasws/webtoolkit",
+	"name": "@yodasws/Empires-4x",
 	"components": [],
 	"sections": [],
-	"pages": []
+	"pages": [],
+	"json": {
+		"world": "json/world"
+	}
 }
