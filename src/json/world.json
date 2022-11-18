@@ -1,14 +1,22 @@
 {
 	"terrains": {
 		"ocean": {
+			"tile": "water"
+		},
+		"lake": {
+			"tile": "water"
 		},
 		"grass": {
+			"tile": "grass"
 		},
 		"desert": {
+			"tile": "grass"
 		},
 		"mountain": {
+			"tile": "grass"
 		},
 		"hill": {
+			"tile": "grass"
 		}
 	},
 	"river": {

@@ -2,7 +2,9 @@
 	"name": "@yodasws/Empires-4x",
 	"components": [],
 	"sections": [],
-	"pages": [],
+	"pages": [
+		"game"
+	],
 	"json": {
 		"world": "json/world"
 	}
