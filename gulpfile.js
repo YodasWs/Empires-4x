@@ -102,11 +102,7 @@ plugins['connect.reload'] = plugins.connect.reload;
 // more options at https://github.com/postcss/autoprefixer#options
 const browsers = [
 	// browser strings detailed at https://github.com/ai/browserslist#queries
-	'last 2 Firefox versions',
-	'last 2 Chrome versions',
-	'Safari >= 10',
-	'ie_mob >= 11',
-	'ie >= 11',
+	'defaults',
 ];
 
 const options = {
@@ -639,7 +635,7 @@ gulp.task('generate:section', gulp.series(
 		},
 		() => {
 			const str = `<h2>${argv.name}</h2>\n`;
-			return plugins.newFile(`${argv.nameCC}.html`, str, { src: true })
+			return plugins.newFile(`index.html`, str, { src: true })
 				.pipe(gulp.dest(`./src/pages/${argv.nameCC}`));
 		},
 		() => {
@@ -649,7 +645,7 @@ gulp.task('generate:section', gulp.series(
 	template(match, ...p) {
 		const path = p.join('/').replace(/\\/+/g, '/').replace(/^\\\/|\\\/$/g, '').split('/').filter(p => p != '');
 		if (path.length === 0) {
-			return 'pages/${argv.nameCC}/${argv.nameCC}.html';
+			return 'pages/${argv.nameCC}/index.html';
 		}
 		return {
 			canonicalRoute: '/${argv.nameCC}/' + path.join('/') + '/',
