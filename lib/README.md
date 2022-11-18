@@ -29,3 +29,13 @@ yodasws.page('404').setRoute({
 	route: '404',
 });
 ```
+
+## Phaser
+
+```
+phaser.min.js
+```
+
+v 3.55.2
+
+Documentation [here](https://phaser.io/learn)
