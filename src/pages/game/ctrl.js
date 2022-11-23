@@ -66,7 +66,7 @@ const config = {
 				row.forEach((tile, j) => {
 					const { x, y } = getCoords(i, j);
 					Object.assign(tile, {
-						sprite: this.add.tileSprite(x, y, tileWidth, tileWidth, 'tile.' + tile.terrain).setScale(scale),
+						sprite: this.add.image(x, y, 'tile.' + tile.terrain).setScale(scale),
 						text: this.add.text(x - tileWidth / 2 * scale, y + tileWidth / 2 / 3, i + '×' + j, {
 							fixedWidth: tileWidth,
 							font: '12pt Courier',
