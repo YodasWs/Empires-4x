@@ -23,17 +23,21 @@ function Player() {
 }
 Object.defineProperties(Player.prototype, {
 	addUnit: {
-		value(unitType, row, col) {
-			this.units.push(new Unit(unitType, row, col));
+		value(unitType, row, col, game) {
+			this.units.push(new Unit(unitType, row, col, game));
 		},
 	},
 });
 
-function Unit(unitType, row, col) {
+function Unit(unitType, row, col, game) {
+	// Check unitType exists
 	const baseStats = json.world.units[unitType];
 	if (typeof baseStats !== 'object' || baseStats === null) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
+	// Add Sprite to World
+	const { x, y } = getCoords(row, col);
+	game.add.sprite(x, y, 'unit.' + unitType).setScale(scale);
 	Object.defineProperties(this, {
 		col: {
 			enumerable: true,
@@ -44,6 +48,7 @@ function Unit(unitType, row, col) {
 			get: () => row,
 		},
 	});
+	// Get read-only access to base unit properties
 	return new Proxy(this, {
 		get(target, key) {
 			if (Reflect.has(baseStats, key)) {
@@ -101,7 +106,7 @@ const config = {
 					});
 				});
 			});
-			players[0].addUnit('warrior', 1, 1);
+			players[0].addUnit('warrior', 1, 1, this);
 			console.log('Sam, players:', players);
 			console.log('Sam, unit 1:', players[0].units[0]);
 			console.log('Sam, unit 1:', players[0].units[0].row, 'x', players[0].units[0].col);
