@@ -23,13 +23,17 @@ function Player() {
 }
 Object.defineProperties(Player.prototype, {
 	addUnit: {
-		value(row, col) {
-			this.units.push(new Unit(row, col));
+		value(unitType, row, col) {
+			this.units.push(new Unit(unitType, row, col));
 		},
 	},
 });
 
-function Unit(row, col) {
+function Unit(unitType, row, col) {
+	const baseStats = json.world.units[unitType];
+	if (typeof baseStats !== 'object' || baseStats === null) {
+		throw new TypeError(`Unknown unit '${unitType}'`);
+	}
 	Object.defineProperties(this, {
 		col: {
 			enumerable: true,
@@ -40,13 +44,30 @@ function Unit(row, col) {
 			get: () => row,
 		},
 	});
+	return new Proxy(this, {
+		get(target, key) {
+			if (Reflect.has(baseStats, key)) {
+				return Reflect.get(baseStats, key);
+			}
+			return Reflect.get(target, key);
+		},
+		has(target, key) {
+			return Reflect.has(baseStats, key) || Reflect.has(target, key);
+		},
+		ownKeys(target) {
+			return [
+				...Reflect.ownKeys(target),
+				...Reflect.ownKeys(baseStats),
+			];
+		},
+	});
 }
 
 const config = {
 	type: Phaser.AUTO,
 	height: 1200,
 	width: 1600,
-	zoom: 0.7,
+	zoom: 0.6,
 	backgroundColor: '#71ABFF',
 	scene: {
 		preload() {
@@ -58,6 +79,10 @@ const config = {
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
 				this.load.image(action, sprite.src);
+			});
+			// Load Unit Images
+			Object.keys(json.world.units).forEach((unit) => {
+				this.load.image('unit.' + unit, 'img/units/' + unit + '.png');
 			});
 		},
 		create() {
@@ -76,8 +101,11 @@ const config = {
 					});
 				});
 			});
-			players[0].addUnit(1, 1);
+			players[0].addUnit('warrior', 1, 1);
 			console.log('Sam, players:', players);
+			console.log('Sam, unit 1:', players[0].units[0]);
+			console.log('Sam, unit 1:', players[0].units[0].row, 'x', players[0].units[0].col);
+			console.log('Sam, unit object:', Object.getOwnPropertyNames(players[0].units[0]));
 		},
 		update() {
 		},

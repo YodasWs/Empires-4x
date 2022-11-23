@@ -19,7 +19,18 @@
 			"tile": "grass"
 		}
 	},
-	"river": {
+	"units": {
+		"warrior": {
+			"freeMovement": 1,
+			"movement": {
+				"ocean": false,
+				"lake": false,
+				"grass": 1,
+				"desert": 1,
+				"mountain": 1,
+				"hill": 1
+			}
+		}
 	},
 	"world": [
 		[
