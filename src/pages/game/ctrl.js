@@ -8,17 +8,53 @@ const actionSprites = {
 	moveK: { src: 'img/actions/moveK.png', key: 'k' },
 	moveL: { src: 'img/actions/moveL.png', key: 'l' },
 };
+let cursors = null;
+const players = [
+	new Player(),
+];
+
+function Player() {
+	const units = [];
+	Object.defineProperties(this, {
+		units: {
+			get: () => units,
+		},
+	});
+}
+Object.defineProperties(Player.prototype, {
+	addUnit: {
+		value(row, col) {
+			this.units.push(new Unit(row, col));
+		},
+	},
+});
+
+function Unit(row, col) {
+	Object.defineProperties(this, {
+		col: {
+			enumerable: true,
+			get: () => col,
+		},
+		row: {
+			enumerable: true,
+			get: () => row,
+		},
+	});
+}
+
 const config = {
 	type: Phaser.AUTO,
 	height: 1200,
 	width: 1600,
 	zoom: 0.7,
+	backgroundColor: '#71ABFF',
 	scene: {
 		preload() {
-			// Load Images
+			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
 				this.load.image('tile.' + key, 'img/tiles/' + terrain.tile + '.png');
 			});
+			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
 				this.load.image(action, sprite.src);
@@ -40,6 +76,8 @@ const config = {
 					});
 				});
 			});
+			players[0].addUnit(1, 1);
+			console.log('Sam, players:', players);
 		},
 		update() {
 		},
