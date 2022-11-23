@@ -44,14 +44,21 @@ const config = {
 	},
 };
 
-function getTileX(row, col) {
-	if (!col && col !== 0) return -300;
-	return col * tileWidth * 74 / 100 * scale + tileWidth / 10;
-}
-function getTileY(row, col) {
-	if ((!row && row !== 0) || (!col && col !== 0)) return -300;
-	return row * tileWidth * 86 / 100 * scale + (col % 2 ? tileWidth * 86 / 100 * scale / 2 : 0);
-}
+const [ getTileX, getTileY ] = (() => {
+	const deltaX = tileWidth * (Math.sqrt(3) - 1) * scale ;
+	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2) * scale;
+	return [
+		function (row, col) {
+			if (!col && col !== 0) return -300;
+			return col * deltaX + tileWidth * scale / 2;
+		},
+		function (row, col) {
+			if ((!row && row !== 0) || (!col && col !== 0)) return -300;
+			return row * deltaY + (col % 2 ? deltaY / 2 : 0) + tileWidth * scale / 4 * Math.sqrt(3);
+		},
+	];
+})();
+
 function getCoords(row, col) {
 	return {
 		x: getTileX(row, col),
