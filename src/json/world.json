@@ -22,7 +22,7 @@
 	"units": {
 		"warrior": {
 			"movementPoints": 1,
-			"movement": {
+			"movementCosts": {
 				"ocean": false,
 				"grass": 1,
 				"desert": 1,

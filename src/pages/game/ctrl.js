@@ -23,6 +23,11 @@ const currentGame = {
 	},
 	startTurn() {
 		this.currentPlayer = this.players[0];
+		// Reset each unit's movement points
+		this.currentPlayer.units.forEach((unit) => {
+			unit.moves = unit.base.movementPoints;
+		});
+		// Activate first unit
 		this.currentPlayer.units[0].activate();
 	},
 	endTurn() {
@@ -49,22 +54,19 @@ Object.defineProperties(Player.prototype, {
 
 function Unit(unitType, row, col, game) {
 	// Check unitType exists
-	const baseStats = json.world.units[unitType];
-	if (typeof baseStats !== 'object' || baseStats === null) {
+	const base = json.world.units[unitType];
+	if (typeof base !== 'object' || base === null) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
-	// Extend object with read-only information from baseStats
-	Object.entries(baseStats).forEach(([key, val]) => {
-		Object.defineProperty(this, key, {
-			enumerable: true,
-			get: () => val,
-		});
-	});
 	// Add sprite
 	const { x, y } = getCoords(row, col);
 	const sprite = game.add.sprite(x, y, `unit.${unitType}`).setScale(scale);
 	// Define properties
 	Object.defineProperties(this, {
+		base: {
+			enumerable: true,
+			get: () => base,
+		},
 		sprite: {
 			enumerable: true,
 			get: () => sprite,
@@ -85,7 +87,33 @@ Object.assign(Unit.prototype, {
 		this.sprite.setDepth(activeUnitDepth);
 		currentGame.sprActiveUnit.setPosition(x, y).setDepth(activeUnitDepth - 1);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			if (true /* isLegalMove(units[activeUnit.index], row, col) */) {
+			let row = this.row;
+			let col = this.col;
+			switch (action) {
+				case 'moveU':
+					if (col % 2 == 0) row--;
+					col--;
+					break;
+				case 'moveI':
+					row--;
+					break;
+				case 'moveO':
+					if (col % 2 == 0) row--;
+					col++;
+					break;
+				case 'moveJ':
+					if (col % 2 == 1) row++;
+					col--;
+					break;
+				case 'moveK':
+					row++;
+					break;
+				case 'moveL':
+					if (col % 2 == 1) row++;
+					col++;
+					break;
+			}
+			if (isLegalMove(this, row, col)) {
 				const { x, y } = getCoords(this.row, this.col);
 				sprite.img.setPosition(x, y).setDepth(activeUnitDepth - 2);
 			} else {
@@ -94,6 +122,41 @@ Object.assign(Unit.prototype, {
 		});
 	},
 });
+
+function isLegalMove(unit, row, col) {
+	// Check Board Bounds
+	if (row < 0 || col < 0) return false;
+	if (row > board.rows || col > board.cols) return false;
+	let tileUnits;
+
+	// Grab Target Tile
+	if (!Array.isArray(json.world.world[row])) return false;
+	const target = json.world.world[row][col];
+	if (typeof target !== 'object' || target === null) return false;
+
+	// TODO: Check move into City
+	switch (target.city) {
+	}
+
+	// TODO: Check for battle
+	// const tileUnits = grabUnitsOnTile(row, col);
+	if (false) {
+		if (unit.attack == 0) return false;
+		if (units[tileUnits[0]].faction == 'britton' && unit.faction == 'roman') return false;
+	}
+	console.log('Sam, isLegalMove, unit:', unit);
+
+	// Check movement into terrain
+	const movementCost = unit.base.movementCosts[target.terrain];
+	if (!Number.isFinite(movementCost)) return false;
+	if (movementCost <= unit.moves) return true;
+	return false;
+}
+
+const board = {
+	rows: 0,
+	cols: 0,
+};
 
 const config = {
 	type: Phaser.AUTO,
@@ -120,7 +183,9 @@ const config = {
 		create() {
 			// Place Game Board Tiles
 			json.world.world.forEach((row, i) => {
+				board.rows = Math.max(board.rows, i);
 				row.forEach((tile, j) => {
+					board.cols = Math.max(board.cols, i);
 					const { x, y } = getCoords(i, j);
 					Object.assign(tile, {
 						sprite: this.add.image(x, y, `tile.${tile.terrain}`).setScale(scale),
@@ -140,7 +205,7 @@ const config = {
 			});
 
 			// TODO: Build Starting Players and Units
-			players[0].addUnit('warrior', 1, 1, this);
+			players[0].addUnit('warrior', Math.round(Math.random() * 2) + 1, Math.round(Math.random() * 2), this);
 			console.log('Sam, players:', players);
 			console.log('Sam, unit 1:', players[0].units[0]);
 
