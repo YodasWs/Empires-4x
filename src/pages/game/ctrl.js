@@ -8,10 +8,28 @@ const actionSprites = {
 	moveK: { src: 'img/actions/moveK.png', key: 'k' },
 	moveL: { src: 'img/actions/moveL.png', key: 'l' },
 };
-let cursors = null;
 const players = [
 	new Player(),
 ];
+
+const activeUnitDepth = 100;
+
+const currentGame = {
+	players,
+	turn: 0,
+	currentPlayer: null,
+	sprActiveUnit: null,
+	startRound() {
+	},
+	startTurn() {
+		this.currentPlayer = this.players[0];
+		this.currentPlayer.units[0].activate();
+	},
+	endTurn() {
+	},
+	endRound() {
+	},
+};
 
 function Player() {
 	const units = [];
@@ -35,10 +53,22 @@ function Unit(unitType, row, col, game) {
 	if (typeof baseStats !== 'object' || baseStats === null) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
-	// Add Sprite to World
+	// Extend object with read-only information from baseStats
+	Object.entries(baseStats).forEach(([key, val]) => {
+		Object.defineProperty(this, key, {
+			enumerable: true,
+			get: () => val,
+		});
+	});
+	// Add sprite
 	const { x, y } = getCoords(row, col);
-	game.add.sprite(x, y, 'unit.' + unitType).setScale(scale);
+	const sprite = game.add.sprite(x, y, `unit.${unitType}`).setScale(scale);
+	// Define properties
 	Object.defineProperties(this, {
+		sprite: {
+			enumerable: true,
+			get: () => sprite,
+		},
 		col: {
 			enumerable: true,
 			get: () => col,
@@ -48,37 +78,34 @@ function Unit(unitType, row, col, game) {
 			get: () => row,
 		},
 	});
-	// Get read-only access to base unit properties
-	return new Proxy(this, {
-		get(target, key) {
-			if (Reflect.has(baseStats, key)) {
-				return Reflect.get(baseStats, key);
-			}
-			return Reflect.get(target, key);
-		},
-		has(target, key) {
-			return Reflect.has(baseStats, key) || Reflect.has(target, key);
-		},
-		ownKeys(target) {
-			return [
-				...Reflect.ownKeys(target),
-				...Reflect.ownKeys(baseStats),
-			];
-		},
-	});
 }
+Object.assign(Unit.prototype, {
+	activate() {
+		const { x, y } = getCoords(this.row, this.col);
+		this.sprite.setDepth(activeUnitDepth);
+		currentGame.sprActiveUnit.setPosition(x, y).setDepth(activeUnitDepth - 1);
+		Object.entries(actionSprites).forEach(([action, sprite]) => {
+			if (true /* isLegalMove(units[activeUnit.index], row, col) */) {
+				const { x, y } = getCoords(this.row, this.col);
+				sprite.img.setPosition(x, y).setDepth(activeUnitDepth - 2);
+			} else {
+				sprite.img.setPosition(-300, -300).setDepth(0);
+			}
+		});
+	},
+});
 
 const config = {
 	type: Phaser.AUTO,
 	height: 1200,
 	width: 1600,
-	zoom: 0.6,
+	zoom: 0.8,
 	backgroundColor: '#71ABFF',
 	scene: {
 		preload() {
 			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
-				this.load.image('tile.' + key, 'img/tiles/' + terrain.tile + '.png');
+				this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
 			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
@@ -87,7 +114,7 @@ const config = {
 			});
 			// Load Unit Images
 			Object.keys(json.world.units).forEach((unit) => {
-				this.load.image('unit.' + unit, 'img/units/' + unit + '.png');
+				this.load.image(`unit.${unit}`, `img/units/${unit}.png`);
 			});
 		},
 		create() {
@@ -96,21 +123,28 @@ const config = {
 				row.forEach((tile, j) => {
 					const { x, y } = getCoords(i, j);
 					Object.assign(tile, {
-						sprite: this.add.image(x, y, 'tile.' + tile.terrain).setScale(scale),
+						sprite: this.add.image(x, y, `tile.${tile.terrain}`).setScale(scale),
 						text: this.add.text(x - tileWidth / 2 * scale, y + tileWidth / 2 / 3, i + '×' + j, {
 							fixedWidth: tileWidth,
-							font: '12pt Courier',
+							font: '12pt Trebuchet MS',
 							align: 'center',
 							color: 'white',
 						}).setOrigin(0).setScale(scale),
 					});
 				});
 			});
+			// Add Game Sprites and Images
+			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit');
+			Object.entries(actionSprites).forEach(([action, sprite]) => {
+				sprite.img = this.add.image(-300, -300, action);
+			});
+
+			// TODO: Build Starting Players and Units
 			players[0].addUnit('warrior', 1, 1, this);
 			console.log('Sam, players:', players);
 			console.log('Sam, unit 1:', players[0].units[0]);
-			console.log('Sam, unit 1:', players[0].units[0].row, 'x', players[0].units[0].col);
-			console.log('Sam, unit object:', Object.getOwnPropertyNames(players[0].units[0]));
+
+			currentGame.startTurn();
 		},
 		update() {
 		},
@@ -145,8 +179,6 @@ yodasws.page('pageGame').setRoute({
 	canonicalRoute: '/game/',
 	route: '/game/?',
 }).on('load', () => {
-	console.log('Sam, json:', json);
-	// TODO: Build World Map
 	const game = new Phaser.Game(Object.assign({}, config, {
 		parent: document.querySelector('main'),
 	}));

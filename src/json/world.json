@@ -21,10 +21,9 @@
 	},
 	"units": {
 		"warrior": {
-			"freeMovement": 1,
+			"movementPoints": 1,
 			"movement": {
 				"ocean": false,
-				"lake": false,
 				"grass": 1,
 				"desert": 1,
 				"mountain": 1,
@@ -39,6 +38,9 @@
 			},
 			{
 				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
 			}
 		],
 		[
@@ -48,6 +50,9 @@
 			{
 				"terrain": "grass",
 				"river": true
+			},
+			{
+				"terrain": "grass"
 			}
 		],
 		[
@@ -57,9 +62,15 @@
 			{
 				"terrain": "desert",
 				"river": true
+			},
+			{
+				"terrain": "desert"
 			}
 		],
 		[
+			{
+				"terrain": "hill"
+			},
 			{
 				"terrain": "mountain"
 			},
