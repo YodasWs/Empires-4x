@@ -1,70 +1,71 @@
 const tileWidth = 200;
-const deltaX = tileWidth * (Math.sqrt(3) - 1);
-const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
-const halfTile = tileWidth / 2;
 
-const polygonPoints = [
-	{ x: -2, y: 0 },
-	{ x: -1, y: 0 - Math.sqrt(3) },
-	{ x: 1, y: 0 - Math.sqrt(3) },
-	{ x: 2, y: 0 },
-	{ x: 1, y: Math.sqrt(3) },
-	{ x: -1, y: Math.sqrt(3) },
-].map((point) => ({
-	x: point.x * tileWidth / 4 + 150,
-	y: point.y * tileWidth / 4 + 150,
-}));
-
-const actionSprites = {
-	moveU: {
-		src: 'img/actions/moveU.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x - deltaX,
-			y: point.y - deltaY / 2,
-		})),
-		key: 'u',
-	},
-	moveI: {
-		src: 'img/actions/moveI.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x,
-			y: point.y - deltaY,
-		})),
-		key: 'i',
-	},
-	moveO: {
-		src: 'img/actions/moveO.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x + deltaX,
-			y: point.y - deltaY / 2,
-		})),
-		key: 'o',
-	},
-	moveJ: {
-		src: 'img/actions/moveJ.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x - deltaX,
-			y: point.y + deltaY / 2,
-		})),
-		key: 'j',
-	},
-	moveK: {
-		src: 'img/actions/moveK.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x,
-			y: point.y + deltaY,
-		})),
-		key: 'k',
-	},
-	moveL: {
-		src: 'img/actions/moveL.png',
-		polygon: polygonPoints.map((point) => ({
-			x: point.x + deltaX,
-			y: point.y + deltaY / 2,
-		})),
-		key: 'l',
-	},
-};
+const actionSprites = (() => {
+	const deltaX = tileWidth * (Math.sqrt(3) - 1);
+	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
+	const halfTile = tileWidth / 2;
+	const polygonPoints = [
+		{ x: -2, y: 0 },
+		{ x: -1, y: 0 - Math.sqrt(3) },
+		{ x: 1, y: 0 - Math.sqrt(3) },
+		{ x: 2, y: 0 },
+		{ x: 1, y: Math.sqrt(3) },
+		{ x: -1, y: Math.sqrt(3) },
+	].map((point) => ({
+		x: point.x * tileWidth / 4 + 150,
+		y: point.y * tileWidth / 4 + 150,
+	}));
+	return {
+		moveU: {
+			src: 'img/actions/moveU.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x - deltaX,
+				y: point.y - deltaY / 2,
+			})),
+			key: 'u',
+		},
+		moveI: {
+			src: 'img/actions/moveI.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x,
+				y: point.y - deltaY,
+			})),
+			key: 'i',
+		},
+		moveO: {
+			src: 'img/actions/moveO.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x + deltaX,
+				y: point.y - deltaY / 2,
+			})),
+			key: 'o',
+		},
+		moveJ: {
+			src: 'img/actions/moveJ.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x - deltaX,
+				y: point.y + deltaY / 2,
+			})),
+			key: 'j',
+		},
+		moveK: {
+			src: 'img/actions/moveK.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x,
+				y: point.y + deltaY,
+			})),
+			key: 'k',
+		},
+		moveL: {
+			src: 'img/actions/moveL.png',
+			polygon: polygonPoints.map((point) => ({
+				x: point.x + deltaX,
+				y: point.y + deltaY / 2,
+			})),
+			key: 'l',
+		},
+	};
+})();
 const players = [
 	new Player(),
 ];
@@ -74,6 +75,7 @@ const activeUnitDepth = 100;
 const currentGame = {
 	players,
 	turn: 0,
+	activeUnit: null,
 	currentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
@@ -116,6 +118,34 @@ Object.defineProperties(Player.prototype, {
 	},
 });
 
+function actionTileCoordinates(action, row, col) {
+	switch (action) {
+		case 'moveU':
+			if (col % 2 == 0) row--;
+			col--;
+			break;
+		case 'moveI':
+			row--;
+			break;
+		case 'moveO':
+			if (col % 2 == 0) row--;
+			col++;
+			break;
+		case 'moveJ':
+			if (col % 2 == 1) row++;
+			col--;
+			break;
+		case 'moveK':
+			row++;
+			break;
+		case 'moveL':
+			if (col % 2 == 1) row++;
+			col++;
+			break;
+	}
+	return [row, col];
+}
+
 function Unit(unitType, row, col, game) {
 	// Check unitType exists
 	const base = json.world.units[unitType];
@@ -138,10 +168,16 @@ function Unit(unitType, row, col, game) {
 		col: {
 			enumerable: true,
 			get: () => col,
+			set(val) {
+				if (0 <= val && col <= board.cols) col = val;
+			},
 		},
 		row: {
 			enumerable: true,
 			get: () => row,
+			set(val) {
+				if (0 <= val && row <= board.rows) row = val;
+			},
 		},
 	});
 }
@@ -151,32 +187,7 @@ Object.assign(Unit.prototype, {
 		this.sprite.setDepth(activeUnitDepth);
 		currentGame.sprActiveUnit.setPosition(x, y).setDepth(activeUnitDepth - 1);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			let row = this.row;
-			let col = this.col;
-			switch (action) {
-				case 'moveU':
-					if (col % 2 == 0) row--;
-					col--;
-					break;
-				case 'moveI':
-					row--;
-					break;
-				case 'moveO':
-					if (col % 2 == 0) row--;
-					col++;
-					break;
-				case 'moveJ':
-					if (col % 2 == 1) row++;
-					col--;
-					break;
-				case 'moveK':
-					row++;
-					break;
-				case 'moveL':
-					if (col % 2 == 1) row++;
-					col++;
-					break;
-			}
+			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			if (isLegalMove(this, row, col)) {
 				const { x, y } = getCoords(this.row, this.col);
 				sprite.img.setPosition(x, y).setDepth(activeUnitDepth - 2);
@@ -184,8 +195,50 @@ Object.assign(Unit.prototype, {
 				sprite.img.setPosition(-300, -300).setDepth(0);
 			}
 		});
+		currentGame.activeUnit = this;
+	},
+	deactivate() {
+		currentGame.sprActiveUnit.setPosition(-300, -300).setDepth(0);
+		Object.entries(actionSprites).forEach(([action, sprite]) => {
+			sprite.img.setPosition(-300, -300).setDepth(0);
+		});
+		currentGame.activeUnit = null;
+	},
+	move(action) {
+		const [row, col] = actionTileCoordinates(action, this.row, this.col);
+		if (!isLegalMove(this, row, col)) {
+			throw new Error('Tried to make illegal move!');
+		}
+		this.row = row;
+		this.col = col;
+		const { x, y } = getCoords(this.row, this.col);
+		this.sprite.setPosition(x, y).setDepth(1);
+		const target = json.world.world[row][col];
+		this.moves -= this.base.movementCosts[target.terrain];
+		if (this.moves > 0) {
+			this.activate();
+		} else {
+			this.deactivate();
+		}
 	},
 });
+
+function doAction(action) {
+	if (currentGame.currentPlayer !== players[0]) {
+		throw new Error('This is not the player\'s turn!');
+	}
+	switch (action) {
+		case 'moveU':
+		case 'moveI':
+		case 'moveO':
+		case 'moveJ':
+		case 'moveK':
+		case 'moveL':
+			console.log('Sam, doAction, activeUnit:', currentGame.activeUnit);
+			currentGame.activeUnit.move(action);
+			break;
+	}
+}
 
 function isLegalMove(unit, row, col) {
 	// Check Board Bounds
@@ -271,37 +324,18 @@ const config = {
 					Phaser.Geom.Polygon.Contains,
 				).on('pointerdown', () => {
 					console.log('Sam, pointerdown on', action);
+					doAction(action);
 				});
 			});
 
 			// TODO: Build Starting Players and Units
-			// players[0].addUnit('warrior', Math.round(Math.random() * 2) + 1, Math.round(Math.random() * 2), this);
-			players[0].addUnit('warrior', 2, 1, this);
+			players[0].addUnit('warrior', Math.floor(Math.random() * 2 + 1), Math.floor(Math.random() + 1), this);
 			console.log('Sam, players:', players);
 			console.log('Sam, unit 1:', players[0].units[0]);
 
 			currentGame.startRound();
 		},
 		update() {
-			[
-				['moveU', 0xff0000],
-				['moveI', 0x00ff00],
-				['moveO', 0x0000ff],
-				['moveJ', 0xff0000],
-				['moveK', 0x00ff00],
-				['moveL', 0x0000ff],
-			].forEach(([key, color]) => {
-				const polygon = new Phaser.Geom.Polygon(actionSprites[key].polygon);
-				const graphics = this.add.graphics({ x: 0, y: 0 });
-				graphics.lineStyle(2, color);
-				graphics.beginPath();
-				graphics.moveTo(polygon.points[0].x + actionSprites[key].img.getCenter().x - 150, polygon.points[0].y + actionSprites[key].img.getCenter().y - 150);
-				polygon.points.forEach((point) => {
-					graphics.lineTo(point.x + actionSprites[key].img.getCenter().x - 150, point.y + actionSprites[key].img.getCenter().y - 150);
-				});
-				graphics.closePath();
-				graphics.strokePath();
-			});
 		},
 	},
 };
