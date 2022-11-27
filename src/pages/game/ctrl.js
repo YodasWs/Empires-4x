@@ -1,12 +1,69 @@
-const scale = 1;
 const tileWidth = 200;
+const deltaX = tileWidth * (Math.sqrt(3) - 1);
+const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
+const halfTile = tileWidth / 2;
+
+const polygonPoints = [
+	{ x: -2, y: 0 },
+	{ x: -1, y: 0 - Math.sqrt(3) },
+	{ x: 1, y: 0 - Math.sqrt(3) },
+	{ x: 2, y: 0 },
+	{ x: 1, y: Math.sqrt(3) },
+	{ x: -1, y: Math.sqrt(3) },
+].map((point) => ({
+	x: point.x * tileWidth / 4 + 150,
+	y: point.y * tileWidth / 4 + 150,
+}));
+
 const actionSprites = {
-	moveU: { src: 'img/actions/moveU.png', key: 'u' },
-	moveI: { src: 'img/actions/moveI.png', key: 'i' },
-	moveO: { src: 'img/actions/moveO.png', key: 'o' },
-	moveJ: { src: 'img/actions/moveJ.png', key: 'j' },
-	moveK: { src: 'img/actions/moveK.png', key: 'k' },
-	moveL: { src: 'img/actions/moveL.png', key: 'l' },
+	moveU: {
+		src: 'img/actions/moveU.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x - deltaX,
+			y: point.y - deltaY / 2,
+		})),
+		key: 'u',
+	},
+	moveI: {
+		src: 'img/actions/moveI.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x,
+			y: point.y - deltaY,
+		})),
+		key: 'i',
+	},
+	moveO: {
+		src: 'img/actions/moveO.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x + deltaX,
+			y: point.y - deltaY / 2,
+		})),
+		key: 'o',
+	},
+	moveJ: {
+		src: 'img/actions/moveJ.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x - deltaX,
+			y: point.y + deltaY / 2,
+		})),
+		key: 'j',
+	},
+	moveK: {
+		src: 'img/actions/moveK.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x,
+			y: point.y + deltaY,
+		})),
+		key: 'k',
+	},
+	moveL: {
+		src: 'img/actions/moveL.png',
+		polygon: polygonPoints.map((point) => ({
+			x: point.x + deltaX,
+			y: point.y + deltaY / 2,
+		})),
+		key: 'l',
+	},
 };
 const players = [
 	new Player(),
@@ -20,9 +77,16 @@ const currentGame = {
 	currentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
+		this.startTurn(0);
 	},
-	startTurn() {
-		this.currentPlayer = this.players[0];
+	startTurn(player) {
+		if (!Number.isFinite(player)) {
+			throw new TypeError(`Unknown player ${player}`);
+		}
+		this.currentPlayer = this.players[player];
+		if (!(this.currentPlayer instanceof Player)) {
+			throw new TypeError(`Player ${player} is not a Player Object`);
+		}
 		// Reset each unit's movement points
 		this.currentPlayer.units.forEach((unit) => {
 			unit.moves = unit.base.movementPoints;
@@ -60,7 +124,7 @@ function Unit(unitType, row, col, game) {
 	}
 	// Add sprite
 	const { x, y } = getCoords(row, col);
-	const sprite = game.add.sprite(x, y, `unit.${unitType}`).setScale(scale);
+	const sprite = game.add.sprite(x, y, `unit.${unitType}`);
 	// Define properties
 	Object.defineProperties(this, {
 		base: {
@@ -188,13 +252,13 @@ const config = {
 					board.cols = Math.max(board.cols, i);
 					const { x, y } = getCoords(i, j);
 					Object.assign(tile, {
-						sprite: this.add.image(x, y, `tile.${tile.terrain}`).setScale(scale),
-						text: this.add.text(x - tileWidth / 2 * scale, y + tileWidth / 2 / 3, i + '×' + j, {
+						sprite: this.add.image(x, y, `tile.${tile.terrain}`),
+						text: this.add.text(x - tileWidth / 2, y + tileWidth / 2 / 3, i + '×' + j, {
 							fixedWidth: tileWidth,
 							font: '12pt Trebuchet MS',
 							align: 'center',
 							color: 'white',
-						}).setOrigin(0).setScale(scale),
+						}).setOrigin(0),
 					});
 				});
 			});
@@ -202,24 +266,50 @@ const config = {
 			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
 				sprite.img = this.add.image(-300, -300, action);
+				sprite.img.setInteractive(
+					new Phaser.Geom.Polygon(sprite.polygon),
+					Phaser.Geom.Polygon.Contains,
+				).on('pointerdown', () => {
+					console.log('Sam, pointerdown on', action);
+				});
 			});
 
 			// TODO: Build Starting Players and Units
-			players[0].addUnit('warrior', Math.round(Math.random() * 2) + 1, Math.round(Math.random() * 2), this);
+			// players[0].addUnit('warrior', Math.round(Math.random() * 2) + 1, Math.round(Math.random() * 2), this);
+			players[0].addUnit('warrior', 2, 1, this);
 			console.log('Sam, players:', players);
 			console.log('Sam, unit 1:', players[0].units[0]);
 
-			currentGame.startTurn();
+			currentGame.startRound();
 		},
 		update() {
+			[
+				['moveU', 0xff0000],
+				['moveI', 0x00ff00],
+				['moveO', 0x0000ff],
+				['moveJ', 0xff0000],
+				['moveK', 0x00ff00],
+				['moveL', 0x0000ff],
+			].forEach(([key, color]) => {
+				const polygon = new Phaser.Geom.Polygon(actionSprites[key].polygon);
+				const graphics = this.add.graphics({ x: 0, y: 0 });
+				graphics.lineStyle(2, color);
+				graphics.beginPath();
+				graphics.moveTo(polygon.points[0].x + actionSprites[key].img.getCenter().x - 150, polygon.points[0].y + actionSprites[key].img.getCenter().y - 150);
+				polygon.points.forEach((point) => {
+					graphics.lineTo(point.x + actionSprites[key].img.getCenter().x - 150, point.y + actionSprites[key].img.getCenter().y - 150);
+				});
+				graphics.closePath();
+				graphics.strokePath();
+			});
 		},
 	},
 };
 
 const [ getTileX, getTileY ] = (() => {
-	const deltaX = tileWidth * (Math.sqrt(3) - 1) * scale ;
-	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2) * scale;
-	const halfTile = tileWidth / 2 * scale;
+	const deltaX = tileWidth * (Math.sqrt(3) - 1);
+	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
+	const halfTile = tileWidth / 2;
 	return [
 		function (row, col) {
 			if (!col && col !== 0) return -300;
