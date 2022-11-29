@@ -1,4 +1,12 @@
+import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
+
+const Tile = Honeycomb.defineHex({
+	dimensions: tileWidth / 2,
+	orientation: Honeycomb.Orientation.FLAT,
+	origin: 'topLeft',
+})
+const grid = new Honeycomb.Grid(Tile, Honeycomb.rectangle({ width: 4, height: 4 }))
 
 const actionSprites = (() => {
 	const deltaX = tileWidth * (Math.sqrt(3) - 1);
@@ -315,13 +323,26 @@ const config = {
 					});
 				});
 			});
+			// Build World from Honeycomb Grid
+			grid.forEach((hex) => {
+				const graphics = this.add.graphics({ x: 0, y: 0 });
+				graphics.lineStyle(2, 0x00ff00);
+				graphics.beginPath();
+				const [firstCorner, ...otherCorners] = hex.corners;
+				graphics.moveTo(firstCorner.x, firstCorner.y);
+				otherCorners.forEach(({x, y}) => {
+					graphics.lineTo(x, y);
+				});
+				graphics.closePath();
+				graphics.strokePath();
+			});
 			// Add Game Sprites and Images
 			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
 				sprite.img = this.add.image(-300, -300, action);
 				sprite.img.setInteractive(
 					new Phaser.Geom.Polygon(sprite.polygon),
-					Phaser.Geom.Polygon.Contains,
+					Phaser.Geom.Polygon.Contains
 				).on('pointerdown', () => {
 					console.log('Sam, pointerdown on', action);
 					doAction(action);

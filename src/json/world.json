@@ -41,6 +41,9 @@
 			},
 			{
 				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
 			}
 		],
 		[
@@ -50,6 +53,9 @@
 			{
 				"terrain": "grass",
 				"river": true
+			},
+			{
+				"terrain": "grass"
 			},
 			{
 				"terrain": "lake"
@@ -65,6 +71,9 @@
 			},
 			{
 				"terrain": "desert"
+			},
+			{
+				"terrain": "hill"
 			}
 		],
 		[
@@ -76,6 +85,9 @@
 			},
 			{
 				"terrain": "hill"
+			},
+			{
+				"terrain": "grass"
 			}
 		]
 	]
