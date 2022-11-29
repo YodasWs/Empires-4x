@@ -88,6 +88,9 @@ const plugins = {
 			'gulp-file': 'newFile',
 		},
 		postRequireTransforms: {
+			compileSass(compileSass) {
+				return compileSass(require('node-sass'));
+			},
 			cli(cli) {
 				return cli.default;
 			},
@@ -118,7 +121,7 @@ const options = {
 					targets: browsers,
 				},
 			],
-		]
+		],
 	},
 	compileSass: {
 		importer: require('@mightyplow/sass-dedup-importer'),
@@ -376,6 +379,20 @@ const options = {
 		mode: 'production',
 		output: {
 			filename: '[name].js',
+		},
+		module: {
+			rules: [
+				{
+					test: /\.mjs$/,
+					use: {
+						loader: 'babel-loader',
+						options: {
+							presets: ['@babel/preset-env'],
+							plugins: ['@babel/plugin-proposal-class-properties'],
+						},
+					},
+				},
+			],
 		},
 	},
 	ssi: {
