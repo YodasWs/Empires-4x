@@ -128,28 +128,28 @@ Object.defineProperties(Player.prototype, {
 
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
-		case 'moveU':
-			if (col % 2 == 0) row--;
-			col--;
-			break;
-		case 'moveI':
-			row--;
-			break;
-		case 'moveO':
-			if (col % 2 == 0) row--;
-			col++;
-			break;
-		case 'moveJ':
-			if (col % 2 == 1) row++;
-			col--;
-			break;
-		case 'moveK':
-			row++;
-			break;
-		case 'moveL':
-			if (col % 2 == 1) row++;
-			col++;
-			break;
+	case 'moveU':
+		if (col % 2 == 0) row--;
+		col--;
+		break;
+	case 'moveI':
+		row--;
+		break;
+	case 'moveO':
+		if (col % 2 == 0) row--;
+		col++;
+		break;
+	case 'moveJ':
+		if (col % 2 == 1) row++;
+		col--;
+		break;
+	case 'moveK':
+		row++;
+		break;
+	case 'moveL':
+		if (col % 2 == 1) row++;
+		col++;
+		break;
 	}
 	return [row, col];
 }
@@ -161,9 +161,11 @@ function Unit(unitType, row, col, game) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
 	// Add sprite
-	const { x, y } = getCoords(row, col);
+	const { x, y } = grid.getHex({ row, col });
 	const sprite = game.add.sprite(x, y, `unit.${unitType}`);
 	// Define properties
+	this.col = col;
+	this.row = row;
 	Object.defineProperties(this, {
 		base: {
 			enumerable: true,
@@ -173,42 +175,27 @@ function Unit(unitType, row, col, game) {
 			enumerable: true,
 			get: () => sprite,
 		},
-		col: {
-			enumerable: true,
-			get: () => col,
-			set(val) {
-				if (0 <= val && col <= board.cols) col = val;
-			},
-		},
-		row: {
-			enumerable: true,
-			get: () => row,
-			set(val) {
-				if (0 <= val && row <= board.rows) row = val;
-			},
-		},
 	});
 }
 Object.assign(Unit.prototype, {
 	activate() {
-		const { x, y } = getCoords(this.row, this.col);
+		const { x, y } = grid.getHex({ row: this.row, col: this.col });
 		this.sprite.setDepth(activeUnitDepth);
-		currentGame.sprActiveUnit.setPosition(x, y).setDepth(activeUnitDepth - 1);
+		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			if (isLegalMove(this, row, col)) {
-				const { x, y } = getCoords(this.row, this.col);
-				sprite.img.setPosition(x, y).setDepth(activeUnitDepth - 2);
+				sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
 			} else {
-				sprite.img.setPosition(-300, -300).setDepth(0);
+				sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
 			}
 		});
 		currentGame.activeUnit = this;
 	},
 	deactivate() {
-		currentGame.sprActiveUnit.setPosition(-300, -300).setDepth(0);
+		currentGame.sprActiveUnit.setActive(false).setPosition(-300, -300).setDepth(0);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			sprite.img.setPosition(-300, -300).setDepth(0);
+			sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
 		});
 		currentGame.activeUnit = null;
 	},
@@ -219,9 +206,8 @@ Object.assign(Unit.prototype, {
 		}
 		this.row = row;
 		this.col = col;
-		const { x, y } = getCoords(this.row, this.col);
-		this.sprite.setPosition(x, y).setDepth(1);
-		const target = json.world.world[row][col];
+		const target = grid.getHex({ row: this.row, col: this.col});
+		this.sprite.setPosition(target.x, target.y).setDepth(1);
 		this.moves -= this.base.movementCosts[target.terrain];
 		if (this.moves > 0) {
 			this.activate();
@@ -236,28 +222,22 @@ function doAction(action) {
 		throw new Error('This is not the player\'s turn!');
 	}
 	switch (action) {
-		case 'moveU':
-		case 'moveI':
-		case 'moveO':
-		case 'moveJ':
-		case 'moveK':
-		case 'moveL':
-			console.log('Sam, doAction, activeUnit:', currentGame.activeUnit);
-			currentGame.activeUnit.move(action);
-			break;
+	case 'moveU':
+	case 'moveI':
+	case 'moveO':
+	case 'moveJ':
+	case 'moveK':
+	case 'moveL':
+		currentGame.activeUnit.move(action);
+		break;
 	}
 }
 
 function isLegalMove(unit, row, col) {
-	// Check Board Bounds
-	if (row < 0 || col < 0) return false;
-	if (row > board.rows || col > board.cols) return false;
-	let tileUnits;
-
 	// Grab Target Tile
-	if (!Array.isArray(json.world.world[row])) return false;
-	const target = json.world.world[row][col];
-	if (typeof target !== 'object' || target === null) return false;
+	const target = grid.getHex({ row, col });
+	if (target === undefined) return false;
+	console.log('Sam, isLegalMove, target:', target);
 
 	// TODO: Check move into City
 	switch (target.city) {
@@ -265,6 +245,7 @@ function isLegalMove(unit, row, col) {
 
 	// TODO: Check for battle
 	// const tileUnits = grabUnitsOnTile(row, col);
+	let tileUnits;
 	if (false) {
 		if (unit.attack == 0) return false;
 		if (units[tileUnits[0]].faction == 'britton' && unit.faction == 'roman') return false;
@@ -277,11 +258,6 @@ function isLegalMove(unit, row, col) {
 	if (movementCost <= unit.moves) return true;
 	return false;
 }
-
-const board = {
-	rows: 0,
-	cols: 0,
-};
 
 const config = {
 	type: Phaser.AUTO,
@@ -306,47 +282,30 @@ const config = {
 			});
 		},
 		create() {
-			// Place Game Board Tiles
-			json.world.world.forEach((row, i) => {
-				board.rows = Math.max(board.rows, i);
-				row.forEach((tile, j) => {
-					board.cols = Math.max(board.cols, i);
-					const { x, y } = getCoords(i, j);
-					Object.assign(tile, {
-						sprite: this.add.image(x, y, `tile.${tile.terrain}`),
-						text: this.add.text(x - tileWidth / 2, y + tileWidth / 2 / 3, i + '×' + j, {
-							fixedWidth: tileWidth,
-							font: '12pt Trebuchet MS',
-							align: 'center',
-							color: 'white',
-						}).setOrigin(0),
-					});
-				});
-			});
 			// Build World from Honeycomb Grid
 			grid.forEach((hex) => {
-				const graphics = this.add.graphics({ x: 0, y: 0 });
-				graphics.lineStyle(2, 0x00ff00);
-				graphics.beginPath();
-				const [firstCorner, ...otherCorners] = hex.corners;
-				graphics.moveTo(firstCorner.x, firstCorner.y);
-				otherCorners.forEach(({x, y}) => {
-					graphics.lineTo(x, y);
+				const tile = json.world.world[hex.row][hex.col];
+				Object.assign(hex, tile, {
+					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(0),
+					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
+						fixedWidth: tileWidth,
+						font: '12pt Trebuchet MS',
+						align: 'center',
+						color: 'white',
+					}).setOrigin(0),
 				});
-				graphics.closePath();
-				graphics.strokePath();
 			});
+
 			// Add Game Sprites and Images
-			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit');
+			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit').setActive(false);
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
-				sprite.img = this.add.image(-300, -300, action);
-				sprite.img.setInteractive(
+				sprite.img = this.add.image(-300, -300, action).setInteractive(
 					new Phaser.Geom.Polygon(sprite.polygon),
 					Phaser.Geom.Polygon.Contains
 				).on('pointerdown', () => {
 					console.log('Sam, pointerdown on', action);
 					doAction(action);
-				});
+				}).setActive(false);
 			});
 
 			// TODO: Build Starting Players and Units
@@ -360,29 +319,6 @@ const config = {
 		},
 	},
 };
-
-const [ getTileX, getTileY ] = (() => {
-	const deltaX = tileWidth * (Math.sqrt(3) - 1);
-	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
-	const halfTile = tileWidth / 2;
-	return [
-		function (row, col) {
-			if (!col && col !== 0) return -300;
-			return col * deltaX + halfTile;
-		},
-		function (row, col) {
-			if ((!row && row !== 0) || (!col && col !== 0)) return -300;
-			return row * deltaY + (col % 2 ? deltaY / 2 : 0) + halfTile * Math.sqrt(3) / 2;
-		},
-	];
-})();
-
-function getCoords(row, col) {
-	return {
-		x: getTileX(row, col),
-		y: getTileY(row, col),
-	};
-}
 
 yodasws.page('pageGame').setRoute({
 	template: 'pages/game/game.html',
