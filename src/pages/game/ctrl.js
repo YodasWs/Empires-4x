@@ -74,14 +74,13 @@ const actionSprites = (() => {
 		},
 	};
 })();
-const players = [
-	new Player(),
-];
 
 const activeUnitDepth = 100;
 
 const currentGame = {
-	players,
+	players: [
+		new Player(),
+	],
 	turn: 0,
 	activeUnit: null,
 	currentPlayer: null,
@@ -171,6 +170,10 @@ function Unit(unitType, row, col, game) {
 			enumerable: true,
 			get: () => base,
 		},
+		game: {
+			enumerable: true,
+			get: () => game,
+		},
 		sprite: {
 			enumerable: true,
 			get: () => sprite,
@@ -191,6 +194,7 @@ Object.assign(Unit.prototype, {
 			}
 		});
 		currentGame.activeUnit = this;
+		this.game.input.keyboard.enabled = true;
 	},
 	deactivate() {
 		currentGame.sprActiveUnit.setActive(false).setPosition(-300, -300).setDepth(0);
@@ -198,6 +202,7 @@ Object.assign(Unit.prototype, {
 			sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
 		});
 		currentGame.activeUnit = null;
+		this.game.input.keyboard.enabled = false;
 	},
 	move(action) {
 		const [row, col] = actionTileCoordinates(action, this.row, this.col);
@@ -218,8 +223,9 @@ Object.assign(Unit.prototype, {
 });
 
 function doAction(action) {
-	if (currentGame.currentPlayer !== players[0]) {
-		throw new Error('This is not the player\'s turn!');
+	if (currentGame.currentPlayer !== currentGame.players[0]) {
+		// Not the player's turn, leave
+		return false;
 	}
 	switch (action) {
 	case 'moveU':
@@ -228,6 +234,10 @@ function doAction(action) {
 	case 'moveJ':
 	case 'moveK':
 	case 'moveL':
+		if (typeof currentGame.activeUnit !== 'object' || currentGame.activeUnit === null) {
+			// No active unit, leave
+			return false;
+		}
 		currentGame.activeUnit.move(action);
 		break;
 	}
@@ -309,9 +319,23 @@ const config = {
 			});
 
 			// TODO: Build Starting Players and Units
-			players[0].addUnit('warrior', Math.floor(Math.random() * 2 + 1), Math.floor(Math.random() + 1), this);
-			console.log('Sam, players:', players);
-			console.log('Sam, unit 1:', players[0].units[0]);
+			currentGame.players[0].addUnit('warrior', Math.floor(Math.random() * 2 + 1), Math.floor(Math.random() * 3), this);
+			console.log('Sam, players:', currentGame.players);
+			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
+
+			this.input.keyboard.on('keydown-U', () => {
+				doAction('moveU');
+			}).on('keydown-I', () => {
+				doAction('moveI');
+			}).on('keydown-O', () => {
+				doAction('moveO');
+			}).on('keydown-J', () => {
+				doAction('moveJ');
+			}).on('keydown-K', () => {
+				doAction('moveK');
+			}).on('keydown-L', () => {
+				doAction('moveL');
+			}).enabled = false;
 
 			currentGame.startRound();
 		},
