@@ -290,6 +290,7 @@ Object.assign(Unit.prototype, {
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
 			sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
 		});
+		this.sprite.setDepth(1);
 		currentGame.activeUnit = null;
 		this.game.input.keyboard.enabled = false;
 		currentGame.currentPlayer.checkEndTurn();
