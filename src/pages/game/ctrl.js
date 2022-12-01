@@ -84,18 +84,20 @@ const currentGame = {
 	turn: 0,
 	activeUnit: null,
 	currentPlayer: null,
+	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
 		this.startTurn(0);
 	},
-	startTurn(player) {
-		if (!Number.isFinite(player)) {
-			throw new TypeError(`Unknown player ${player}`);
+	startTurn(intPlayer) {
+		if (!Number.isFinite(intPlayer)) {
+			throw new TypeError(`Unknown player ${intPlayer}`);
 		}
-		this.currentPlayer = this.players[player];
+		this.currentPlayer = this.players[intPlayer];
 		if (!(this.currentPlayer instanceof Player)) {
-			throw new TypeError(`Player ${player} is not a Player Object`);
+			throw new TypeError(`Player ${intPlayer} is not a Player Object`);
 		}
+		this.intCurrentPlayer = intPlayer;
 		// Reset each unit's movement points
 		this.currentPlayer.units.forEach((unit) => {
 			unit.moves = unit.base.movementPoints;
@@ -104,24 +106,76 @@ const currentGame = {
 		this.currentPlayer.units[0].activate();
 	},
 	endTurn() {
+		console.log('Sam, endTurn!');
+		this.intCurrentPlayer++;
+		if (this.intCurrentPlayer >= this.players.length) {
+			this.endRound();
+			return;
+		}
+		this.startTurn(this.intCurrentPlayer);
 	},
 	endRound() {
+		console.log('Sam, endRound!');
 	},
 };
 
 function Player() {
 	const units = [];
+	let activeUnit = null;
 	Object.defineProperties(this, {
 		units: {
+			enumerable: true,
 			get: () => units,
+		},
+		activeUnit: {
+			enumerable: true,
+			get() {
+				if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
+					return units[activeUnit];
+				}
+				return undefined;
+			},
+			set(val) {
+				if (Number.isInteger(val) && val >= 0) {
+					if (val >= units.length) {
+						activeUnit = val % units.length;
+						return true;
+					}
+					activeUnit = val;
+					return true;
+				}
+				if (val === null) {
+					activeUnit = null;
+				}
+				return false;
+			},
 		},
 	});
 }
-Object.defineProperties(Player.prototype, {
-	addUnit: {
-		value(unitType, row, col, game) {
-			this.units.push(new Unit(unitType, row, col, game));
-		},
+Object.assign(Player.prototype, {
+	addUnit(unitType, row, col, game) {
+		this.units.push(new Unit(unitType, row, col, game));
+	},
+	checkEndTurn() {
+		console.log('Sam, checkEndTurn');
+		// Find and activate next unit
+		for (const i = this.activeUnit; i < this.units.length; i++) {
+			if (this.units[i].moves > 0) {
+				this.units[i].activate();
+				this.activeUnit = i;
+				return;
+			}
+		}
+		// Check for unmove unit we skipped
+		for (const i = 0; i <= this.activeUnit; i++) {
+			if (this.units[i].moves > 0) {
+				this.units[i].activate();
+				this.activeUnit = i;
+				return;
+			}
+		}
+		//
+		currentGame.endTurn();
 	},
 });
 
@@ -203,6 +257,7 @@ Object.assign(Unit.prototype, {
 		});
 		currentGame.activeUnit = null;
 		this.game.input.keyboard.enabled = false;
+		currentGame.currentPlayer.checkEndTurn();
 	},
 	move(action) {
 		const [row, col] = actionTileCoordinates(action, this.row, this.col);
