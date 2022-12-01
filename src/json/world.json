@@ -20,6 +20,16 @@
 		}
 	},
 	"units": {
+		"settler": {
+			"movementPoints": 1,
+			"movementCosts": {
+				"ocean": false,
+				"grass": 1,
+				"desert": 1,
+				"mountain": false,
+				"hill": 1
+			}
+		},
 		"warrior": {
 			"movementPoints": 1,
 			"movementCosts": {

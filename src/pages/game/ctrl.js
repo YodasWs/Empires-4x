@@ -77,6 +77,105 @@ const actionSprites = (() => {
 
 const activeUnitDepth = 100;
 
+const Player = (() => {
+	let activeUnit = null;
+	function Player() {
+		const units = [];
+		Object.defineProperties(this, {
+			units: {
+				enumerable: true,
+				get: () => units,
+			},
+			activeUnit: {
+				enumerable: true,
+				get() {
+					if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
+						return units[activeUnit];
+					}
+					return undefined;
+				},
+				set(val) {
+					if (Number.isInteger(val) && val >= 0) {
+						if (val >= units.length) {
+							activeUnit = val % units.length;
+							return true;
+						}
+						activeUnit = val;
+						return true;
+					}
+					if (val === null) {
+						activeUnit = null;
+					}
+					return false;
+				},
+			},
+		});
+	}
+	Object.assign(Player.prototype, {
+		addUnit(unitType, row, col, game) {
+			this.units.push(new Unit(unitType, {
+				row,
+				col,
+				game,
+				player: this,
+			}));
+		},
+		checkEndTurn() {
+			console.log('Sam, checkEndTurn');
+			let isActiveUnit = this.activateNext();
+			if (!isActiveUnit) {
+				currentGame.endTurn();
+			}
+		},
+		activateUnit(intUnit = activeUnit) {
+			const unit = this.units[intUnit];
+			if (!(unit instanceof Unit)) {
+				throw new TypeError(`Player does not have unit ${intUnit}`);
+			}
+			const { x, y } = grid.getHex({ row: unit.row, col: unit.col });
+			unit.sprite.setDepth(activeUnitDepth);
+			currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
+			Object.entries(actionSprites).forEach(([action, sprite]) => {
+				const [row, col] = actionTileCoordinates(action, unit.row, unit.col);
+				if (isLegalMove(unit, row, col)) {
+					sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
+				} else {
+					sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
+				}
+			});
+			activeUnit = intUnit;
+			currentGame.activeUnit = unit;
+			unit.game.input.keyboard.enabled = true;
+		},
+		activateNext() {
+			// Find and activate next unit
+			for (let i = activeUnit; i < this.units.length; i++) {
+				if (!(this.units[i] instanceof Unit)) {
+					break;
+				}
+				if (this.units[i].moves > 0) {
+					this.activateUnit(i);
+					activeUnit = i;
+					return true;
+				}
+			}
+			// Check for unmove unit we skipped
+			for (let i = 0; i <= activeUnit; i++) {
+				if (!(this.units[i] instanceof Unit)) {
+					break;
+				}
+				if (this.units[i].moves > 0) {
+					this.activateUnit(i);
+					activeUnit = i;
+					return true;
+				}
+			}
+			return false;
+		},
+	});
+	return Player;
+})();
+
 const currentGame = {
 	players: [
 		new Player(),
@@ -103,7 +202,7 @@ const currentGame = {
 			unit.moves = unit.base.movementPoints;
 		});
 		// Activate first unit
-		this.currentPlayer.units[0].activate();
+		this.currentPlayer.activateUnit(0);
 	},
 	endTurn() {
 		console.log('Sam, endTurn!');
@@ -118,66 +217,6 @@ const currentGame = {
 		console.log('Sam, endRound!');
 	},
 };
-
-function Player() {
-	const units = [];
-	let activeUnit = null;
-	Object.defineProperties(this, {
-		units: {
-			enumerable: true,
-			get: () => units,
-		},
-		activeUnit: {
-			enumerable: true,
-			get() {
-				if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
-					return units[activeUnit];
-				}
-				return undefined;
-			},
-			set(val) {
-				if (Number.isInteger(val) && val >= 0) {
-					if (val >= units.length) {
-						activeUnit = val % units.length;
-						return true;
-					}
-					activeUnit = val;
-					return true;
-				}
-				if (val === null) {
-					activeUnit = null;
-				}
-				return false;
-			},
-		},
-	});
-}
-Object.assign(Player.prototype, {
-	addUnit(unitType, row, col, game) {
-		this.units.push(new Unit(unitType, row, col, game));
-	},
-	checkEndTurn() {
-		console.log('Sam, checkEndTurn');
-		// Find and activate next unit
-		for (const i = this.activeUnit; i < this.units.length; i++) {
-			if (this.units[i].moves > 0) {
-				this.units[i].activate();
-				this.activeUnit = i;
-				return;
-			}
-		}
-		// Check for unmove unit we skipped
-		for (const i = 0; i <= this.activeUnit; i++) {
-			if (this.units[i].moves > 0) {
-				this.units[i].activate();
-				this.activeUnit = i;
-				return;
-			}
-		}
-		//
-		currentGame.endTurn();
-	},
-});
 
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
@@ -207,7 +246,12 @@ function actionTileCoordinates(action, row, col) {
 	return [row, col];
 }
 
-function Unit(unitType, row, col, game) {
+function Unit(unitType, {
+	row,
+	col,
+	game,
+	player
+}) {
 	// Check unitType exists
 	const base = json.world.units[unitType];
 	if (typeof base !== 'object' || base === null) {
@@ -235,21 +279,6 @@ function Unit(unitType, row, col, game) {
 	});
 }
 Object.assign(Unit.prototype, {
-	activate() {
-		const { x, y } = grid.getHex({ row: this.row, col: this.col });
-		this.sprite.setDepth(activeUnitDepth);
-		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
-		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			if (isLegalMove(this, row, col)) {
-				sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
-			} else {
-				sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
-			}
-		});
-		currentGame.activeUnit = this;
-		this.game.input.keyboard.enabled = true;
-	},
 	deactivate() {
 		currentGame.sprActiveUnit.setActive(false).setPosition(-300, -300).setDepth(0);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
@@ -270,7 +299,7 @@ Object.assign(Unit.prototype, {
 		this.sprite.setPosition(target.x, target.y).setDepth(1);
 		this.moves -= this.base.movementCosts[target.terrain];
 		if (this.moves > 0) {
-			this.activate();
+			this.player.activateUnit();
 		} else {
 			this.deactivate();
 		}
@@ -374,6 +403,7 @@ const config = {
 			});
 
 			// TODO: Build Starting Players and Units
+			currentGame.players[0].addUnit('settler', 1, 2, this);
 			currentGame.players[0].addUnit('warrior', Math.floor(Math.random() * 2 + 1), Math.floor(Math.random() * 3), this);
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
