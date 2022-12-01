@@ -221,24 +221,30 @@ const currentGame = {
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
 	case 'moveU':
+	case 'u':
 		if (col % 2 == 0) row--;
 		col--;
 		break;
 	case 'moveI':
+	case 'i':
 		row--;
 		break;
 	case 'moveO':
+	case 'o':
 		if (col % 2 == 0) row--;
 		col++;
 		break;
 	case 'moveJ':
+	case 'j':
 		if (col % 2 == 1) row++;
 		col--;
 		break;
 	case 'moveK':
+	case 'k':
 		row++;
 		break;
 	case 'moveL':
+	case 'l':
 		if (col % 2 == 1) row++;
 		col++;
 		break;
@@ -289,6 +295,11 @@ Object.assign(Unit.prototype, {
 		currentGame.currentPlayer.checkEndTurn();
 	},
 	move(action) {
+		if (action === ' ') {
+			this.moves = 0;
+			this.deactivate();
+			return;
+		}
 		const [row, col] = actionTileCoordinates(action, this.row, this.col);
 		if (!isLegalMove(this, row, col)) {
 			throw new Error('Tried to make illegal move!');
@@ -306,23 +317,33 @@ Object.assign(Unit.prototype, {
 	},
 });
 
-function doAction(action) {
+function doAction(evt) {
 	if (currentGame.currentPlayer !== currentGame.players[0]) {
 		// Not the player's turn, leave
 		return false;
 	}
-	switch (action) {
+	if (evt.repeat) {
+		return false;
+	}
+	switch (evt.key) {
+	case ' ':
 	case 'moveU':
 	case 'moveI':
 	case 'moveO':
 	case 'moveJ':
 	case 'moveK':
 	case 'moveL':
+	case 'u':
+	case 'i':
+	case 'o':
+	case 'j':
+	case 'k':
+	case 'l':
 		if (typeof currentGame.activeUnit !== 'object' || currentGame.activeUnit === null) {
 			// No active unit, leave
 			return false;
 		}
-		currentGame.activeUnit.move(action);
+		currentGame.activeUnit.move(evt.key);
 		break;
 	}
 }
@@ -398,7 +419,7 @@ const config = {
 					Phaser.Geom.Polygon.Contains
 				).on('pointerdown', () => {
 					console.log('Sam, pointerdown on', action);
-					doAction(action);
+					doAction({ key: action });
 				}).setActive(false);
 			});
 
@@ -408,18 +429,9 @@ const config = {
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
-			this.input.keyboard.on('keydown-U', () => {
-				doAction('moveU');
-			}).on('keydown-I', () => {
-				doAction('moveI');
-			}).on('keydown-O', () => {
-				doAction('moveO');
-			}).on('keydown-J', () => {
-				doAction('moveJ');
-			}).on('keydown-K', () => {
-				doAction('moveK');
-			}).on('keydown-L', () => {
-				doAction('moveL');
+			this.input.keyboard.on('keydown', (evt) => {
+				evt.preventDefault();
+				doAction(evt);
 			}).enabled = false;
 
 			currentGame.startRound();
