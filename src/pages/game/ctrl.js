@@ -76,7 +76,12 @@ const actionSprites = (() => {
 	};
 })();
 
-const activeUnitDepth = 100;
+const depths = {
+	map: 0,
+	inactiveUnits: 1,
+	actionSprites: 98,
+	activeUnit: 100,
+};
 
 const Player = (() => {
 	let activeUnit = null;
@@ -280,25 +285,25 @@ Object.assign(Unit.prototype, {
 	activate() {
 		const { x, y } = grid.getHex({ row: this.row, col: this.col });
 		this.scene.cameras.main.centerOn(x, y);
-		this.sprite.setDepth(activeUnitDepth);
-		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
+		this.sprite.setDepth(depths.activeUnit);
+		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(depths.activeUnit - 1);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			if (isLegalMove(this, row, col)) {
-				sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
+				sprite.img.setActive(true).setPosition(x, y).setDepth(depths.actionSprites);
 			} else {
-				sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
+				sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
 			}
 		});
 		currentGame.activeUnit = this;
 		this.scene.input.keyboard.enabled = true;
 	},
 	deactivate() {
-		currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
+		currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
+			sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
 		});
-		this.sprite.setDepth(1);
+		this.sprite.setDepth(depths.inactiveUnits);
 		currentGame.activeUnit = null;
 		this.scene.input.keyboard.enabled = false;
 		currentGame.currentPlayer.checkEndTurn();
@@ -334,7 +339,7 @@ Object.assign(Unit.prototype, {
 			this.row = row;
 			this.col = col;
 			const target = grid.getHex({ row: this.row, col: this.col});
-			this.sprite.setPosition(target.x, target.y).setDepth(1);
+			this.sprite.setPosition(target.x, target.y).setDepth(depths.inactiveUnits);
 			this.moves -= this.base.movementCosts[target.terrain];
 			if (this.moves > 0) {
 				this.player.activateUnit();
@@ -413,7 +418,7 @@ const config = {
 			grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
-					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(0),
+					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map),
 					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
 						fixedWidth: tileWidth,
 						font: '12pt Trebuchet MS',
