@@ -386,9 +386,8 @@ function isLegalMove(unit, row, col) {
 
 const config = {
 	type: Phaser.AUTO,
-	height: 1200,
-	width: 1600,
-	zoom: 0.8,
+	height: window.visualViewport.height,
+	width: window.visualViewport.width,
 	backgroundColor: '#71ABFF',
 	scene: {
 		preload() {
