@@ -54,6 +54,24 @@
 			},
 			{
 				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
+			},
+			{
+				"terrain": "ocean"
 			}
 		],
 		[
@@ -69,6 +87,24 @@
 			},
 			{
 				"terrain": "lake"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
 			}
 		],
 		[
@@ -84,6 +120,24 @@
 			},
 			{
 				"terrain": "hill"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
 			}
 		],
 		[
@@ -95,6 +149,88 @@
 			},
 			{
 				"terrain": "hill"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			}
+		],
+		[
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			}
+		],
+		[
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
+			},
+			{
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass"

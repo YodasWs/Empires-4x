@@ -6,7 +6,7 @@ const Tile = Honeycomb.defineHex({
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 })
-const grid = new Honeycomb.Grid(Tile, Honeycomb.rectangle({ width: 4, height: 4 }))
+const grid = new Honeycomb.Grid(Tile, Honeycomb.rectangle({ width: 10, height: 6 }))
 
 const actionSprites = (() => {
 	const deltaX = tileWidth * (Math.sqrt(3) - 1);
@@ -149,7 +149,7 @@ const Player = (() => {
 		},
 		activateNext() {
 			// Find and activate next unit
-			for (let i = activeUnit; i < this.units.length; i++) {
+			for (let i = activeUnit + 1; i < this.units.length; i++) {
 				if (!(this.units[i] instanceof Unit)) {
 					break;
 				}
@@ -186,6 +186,8 @@ const currentGame = {
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
+		this.turn++;
+		console.log('Sam, startRound', this.turn);
 		this.startTurn(0);
 	},
 	startTurn(intPlayer) {
@@ -215,6 +217,7 @@ const currentGame = {
 	},
 	endRound() {
 		console.log('Sam, endRound!');
+		this.startRound();
 	},
 };
 
@@ -295,58 +298,64 @@ Object.assign(Unit.prototype, {
 		this.game.input.keyboard.enabled = false;
 		currentGame.currentPlayer.checkEndTurn();
 	},
-	move(action) {
+	doAction(action) {
+		if (action === 'w') {
+			this.deactivate();
+			return;
+		}
+		console.log(`Sam, '${action}'`);
 		if (action === ' ') {
+			console.log('Sam, did you hit space?');
 			this.moves = 0;
 			this.deactivate();
 			return;
 		}
-		const [row, col] = actionTileCoordinates(action, this.row, this.col);
-		if (!isLegalMove(this, row, col)) {
-			throw new Error('Tried to make illegal move!');
-		}
-		this.row = row;
-		this.col = col;
-		const target = grid.getHex({ row: this.row, col: this.col});
-		this.sprite.setPosition(target.x, target.y).setDepth(1);
-		this.moves -= this.base.movementCosts[target.terrain];
-		if (this.moves > 0) {
-			this.player.activateUnit();
-		} else {
-			this.deactivate();
+		if ([
+			'moveU',
+			'u',
+			'moveI',
+			'i',
+			'moveO',
+			'o',
+			'moveJ',
+			'j',
+			'moveK',
+			'k',
+			'moveL',
+			'l',
+		].includes(action)) {
+			const [row, col] = actionTileCoordinates(action, this.row, this.col);
+			if (!isLegalMove(this, row, col)) {
+				return;
+			}
+			this.row = row;
+			this.col = col;
+			const target = grid.getHex({ row: this.row, col: this.col});
+			this.sprite.setPosition(target.x, target.y).setDepth(1);
+			this.moves -= this.base.movementCosts[target.terrain];
+			if (this.moves > 0) {
+				this.player.activateUnit();
+			} else {
+				this.deactivate();
+			}
+			return;
 		}
 	},
 });
 
 function doAction(evt) {
+	// Not the player's turn, leave
 	if (currentGame.currentPlayer !== currentGame.players[0]) {
-		// Not the player's turn, leave
 		return false;
 	}
 	if (evt.repeat) {
 		return false;
 	}
-	switch (evt.key) {
-	case ' ':
-	case 'moveU':
-	case 'moveI':
-	case 'moveO':
-	case 'moveJ':
-	case 'moveK':
-	case 'moveL':
-	case 'u':
-	case 'i':
-	case 'o':
-	case 'j':
-	case 'k':
-	case 'l':
-		if (typeof currentGame.activeUnit !== 'object' || currentGame.activeUnit === null) {
-			// No active unit, leave
-			return false;
-		}
-		currentGame.activeUnit.move(evt.key);
-		break;
+	// No active unit, leave
+	if (typeof currentGame.activeUnit !== 'object' || currentGame.activeUnit === null) {
+		return false;
 	}
+	currentGame.activeUnit.doAction(evt.key);
 }
 
 function isLegalMove(unit, row, col) {
