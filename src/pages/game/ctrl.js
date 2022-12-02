@@ -392,10 +392,13 @@ function isLegalMove(unit, row, col) {
 	return false;
 }
 
+const scale = 0.8;
+
 const config = {
 	type: Phaser.AUTO,
-	height: window.visualViewport.height,
-	width: window.visualViewport.width,
+	height: window.visualViewport.height / scale,
+	width: window.visualViewport.width / scale,
+	zoom: scale,
 	backgroundColor: '#71ABFF',
 	scene: {
 		preload() {
