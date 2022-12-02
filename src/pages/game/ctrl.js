@@ -1,5 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
+const offscreen = window.visualViewport.width * -2;
 
 const Tile = Honeycomb.defineHex({
 	dimensions: tileWidth / 2,
@@ -112,11 +113,11 @@ const Player = (() => {
 		});
 	}
 	Object.assign(Player.prototype, {
-		addUnit(unitType, row, col, game) {
+		addUnit(unitType, row, col, scene) {
 			this.units.push(new Unit(unitType, {
 				row,
 				col,
-				game,
+				scene,
 				player: this,
 			}));
 		},
@@ -132,20 +133,8 @@ const Player = (() => {
 			if (!(unit instanceof Unit)) {
 				throw new TypeError(`Player does not have unit ${intUnit}`);
 			}
-			const { x, y } = grid.getHex({ row: unit.row, col: unit.col });
-			unit.sprite.setDepth(activeUnitDepth);
-			currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
-			Object.entries(actionSprites).forEach(([action, sprite]) => {
-				const [row, col] = actionTileCoordinates(action, unit.row, unit.col);
-				if (isLegalMove(unit, row, col)) {
-					sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
-				} else {
-					sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
-				}
-			});
+			unit.activate();
 			activeUnit = intUnit;
-			currentGame.activeUnit = unit;
-			unit.game.input.keyboard.enabled = true;
 		},
 		activateNext() {
 			// Find and activate next unit
@@ -258,7 +247,7 @@ function actionTileCoordinates(action, row, col) {
 function Unit(unitType, {
 	row,
 	col,
-	game,
+	scene,
 	player
 }) {
 	// Check unitType exists
@@ -268,7 +257,7 @@ function Unit(unitType, {
 	}
 	// Add sprite
 	const { x, y } = grid.getHex({ row, col });
-	const sprite = game.add.sprite(x, y, `unit.${unitType}`);
+	const sprite = scene.add.sprite(x, y, `unit.${unitType}`);
 	// Define properties
 	this.col = col;
 	this.row = row;
@@ -277,9 +266,9 @@ function Unit(unitType, {
 			enumerable: true,
 			get: () => base,
 		},
-		game: {
+		scene: {
 			enumerable: true,
-			get: () => game,
+			get: () => scene,
 		},
 		sprite: {
 			enumerable: true,
@@ -288,14 +277,30 @@ function Unit(unitType, {
 	});
 }
 Object.assign(Unit.prototype, {
-	deactivate() {
-		currentGame.sprActiveUnit.setActive(false).setPosition(-300, -300).setDepth(0);
+	activate() {
+		const { x, y } = grid.getHex({ row: this.row, col: this.col });
+		this.scene.cameras.main.centerOn(x, y);
+		this.sprite.setDepth(activeUnitDepth);
+		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 1);
 		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			sprite.img.setActive(false).setPosition(-300, -300).setDepth(0);
+			const [row, col] = actionTileCoordinates(action, this.row, this.col);
+			if (isLegalMove(this, row, col)) {
+				sprite.img.setActive(true).setPosition(x, y).setDepth(activeUnitDepth - 2);
+			} else {
+				sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
+			}
+		});
+		currentGame.activeUnit = this;
+		this.scene.input.keyboard.enabled = true;
+	},
+	deactivate() {
+		currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
+		Object.entries(actionSprites).forEach(([action, sprite]) => {
+			sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(0);
 		});
 		this.sprite.setDepth(1);
 		currentGame.activeUnit = null;
-		this.game.input.keyboard.enabled = false;
+		this.scene.input.keyboard.enabled = false;
 		currentGame.currentPlayer.checkEndTurn();
 	},
 	doAction(action) {
@@ -303,9 +308,7 @@ Object.assign(Unit.prototype, {
 			this.deactivate();
 			return;
 		}
-		console.log(`Sam, '${action}'`);
 		if (action === ' ') {
-			console.log('Sam, did you hit space?');
 			this.moves = 0;
 			this.deactivate();
 			return;
@@ -421,9 +424,9 @@ const config = {
 			});
 
 			// Add Game Sprites and Images
-			currentGame.sprActiveUnit = this.add.image(-300, -300, 'activeUnit').setActive(false);
+			currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
-				sprite.img = this.add.image(-300, -300, action).setInteractive(
+				sprite.img = this.add.image(offscreen, offscreen, action).setInteractive(
 					new Phaser.Geom.Polygon(sprite.polygon),
 					Phaser.Geom.Polygon.Contains
 				).on('pointerdown', () => {
@@ -438,6 +441,7 @@ const config = {
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
+			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
 				evt.preventDefault();
 				doAction(evt);
