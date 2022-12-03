@@ -404,7 +404,16 @@ Object.assign(Unit.prototype, {
 				player: this.player,
 				scene: this.scene,
 			});
-			// TODO: Remove unit from game
+			// Remove unit from game
+			const i = this.player.units.indexOf(this);
+			console.log('Sam, splice', i);
+			if (i >= 0) {
+				this.player.units.splice(i, 1);
+			}
+			this.deactivate();
+			this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+			delete this;
+			return;
 		}
 		// TODO: Claim hex territory
 		if (action === 'c') {
