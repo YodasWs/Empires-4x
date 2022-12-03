@@ -2,12 +2,11 @@ import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
 const offscreen = window.visualViewport.width * -2;
 
-const Tile = Honeycomb.defineHex({
+const grid = new Honeycomb.Grid(Honeycomb.defineHex({
 	dimensions: tileWidth / 2,
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
-})
-const grid = new Honeycomb.Grid(Tile, Honeycomb.rectangle({ width: 10, height: 6 }))
+}), Honeycomb.rectangle({ width: 10, height: 6 }));
 
 const actionSprites = (() => {
 	const deltaX = tileWidth * (Math.sqrt(3) - 1);
@@ -78,10 +77,34 @@ const actionSprites = (() => {
 
 const depths = {
 	map: 0,
-	inactiveUnits: 1,
+	cities: 1,
+	inactiveUnits: 2,
 	actionSprites: 98,
 	activeUnit: 100,
 };
+
+function Tile() {
+}
+Object.assign(Tile.prototype, {
+});
+
+function City({
+	col,
+	row,
+	scene,
+	player,
+}) {
+	const hex = grid.getHex({ row, col });
+	const sprite = scene.add.image(hex.x, hex.y, 'cities', player % 3).setDepth(depths.cities).setScale(0.8);
+	hex.city = this;
+	Object.defineProperties(this, {
+		sprite: {
+			get: () => sprite,
+		}
+	});
+}
+Object.assign(City.prototype, {
+});
 
 const Player = (() => {
 	let activeUnit = null;
@@ -279,6 +302,10 @@ function Unit(unitType, {
 			enumerable: true,
 			get: () => sprite,
 		},
+		unitType: {
+			enumerable: true,
+			get: () => unitType,
+		},
 	});
 }
 Object.assign(Unit.prototype, {
@@ -348,6 +375,16 @@ Object.assign(Unit.prototype, {
 			}
 			return;
 		}
+		if (action === 'b' && this.unitType === 'settler') {
+			// Build city
+			const city = new City({
+				col: this.col,
+				row: this.row,
+				player: 0,
+				scene: this.scene,
+			});
+			// TODO: Remove unit from game
+		}
 	},
 });
 
@@ -406,6 +443,10 @@ const config = {
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
 				this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
 			});
+			this.load.spritesheet('cities', 'img/tiles/cities.png', {
+				frameHeight: 200,
+				frameWidth: 200,
+			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
@@ -429,6 +470,14 @@ const config = {
 						color: 'white',
 					}).setOrigin(0),
 				});
+				if (typeof hex.city === 'object' && hex.city !== null) {
+					new City({
+						col: hex.col,
+						row: hex.row,
+						scene: this,
+						player: hex.city.player,
+					});
+				}
 			});
 
 			// Add Game Sprites and Images

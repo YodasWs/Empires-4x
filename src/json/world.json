@@ -76,20 +76,29 @@
 		],
 		[
 			{
-				"terrain": "grass"
+				"terrain": "grass",
+				"city": {
+					"player": 2
+				}
 			},
 			{
 				"terrain": "grass",
 				"river": true
 			},
 			{
-				"terrain": "grass"
+				"terrain": "grass",
+				"city": {
+					"player": 1
+				}
 			},
 			{
 				"terrain": "lake"
 			},
 			{
-				"terrain": "grass"
+				"terrain": "grass",
+				"city": {
+					"player": 0
+				}
 			},
 			{
 				"terrain": "grass"
