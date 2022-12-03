@@ -336,15 +336,18 @@ Object.assign(Unit.prototype, {
 		currentGame.currentPlayer.checkEndTurn();
 	},
 	doAction(action) {
+		// Wait, to do action later in turn
 		if (action === 'w') {
 			this.deactivate();
 			return;
 		}
+		// Stay here
 		if (action === ' ') {
 			this.moves = 0;
 			this.deactivate();
 			return;
 		}
+		// Move unit
 		if ([
 			'moveU',
 			'u',
@@ -375,7 +378,13 @@ Object.assign(Unit.prototype, {
 			}
 			return;
 		}
+		// Build city
 		if (action === 'b' && this.unitType === 'settler') {
+			// TODO: Make sure there is no city on this tile
+			const hex = grid.getHex({ col: this.col, row: this.row });
+			if (typeof hex.city === 'object' && hex.city !== null) {
+				return;
+			}
 			// Build city
 			const city = new City({
 				col: this.col,
