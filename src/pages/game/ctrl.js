@@ -6,7 +6,7 @@ const grid = new Honeycomb.Grid(Honeycomb.defineHex({
 	dimensions: tileWidth / 2,
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
-}), Honeycomb.rectangle({ width: 10, height: 6 }));
+}), Honeycomb.rectangle({ width: 15, height: 6 }));
 
 const actionSprites = (() => {
 	const deltaX = tileWidth * (Math.sqrt(3) - 1);
@@ -84,8 +84,16 @@ const depths = {
 };
 
 function Tile() {
+	this.player = undefined;
+	Object.defineProperties(this, {
+	});
 }
 Object.assign(Tile.prototype, {
+	claimTerritory(player) {
+		if (typeof this.player !== 'object' || this.player === null) {
+			this.player = player;
+		}
+	}
 });
 
 function City({
@@ -203,6 +211,16 @@ const currentGame = {
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
+		// Check cities
+		grid.filter(hex => typeof hex.city === 'object' && hex.city !== null).forEach((hex) => {
+			const city = hex.city;
+			console.log('Sam, startRound, city:', city);
+			grid.traverse(Honeycomb.spiral({
+				start: [ hex.q, hex.r ],
+				radius: 2,
+			}));
+		});
+		// Start Round
 		this.turn++;
 		console.log('Sam, startRound', this.turn);
 		this.startTurn(0);
@@ -418,9 +436,9 @@ Object.assign(Unit.prototype, {
 		// TODO: Claim hex territory
 		if (action === 'c') {
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			if (typeof thisHex.player !== 'object' || thisHex.player === null) {
-				thisHex.player = this.player;
-			}
+			thisHex.tile.claimTerritory(this.player);
+			this.moves--;
+			this.deactivate();
 		}
 	},
 });
@@ -444,7 +462,7 @@ function isLegalMove(unit, row, col) {
 	// Grab Target Tile
 	const target = grid.getHex({ row, col });
 	if (target === undefined) return false;
-	console.log('Sam, isLegalMove, target:', target);
+	// console.log('Sam, isLegalMove, target:', target);
 
 	// TODO: Check move into City
 	switch (target.city) {
@@ -457,7 +475,7 @@ function isLegalMove(unit, row, col) {
 		if (unit.attack == 0) return false;
 		if (units[tileUnits[0]].faction == 'britton' && unit.faction == 'roman') return false;
 	}
-	console.log('Sam, isLegalMove, unit:', unit);
+	// console.log('Sam, isLegalMove, unit:', unit);
 
 	// Check movement into terrain
 	const movementCost = unit.base.movementCosts[target.terrain];
@@ -466,7 +484,7 @@ function isLegalMove(unit, row, col) {
 	return false;
 }
 
-const scale = 0.8;
+const scale = 0.5;
 
 const config = {
 	type: Phaser.AUTO,
@@ -499,6 +517,10 @@ const config = {
 			grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
+					tile: new Tile({
+						col: hex.col,
+						row: hex.row,
+					}),
 					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map),
 					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
 						fixedWidth: tileWidth,
