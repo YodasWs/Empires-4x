@@ -294,6 +294,10 @@ function Unit(unitType, {
 			enumerable: true,
 			get: () => base,
 		},
+		player: {
+			enumerable: true,
+			get: () => player,
+		},
 		scene: {
 			enumerable: true,
 			get: () => scene,
@@ -337,7 +341,7 @@ Object.assign(Unit.prototype, {
 	},
 	doAction(action) {
 		// Wait, to do action later in turn
-		if (action === 'w') {
+		if (action === 'w' || action === 'Tab') {
 			this.deactivate();
 			return;
 		}
@@ -368,9 +372,9 @@ Object.assign(Unit.prototype, {
 			}
 			this.row = row;
 			this.col = col;
-			const target = grid.getHex({ row: this.row, col: this.col});
-			this.sprite.setPosition(target.x, target.y).setDepth(depths.inactiveUnits);
-			this.moves -= this.base.movementCosts[target.terrain];
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			this.sprite.setPosition(thisHex.x, thisHex.y).setDepth(depths.inactiveUnits);
+			this.moves -= this.base.movementCosts[thisHex.terrain];
 			if (this.moves > 0) {
 				this.player.activateUnit();
 			} else {
@@ -380,19 +384,34 @@ Object.assign(Unit.prototype, {
 		}
 		// Build city
 		if (action === 'b' && this.unitType === 'settler') {
-			// TODO: Make sure there is no city on this tile
-			const hex = grid.getHex({ col: this.col, row: this.row });
-			if (typeof hex.city === 'object' && hex.city !== null) {
+			// Make sure there is no city on this tile or an adjacent tile
+			const thisHex = grid.getHex({ col: this.col, row: this.row });
+			if (grid.traverse(Honeycomb.spiral({
+				start: [ thisHex.q, thisHex.r ],
+				radius: 1,
+			})).filter((hex) => {
+				if (typeof hex.city === 'object' && hex.city !== null) {
+					return true;
+				}
+				return false;
+			}).size > 0) {
 				return;
 			}
 			// Build city
 			const city = new City({
 				col: this.col,
 				row: this.row,
-				player: 0,
+				player: this.player,
 				scene: this.scene,
 			});
 			// TODO: Remove unit from game
+		}
+		// TODO: Claim hex territory
+		if (action === 'c') {
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			if (typeof thisHex.player !== 'object' || thisHex.player === null) {
+				thisHex.player = this.player;
+			}
 		}
 	},
 });

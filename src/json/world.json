@@ -88,7 +88,7 @@
 			{
 				"terrain": "grass",
 				"city": {
-					"player": 1
+					"player": 0
 				}
 			},
 			{
@@ -97,7 +97,7 @@
 			{
 				"terrain": "grass",
 				"city": {
-					"player": 0
+					"player": 1
 				}
 			},
 			{
