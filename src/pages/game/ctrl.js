@@ -77,22 +77,34 @@ const actionSprites = (() => {
 
 const depths = {
 	map: 0,
-	cities: 1,
-	inactiveUnits: 2,
+	territoryLines: 1,
+	cities: 2,
+	inactiveUnits: 3,
 	actionSprites: 98,
 	activeUnit: 100,
 };
 
 function Tile() {
-	this.player = undefined;
+	let player = undefined;
 	Object.defineProperties(this, {
+		player: {
+			enumerable: true,
+			get: () => player,
+			set(val) {
+				if (!(val instanceof Player)) {
+					throw new TypeError('Tile.player must be of type Player');
+				}
+				if (!(player instanceof Player)) {
+					player = val;
+				}
+			},
+		},
 	});
 }
 Object.assign(Tile.prototype, {
 	claimTerritory(player) {
-		if (!(this.player instanceof Player)) {
-			this.player = player;
-		}
+		this.player = player;
+		currentGame.markTerritory();
 	}
 });
 
@@ -102,10 +114,31 @@ function City({
 	scene,
 	player,
 }) {
-	const hex = grid.getHex({ row, col });
-	hex.tile.claimTerritory(player);
-	const sprite = scene.add.image(hex.x, hex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
-	hex.city = this;
+	// Tie to hex
+	const thisHex = grid.getHex({ row, col });
+	thisHex.tile.claimTerritory(player);
+	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
+	thisHex.city = this;
+	// Claim adjacent tiles
+	grid.traverse(Honeycomb.spiral({
+		start: [ thisHex.q, thisHex.r ],
+		radius: 1,
+	})).forEach((hex) => {
+		hex.tile.claimTerritory(player);
+	});
+	// Claim water territory
+	grid.traverse(Honeycomb.spiral({
+		start: [ thisHex.q, thisHex.r ],
+		radius: 2,
+	})).forEach((hex) => {
+		if ([
+			'lake',
+			'ocean',
+		].includes(hex.terrain) && !hex.tile.player) {
+			hex.tile.claimTerritory(player);
+		}
+	});
+	// Properties
 	Object.defineProperties(this, {
 		player: {
 			enumerable: true,
@@ -121,12 +154,16 @@ Object.assign(City.prototype, {
 
 const Player = (() => {
 	let activeUnit = null;
-	function Player(frame) {
+	function Player(index) {
 		const units = [];
 		Object.defineProperties(this, {
 			frame: {
 				enumerable: true,
-				get: () => frame,
+				get: () => index % 3,
+			},
+			index: {
+				enumerable: true,
+				get: () => index,
 			},
 			units: {
 				enumerable: true,
@@ -253,8 +290,24 @@ const currentGame = {
 		this.currentPlayer.units.forEach((unit) => {
 			unit.moves = unit.base.movementPoints;
 		});
+		this.markTerritory();
 		// Activate first unit
 		this.currentPlayer.activateUnit(0);
+	},
+	markTerritory() {
+		const graphics = currentGame.scenes.getScene('main').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
+		grid.forEach((hex) => {
+			if (!hex.tile || !hex.tile.player) return;
+			graphics.lineStyle(5, 0x000000);
+			graphics.beginPath();
+			const [firstCorner, ...otherCorners] = hex.corners;
+			graphics.moveTo(firstCorner.x, firstCorner.y);
+			otherCorners.forEach(({x, y}) => {
+				graphics.lineTo(x, y);
+			});
+			graphics.closePath();
+			graphics.strokePath();
+		});
 	},
 	endTurn() {
 		console.log('Sam, endTurn!');
@@ -450,6 +503,7 @@ Object.assign(Unit.prototype, {
 		// TODO: Claim hex territory
 		if (action === 'c') {
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			if (thisHex.tile.player === this.player) return;
 			thisHex.tile.claimTerritory(this.player);
 			this.moves--;
 			this.deactivate();
@@ -480,15 +534,16 @@ function isLegalMove(unit, row, col) {
 	// console.log('Sam, isLegalMove, target:', target);
 
 	// TODO: Check move into City
-	switch (target.city) {
+	if (target.city instanceof City && target.city.player.index !== unit.player.index) {
+		if (!unit.attack || !unit.attackCities) return false;
 	}
 
 	// TODO: Check for battle
 	// const tileUnits = grabUnitsOnTile(row, col);
 	let tileUnits;
 	if (false) {
-		if (unit.attack == 0) return false;
-		if (units[tileUnits[0]].faction == 'britton' && unit.faction == 'roman') return false;
+		if (!unit.attack) return false;
+		if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
 	}
 	// console.log('Sam, isLegalMove, unit:', unit);
 
@@ -508,6 +563,7 @@ const config = {
 	zoom: scale,
 	backgroundColor: '#71ABFF',
 	scene: {
+		key: 'main',
 		preload() {
 			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
@@ -544,6 +600,7 @@ const config = {
 						color: 'white',
 					}).setOrigin(0),
 				});
+			}).forEach((hex) => {
 				if (typeof hex.city === 'object' && hex.city !== null) {
 					hex.city = new City({
 						col: hex.col,
@@ -574,6 +631,11 @@ const config = {
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
+				if (evt.ctrlKey && [
+					'r', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+				].includes(evt.key)) {
+					return;
+				}
 				evt.preventDefault();
 				doAction(evt);
 			}).enabled = false;
@@ -584,6 +646,7 @@ const config = {
 			// TODO: Outline hexes claimed as territory
 			// TODO: Remove old lines
 			// TODO: Draw only at start of round and when updated
+			return;
 			const graphics = this.add.graphics({ x: 0, y: 0 });
 			grid.forEach((hex) => {
 				if (!hex.tile.player) return;

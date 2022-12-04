@@ -91,29 +91,20 @@
 		],
 		[
 			{
-				"terrain": "grass",
-				"city": {
-					"player": 2
-				}
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass",
 				"river": true
 			},
 			{
-				"terrain": "grass",
-				"city": {
-					"player": 0
-				}
+				"terrain": "grass"
 			},
 			{
 				"terrain": "lake"
 			},
 			{
-				"terrain": "grass",
-				"city": {
-					"player": 1
-				}
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass"
@@ -158,7 +149,10 @@
 				"terrain": "desert"
 			},
 			{
-				"terrain": "hill"
+				"terrain": "hill",
+				"city": {
+					"player": 0
+				}
 			},
 			{
 				"terrain": "grass"
@@ -173,7 +167,10 @@
 				"terrain": "grass"
 			},
 			{
-				"terrain": "grass"
+				"terrain": "grass",
+				"city": {
+					"player": 2
+				}
 			},
 			{
 				"terrain": "grass"
@@ -232,7 +229,10 @@
 				"terrain": "grass"
 			},
 			{
-				"terrain": "grass"
+				"terrain": "grass",
+				"city": {
+					"player": 1
+				}
 			},
 			{
 				"terrain": "grass"
