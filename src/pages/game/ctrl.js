@@ -90,7 +90,7 @@ function Tile() {
 }
 Object.assign(Tile.prototype, {
 	claimTerritory(player) {
-		if (typeof this.player !== 'object' || this.player === null) {
+		if (!(this.player instanceof Player)) {
 			this.player = player;
 		}
 	}
@@ -103,9 +103,14 @@ function City({
 	player,
 }) {
 	const hex = grid.getHex({ row, col });
-	const sprite = scene.add.image(hex.x, hex.y, 'cities', player % 3).setDepth(depths.cities).setScale(0.8);
+	hex.tile.claimTerritory(player);
+	const sprite = scene.add.image(hex.x, hex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
 	hex.city = this;
 	Object.defineProperties(this, {
+		player: {
+			enumerable: true,
+			get: () => player,
+		},
 		sprite: {
 			get: () => sprite,
 		}
@@ -116,9 +121,13 @@ Object.assign(City.prototype, {
 
 const Player = (() => {
 	let activeUnit = null;
-	function Player() {
+	function Player(frame) {
 		const units = [];
 		Object.defineProperties(this, {
+			frame: {
+				enumerable: true,
+				get: () => frame,
+			},
 			units: {
 				enumerable: true,
 				get: () => units,
@@ -165,6 +174,10 @@ const Player = (() => {
 			}
 		},
 		activateUnit(intUnit = activeUnit) {
+			if (this.units.length === 0) {
+				this.checkEndTurn();
+				return;
+			}
 			const unit = this.units[intUnit];
 			if (!(unit instanceof Unit)) {
 				throw new TypeError(`Player does not have unit ${intUnit}`);
@@ -203,7 +216,9 @@ const Player = (() => {
 
 const currentGame = {
 	players: [
-		new Player(),
+		new Player(0),
+		new Player(1),
+		new Player(2),
 	],
 	turn: 0,
 	activeUnit: null,
@@ -424,7 +439,6 @@ Object.assign(Unit.prototype, {
 			});
 			// Remove unit from game
 			const i = this.player.units.indexOf(this);
-			console.log('Sam, splice', i);
 			if (i >= 0) {
 				this.player.units.splice(i, 1);
 			}
@@ -439,6 +453,7 @@ Object.assign(Unit.prototype, {
 			thisHex.tile.claimTerritory(this.player);
 			this.moves--;
 			this.deactivate();
+			return;
 		}
 	},
 });
@@ -530,11 +545,11 @@ const config = {
 					}).setOrigin(0),
 				});
 				if (typeof hex.city === 'object' && hex.city !== null) {
-					new City({
+					hex.city = new City({
 						col: hex.col,
 						row: hex.row,
 						scene: this,
-						player: hex.city.player,
+						player: currentGame.players[hex.city.player],
 					});
 				}
 			});
@@ -566,6 +581,33 @@ const config = {
 			currentGame.startRound();
 		},
 		update() {
+			// TODO: Outline hexes claimed as territory
+			// TODO: Remove old lines
+			// TODO: Draw only at start of round and when updated
+			const graphics = this.add.graphics({ x: 0, y: 0 });
+			grid.forEach((hex) => {
+				if (!hex.tile.player) return;
+				graphics.lineStyle(5, (() => {
+					switch (hex.tile.player.frame) {
+						case 0:
+							return 0xff0000;
+						case 1:
+							return 0x00ff00;
+						case 2:
+							return 0x0000ff;
+						default:
+							return 0xaaaaaa;
+					}
+				})(), 0.2);
+				graphics.beginPath();
+				const [firstCorner, ...otherCorners] = hex.corners;
+				graphics.moveTo(firstCorner.x, firstCorner.y);
+				otherCorners.forEach(({x, y}) => {
+					graphics.lineTo(x, y);
+				});
+				graphics.closePath();
+				graphics.strokePath();
+			});
 		},
 	},
 };
