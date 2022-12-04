@@ -94,6 +94,7 @@ function Tile() {
 				if (!(val instanceof Player)) {
 					throw new TypeError('Tile.player must be of type Player');
 				}
+				// Do not yet allow claiming of other player's territory
 				if (!(player instanceof Player)) {
 					player = val;
 				}
@@ -116,10 +117,9 @@ function City({
 }) {
 	// Tie to hex
 	const thisHex = grid.getHex({ row, col });
-	thisHex.tile.claimTerritory(player);
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
 	thisHex.city = this;
-	// Claim adjacent tiles
+	// Claim this tile and adjacent tiles
 	grid.traverse(Honeycomb.spiral({
 		start: [ thisHex.q, thisHex.r ],
 		radius: 1,
@@ -187,6 +187,21 @@ const Player = (() => {
 						activeUnit = null;
 					}
 					return false;
+				},
+			},
+			color: {
+				enumerable: true,
+				get() {
+					switch (index % 3) {
+						case 0:
+							return 0xff0000;
+						case 1:
+							return 0x00ff00;
+						case 2:
+							return 0x0000ff;
+						default:
+							return 0xaaaaaa;
+					}
 				},
 			},
 		});
@@ -292,12 +307,15 @@ const currentGame = {
 		this.currentPlayer.activateUnit(0);
 	},
 	markTerritory() {
+		// TODO: Mark only the boundaries of territory
+		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		const graphics = currentGame.scenes.getScene('main').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
 		grid.forEach((hex) => {
-			if (!hex.tile || !hex.tile.player) return;
-			graphics.lineStyle(5, 0x000000);
+			if (!hex.tile || !(hex.tile.player instanceof Player)) return;
+			graphics.lineStyle(5, hex.tile.player.color);
 			graphics.beginPath();
-			const [firstCorner, ...otherCorners] = hex.corners;
+			// Draw points closer to center of hex
+			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, 0.97));
 			graphics.moveTo(firstCorner.x, firstCorner.y);
 			otherCorners.forEach(({x, y}) => {
 				graphics.lineTo(x, y);
@@ -320,6 +338,16 @@ const currentGame = {
 		this.startRound();
 	},
 };
+
+function lineShift(point1, point2, t = 0.9) {
+	const m = (point1.y - point2.y) / (point1.x - point2.x)
+	const b = point1.y - m * point1.x
+	const x = (point1.x - point2.x) * t + point2.x;
+	return {
+		x,
+		y: m * x + b,
+	};
+}
 
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
@@ -641,34 +669,6 @@ const config = {
 			currentGame.startRound();
 		},
 		update() {
-			// TODO: Outline hexes claimed as territory
-			// TODO: Remove old lines
-			// TODO: Draw only at start of round and when updated
-			return;
-			const graphics = this.add.graphics({ x: 0, y: 0 });
-			grid.forEach((hex) => {
-				if (!hex.tile.player) return;
-				graphics.lineStyle(5, (() => {
-					switch (hex.tile.player.frame) {
-						case 0:
-							return 0xff0000;
-						case 1:
-							return 0x00ff00;
-						case 2:
-							return 0x0000ff;
-						default:
-							return 0xaaaaaa;
-					}
-				})(), 0.2);
-				graphics.beginPath();
-				const [firstCorner, ...otherCorners] = hex.corners;
-				graphics.moveTo(firstCorner.x, firstCorner.y);
-				otherCorners.forEach(({x, y}) => {
-					graphics.lineTo(x, y);
-				});
-				graphics.closePath();
-				graphics.strokePath();
-			});
 		},
 	},
 };
