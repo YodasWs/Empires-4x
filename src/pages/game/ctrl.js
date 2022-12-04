@@ -383,6 +383,13 @@ function actionTileCoordinates(action, row, col) {
 	return [row, col];
 }
 
+function hideActionSprites() {
+	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+	Object.entries(actionSprites).forEach(([action, sprite]) => {
+		sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+	});
+}
+
 function Unit(unitType, {
 	row,
 	col,
@@ -441,10 +448,7 @@ Object.assign(Unit.prototype, {
 		this.scene.input.keyboard.enabled = true;
 	},
 	deactivate() {
-		currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-		});
+		hideActionSprites();
 		this.sprite.setDepth(depths.inactiveUnits);
 		currentGame.activeUnit = null;
 		this.scene.input.keyboard.enabled = false;
@@ -671,6 +675,16 @@ const config = {
 			}).enabled = false;
 
 			currentGame.startRound();
+
+			this.events.on('pause', () => {
+				console.log('Sam, mainGameScene paused');
+				hideActionSprites();
+			});
+			this.events.on('resume', () => {
+				console.log('Sam, mainGameScene resumed');
+				currentGame.scenes.wake('mainControls');
+				currentGame.currentPlayer.activateUnit();
+			});
 		},
 		update() {
 		},
@@ -691,10 +705,25 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create() {
+			console.log('Sam, mainControls created');
+			const graphics = this.add.graphics({ x: 0, y: 0 });
+			graphics.lineStyle(5, 0x0000ff);
+			graphics.beginPath();
+			graphics.moveTo(1000, 0);
+			graphics.lineTo(1000, 1000);
+			graphics.lineTo(0, 1000);
+			graphics.closePath();
+			graphics.strokePath();
+
+			graphics.fillStyle(0x00ff00);
+			graphics.fillCircle(window.visualViewport.width / scale / 2, window.visualViewport.height / scale - 150, 150);
+			this.events.on('sleep', () => {
+				console.log('Sam, mainControls sleep');
+			});
 		},
 		update() {
 		},
-	});
+	}, true);
 	game.scene.moveAbove('mainGameScene', 'mainControls');
 
 	game.scene.add('city-view', {
@@ -706,6 +735,15 @@ yodasws.page('pageGame').setRoute({
 		},
 	});
 	game.scene.sleep('city-view');
+	setTimeout(() => {
+		game.scene.pause('mainGameScene');
+		setTimeout(() => {
+			game.scene.switch('mainControls', 'city-view');
+			setTimeout(() => {
+				game.scene.resume('mainGameScene');
+			}, 1000);
+		}, 1000);
+	}, 1000);
 
 	game.scene.add('main-menu', {
 		preload() {
@@ -728,4 +766,5 @@ yodasws.page('pageGame').setRoute({
 	game.scene.sleep('tech-tree');
 
 	currentGame.scenes = game.scene;
+	console.log('Sam, scenes:', game.scene.scenes);
 });
