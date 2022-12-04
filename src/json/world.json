@@ -1,9 +1,11 @@
 {
 	"terrains": {
 		"ocean": {
+			"isWater": true,
 			"tile": "ocean"
 		},
 		"lake": {
+			"isWater": true,
 			"tile": "lake"
 		},
 		"grass": {
@@ -98,9 +100,6 @@
 				"river": true
 			},
 			{
-				"terrain": "grass"
-			},
-			{
 				"terrain": "lake"
 			},
 			{
@@ -111,6 +110,9 @@
 			},
 			{
 				"terrain": "grass"
+			},
+			{
+				"terrain": "lake"
 			},
 			{
 				"terrain": "grass"

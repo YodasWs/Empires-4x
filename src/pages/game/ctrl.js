@@ -131,10 +131,7 @@ function City({
 		start: [ thisHex.q, thisHex.r ],
 		radius: 2,
 	})).forEach((hex) => {
-		if ([
-			'lake',
-			'ocean',
-		].includes(hex.terrain) && !hex.tile.player) {
+		if (hex.terrain.isWater && !hex.tile.player) {
 			hex.tile.claimTerritory(player);
 		}
 	});
@@ -460,7 +457,7 @@ Object.assign(Unit.prototype, {
 			this.col = col;
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			this.sprite.setPosition(thisHex.x, thisHex.y).setDepth(depths.inactiveUnits);
-			this.moves -= this.base.movementCosts[thisHex.terrain];
+			this.moves -= this.base.movementCosts[thisHex.terrain.terrain];
 			if (this.moves > 0) {
 				this.player.activateUnit();
 			} else {
@@ -548,7 +545,7 @@ function isLegalMove(unit, row, col) {
 	// console.log('Sam, isLegalMove, unit:', unit);
 
 	// Check movement into terrain
-	const movementCost = unit.base.movementCosts[target.terrain];
+	const movementCost = unit.base.movementCosts[target.terrain.terrain];
 	if (!Number.isFinite(movementCost)) return false;
 	if (movementCost <= unit.moves) return true;
 	return false;
@@ -588,10 +585,11 @@ const config = {
 			grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
-					tile: new Tile({
-						col: hex.col,
-						row: hex.row,
-					}),
+					tile: new Tile(),
+					terrain: {
+						...json.world.terrains[tile.terrain],
+						terrain: tile.terrain,
+					},
 					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map),
 					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
 						fixedWidth: tileWidth,
@@ -624,8 +622,8 @@ const config = {
 			});
 
 			// TODO: Build Starting Players and Units
-			currentGame.players[0].addUnit('settler', 1, 2, this);
-			currentGame.players[0].addUnit('warrior', Math.floor(Math.random() * 2 + 1), Math.floor(Math.random() * 3), this);
+			currentGame.players[0].addUnit('settler', 2, 3, this);
+			currentGame.players[0].addUnit('warrior', 2, 3, this);
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
