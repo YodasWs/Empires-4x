@@ -29,6 +29,7 @@
 				"grass": 1,
 				"desert": 1,
 				"mountain": false,
+				"lake": 1,
 				"hill": 1
 			}
 		},

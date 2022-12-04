@@ -495,8 +495,12 @@ Object.assign(Unit.prototype, {
 		}
 		// Build city
 		if (action === 'b' && this.unitType === 'settler') {
-			// Make sure there is no city on this tile or an adjacent tile
 			const thisHex = grid.getHex({ col: this.col, row: this.row });
+			// Do not build on water
+			if (thisHex.terrain.isWater) {
+				return;
+			}
+			// Make sure there is no city on this tile or an adjacent tile
 			if (grid.traverse(Honeycomb.spiral({
 				start: [ thisHex.q, thisHex.r ],
 				radius: 1,
