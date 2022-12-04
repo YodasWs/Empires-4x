@@ -309,7 +309,7 @@ const currentGame = {
 	markTerritory() {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
-		const graphics = currentGame.scenes.getScene('main').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
+		const graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
 		grid.forEach((hex) => {
 			if (!hex.tile || !(hex.tile.player instanceof Player)) return;
 			graphics.lineStyle(5, hex.tile.player.color);
@@ -588,7 +588,7 @@ const config = {
 	zoom: scale,
 	backgroundColor: '#71ABFF',
 	scene: {
-		key: 'main',
+		key: 'mainGameScene',
 		preload() {
 			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
@@ -681,4 +681,47 @@ yodasws.page('pageGame').setRoute({
 	const game = new Phaser.Game(Object.assign({}, config, {
 		parent: document.querySelector('main'),
 	}));
+
+	game.scene.sleep('mainGameScene');
+	game.scene.add('mainControls', {
+		preload() {
+		},
+		create() {
+		},
+		update() {
+		},
+	});
+	game.scene.moveAbove('mainGameScene', 'mainControls');
+
+	game.scene.add('city-view', {
+		preload() {
+		},
+		create() {
+		},
+		update() {
+		},
+	});
+	game.scene.sleep('city-view');
+
+	game.scene.add('main-menu', {
+		preload() {
+		},
+		create() {
+		},
+		update() {
+		},
+	});
+	game.scene.sleep('main-menu');
+
+	game.scene.add('tech-tree', {
+		preload() {
+		},
+		create() {
+		},
+		update() {
+		},
+	});
+	game.scene.sleep('tech-tree');
+
+	currentGame.scenes = game.scene;
 });
