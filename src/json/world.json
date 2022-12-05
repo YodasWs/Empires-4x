@@ -1,46 +1,73 @@
 {
 	"terrains": {
-		"ocean": {
-			"isWater": true,
-			"tile": "ocean"
+		"desert": {
+			"food": 0,
+			"tile": "desert"
+		},
+		"grass": {
+			"food": 1,
+			"tile": "grass"
+		},
+		"hill": {
+			"food": 1,
+			"tile": "grass"
 		},
 		"lake": {
+			"food": 1,
 			"isWater": true,
 			"tile": "lake"
 		},
-		"grass": {
-			"tile": "grass"
-		},
-		"desert": {
-			"tile": "desert"
-		},
 		"mountain": {
+			"food": 0,
 			"tile": "mountains"
 		},
-		"hill": {
-			"tile": "grass"
+		"ocean": {
+			"food": 1,
+			"isWater": true,
+			"tile": "ocean"
+		},
+		"swamp": {
+			"food": 0,
+			"tile": "swamp"
 		}
 	},
 	"units": {
 		"settler": {
 			"movementPoints": 1,
 			"movementCosts": {
-				"ocean": false,
-				"grass": 1,
 				"desert": 1,
-				"mountain": false,
+				"grass": 1,
+				"hill": 1,
 				"lake": 1,
-				"hill": 1
+				"mountain": false,
+				"ocean": false,
+				"swamp": false
 			}
 		},
 		"warrior": {
+			"attack": 1,
+			"attackCities": true,
 			"movementPoints": 1,
 			"movementCosts": {
-				"ocean": false,
-				"grass": 1,
 				"desert": 1,
+				"grass": 1,
+				"hill": 1,
+				"lake": false,
 				"mountain": 1,
-				"hill": 1
+				"ocean": false,
+				"swamp": 1
+			}
+		},
+		"worker": {
+			"movementPoints": 1,
+			"movementCosts": {
+				"desert": 1,
+				"grass": 1,
+				"hill": 1,
+				"lake": 1,
+				"mountain": 1,
+				"ocean": false,
+				"swamp": 1
 			}
 		}
 	},
@@ -97,7 +124,7 @@
 				"terrain": "grass"
 			},
 			{
-				"terrain": "grass",
+				"terrain": "swamp",
 				"river": true
 			},
 			{

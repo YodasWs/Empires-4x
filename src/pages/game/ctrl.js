@@ -497,41 +497,49 @@ Object.assign(Unit.prototype, {
 			}
 			return;
 		}
-		// Build city
-		if (action === 'b' && this.unitType === 'settler') {
-			const thisHex = grid.getHex({ col: this.col, row: this.row });
-			// Do not build on water
-			if (thisHex.terrain.isWater) {
-				return;
-			}
-			// Make sure there is no city on this tile or an adjacent tile
-			if (grid.traverse(Honeycomb.spiral({
-				start: [ thisHex.q, thisHex.r ],
-				radius: 1,
-			})).filter((hex) => {
-				if (typeof hex.city === 'object' && hex.city !== null) {
-					return true;
+		switch (this.unitType) {
+			case 'settler':
+				switch (action) {
+					// Build city
+					case 'b':
+						const thisHex = grid.getHex({ col: this.col, row: this.row });
+						// Do not build on water
+						if (thisHex.terrain.isWater) {
+							return;
+						}
+						// Make sure there is no city on this tile or an adjacent tile
+						if (grid.traverse(Honeycomb.spiral({
+							start: [ thisHex.q, thisHex.r ],
+							radius: 1,
+						})).filter((hex) => {
+							if (typeof hex.city === 'object' && hex.city !== null) {
+								return true;
+							}
+							return false;
+						}).size > 0) {
+							return;
+						}
+						// Build city
+						const city = new City({
+							col: this.col,
+							row: this.row,
+							player: this.player,
+							scene: this.scene,
+						});
+						// Remove unit from game
+						const i = this.player.units.indexOf(this);
+						if (i >= 0) {
+							this.player.units.splice(i, 1);
+						}
+						this.deactivate();
+						this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+						delete this;
+						return;
 				}
-				return false;
-			}).size > 0) {
-				return;
-			}
-			// Build city
-			const city = new City({
-				col: this.col,
-				row: this.row,
-				player: this.player,
-				scene: this.scene,
-			});
-			// Remove unit from game
-			const i = this.player.units.indexOf(this);
-			if (i >= 0) {
-				this.player.units.splice(i, 1);
-			}
-			this.deactivate();
-			this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-			delete this;
-			return;
+				break;
+			case 'worker':
+				switch (action) {
+				}
 		}
 		// TODO: Claim hex territory
 		if (action === 'c') {
@@ -660,6 +668,7 @@ const config = {
 			// TODO: Build Starting Players and Units
 			currentGame.players[0].addUnit('settler', 2, 3, this);
 			currentGame.players[0].addUnit('warrior', 2, 3, this);
+			currentGame.players[0].addUnit('worker', 2, 3, this);
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
@@ -700,7 +709,6 @@ yodasws.page('pageGame').setRoute({
 		parent: document.querySelector('main'),
 	}));
 
-	game.scene.sleep('mainGameScene');
 	game.scene.add('mainControls', {
 		preload() {
 		},
@@ -734,7 +742,7 @@ yodasws.page('pageGame').setRoute({
 		update() {
 		},
 	});
-	game.scene.sleep('city-view');
+
 	setTimeout(() => {
 		game.scene.pause('mainGameScene');
 		setTimeout(() => {
@@ -753,7 +761,6 @@ yodasws.page('pageGame').setRoute({
 		update() {
 		},
 	});
-	game.scene.sleep('main-menu');
 
 	game.scene.add('tech-tree', {
 		preload() {
@@ -763,7 +770,6 @@ yodasws.page('pageGame').setRoute({
 		update() {
 		},
 	});
-	game.scene.sleep('tech-tree');
 
 	currentGame.scenes = game.scene;
 	console.log('Sam, scenes:', game.scene.scenes);
