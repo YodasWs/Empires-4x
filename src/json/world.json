@@ -28,6 +28,7 @@
 		},
 		"swamp": {
 			"food": 0,
+			"isWater": true,
 			"tile": "swamp"
 		}
 	},

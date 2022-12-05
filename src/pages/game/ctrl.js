@@ -86,10 +86,35 @@ const depths = {
 
 function Tile() {
 	let player = undefined;
+	const claims = new Map();
 	Object.defineProperties(this, {
+		claims: {
+			enumerable: true,
+			get: () => (lookupPlayer, claimIncrement) => {
+				if (lookupPlayer instanceof Player) {
+					if (Number.isInteger(claimIncrement)) {
+						claims.set(lookupPlayer, (claims.get(lookupPlayer) || 0) + claimIncrement);
+					}
+					return claims.get(lookupPlayer) || 0;
+				}
+				return claims;
+			},
+		},
 		player: {
 			enumerable: true,
-			get: () => player,
+			get: () => {
+				const topClaimant = {
+					player: null,
+					claim: 0,
+				};
+				claims.forEach((val, claimPlayer) => {
+					if (topClaimant.claim < val) {
+						topClaimant.player = claimPlayer;
+						topClaimant.claim = val;
+					}
+				});
+				return topClaimant.player;
+			},
 			set(val) {
 				if (!(val instanceof Player)) {
 					throw new TypeError('Tile.player must be of type Player');
@@ -103,8 +128,11 @@ function Tile() {
 	});
 }
 Object.assign(Tile.prototype, {
-	claimTerritory(player) {
-		this.player = player;
+	claimTerritory(player, claimIncrement = 0) {
+		if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
+			this.claims(player, claimIncrement);
+		}
+		// this.player = player;
 		currentGame.markTerritory();
 	}
 });
@@ -124,7 +152,7 @@ function City({
 		start: [ thisHex.q, thisHex.r ],
 		radius: 1,
 	})).forEach((hex) => {
-		hex.tile.claimTerritory(player);
+		hex.tile.claimTerritory(player, 100);
 	});
 	// Claim water territory
 	grid.traverse(Honeycomb.spiral({
@@ -132,11 +160,15 @@ function City({
 		radius: 2,
 	})).forEach((hex) => {
 		if (hex.terrain.isWater && !hex.tile.player) {
-			hex.tile.claimTerritory(player);
+			hex.tile.claimTerritory(player, 50);
 		}
 	});
 	// Properties
 	Object.defineProperties(this, {
+		hex: {
+			enumerable: true,
+			get: () => grid.getHex({ row, col }),
+		},
 		player: {
 			enumerable: true,
 			get: () => player,
@@ -216,7 +248,6 @@ const Player = (() => {
 			}));
 		},
 		checkEndTurn() {
-			console.log('Sam, checkEndTurn');
 			let isActiveUnit = this.activateNext();
 			if (!isActiveUnit) {
 				currentGame.endTurn();
@@ -275,15 +306,27 @@ const currentGame = {
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
-		// Check cities
-		grid.filter(hex => typeof hex.city === 'object' && hex.city !== null).forEach((hex) => {
-			const city = hex.city;
-			console.log('Sam, startRound, city:', city);
-			grid.traverse(Honeycomb.spiral({
-				start: [ hex.q, hex.r ],
-				radius: 2,
-			}));
+		grid.forEach((hex) => {
+			// Adjust each player's claim on territory
+			currentGame.players.forEach((player) => {
+				if (hex.tile.player === player) {
+					hex.tile.claimTerritory(player, 1);
+				} else if (hex.tile.claims(player) > 0) {
+					hex.tile.claimTerritory(player, -1);
+				}
+			});
+			// Check cities
+			if (hex.city instanceof City) {
+				const city = hex.city;
+				console.log('Sam, startRound, city:', city);
+				grid.traverse(Honeycomb.spiral({
+					start: [ hex.q, hex.r ],
+					radius: 2,
+				})).forEach((hex) => {
+				});
+			}
 		});
+
 		// Start Round
 		this.turn++;
 		console.log('Sam, startRound', this.turn);
@@ -411,6 +454,10 @@ function Unit(unitType, {
 		base: {
 			enumerable: true,
 			get: () => base,
+		},
+		hex: {
+			enumerable: true,
+			get: () => grid.getHex({ row, col }),
 		},
 		player: {
 			enumerable: true,
@@ -541,11 +588,11 @@ Object.assign(Unit.prototype, {
 				switch (action) {
 				}
 		}
-		// TODO: Claim hex territory
+		// Claim hex territory
 		if (action === 'c') {
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			if (thisHex.tile.player === this.player) return;
-			thisHex.tile.claimTerritory(this.player);
+			thisHex.tile.claimTerritory(this.player, 10);
 			this.moves--;
 			this.deactivate();
 			return;
@@ -679,6 +726,7 @@ const config = {
 				].includes(evt.key)) {
 					return;
 				}
+				if (evt.ctrlKey && evt.shiftKey && evt.key === 'i') return;
 				evt.preventDefault();
 				doAction(evt);
 			}).enabled = false;
