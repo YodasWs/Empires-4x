@@ -100,6 +100,7 @@ function Tile() {
 				return claims;
 			},
 		},
+		// TODO: Cache player
 		player: {
 			enumerable: true,
 			get: () => {
@@ -115,15 +116,6 @@ function Tile() {
 				});
 				return topClaimant.player;
 			},
-			set(val) {
-				if (!(val instanceof Player)) {
-					throw new TypeError('Tile.player must be of type Player');
-				}
-				// Do not yet allow claiming of other player's territory
-				if (!(player instanceof Player)) {
-					player = val;
-				}
-			},
 		},
 	});
 }
@@ -131,9 +123,9 @@ Object.assign(Tile.prototype, {
 	claimTerritory(player, claimIncrement = 0) {
 		if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
 			this.claims(player, claimIncrement);
+			// TODO: Only update scene if player owner has changed
+			currentGame.markTerritory();
 		}
-		// this.player = player;
-		currentGame.markTerritory();
 	}
 });
 
@@ -248,6 +240,7 @@ const Player = (() => {
 			}));
 		},
 		checkEndTurn() {
+			console.log('Sam, checkEndTurn');
 			let isActiveUnit = this.activateNext();
 			if (!isActiveUnit) {
 				currentGame.endTurn();
@@ -269,22 +262,20 @@ const Player = (() => {
 			// Find and activate next unit
 			for (let i = activeUnit + 1; i < this.units.length; i++) {
 				if (!(this.units[i] instanceof Unit)) {
-					break;
+					continue;
 				}
 				if (this.units[i].moves > 0) {
 					this.activateUnit(i);
-					activeUnit = i;
 					return true;
 				}
 			}
 			// Check for unmove unit we skipped
 			for (let i = 0; i <= activeUnit; i++) {
 				if (!(this.units[i] instanceof Unit)) {
-					break;
+					continue;
 				}
 				if (this.units[i].moves > 0) {
 					this.activateUnit(i);
-					activeUnit = i;
 					return true;
 				}
 			}
@@ -537,14 +528,13 @@ Object.assign(Unit.prototype, {
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			this.sprite.setPosition(thisHex.x, thisHex.y).setDepth(depths.inactiveUnits);
 			this.moves -= this.base.movementCosts[thisHex.terrain.terrain];
-			if (this.moves > 0) {
-				this.player.activateUnit();
-			} else {
-				this.deactivate();
-			}
-			return;
-		}
-		switch (this.unitType) {
+		} else if (action === 'c') {
+			// Claim hex territory
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			if (thisHex.tile.player === this.player) return;
+			thisHex.tile.claimTerritory(this.player, 10);
+			this.moves--;
+		} else switch (this.unitType) {
 			case 'settler':
 				switch (action) {
 					// Build city
@@ -588,14 +578,10 @@ Object.assign(Unit.prototype, {
 				switch (action) {
 				}
 		}
-		// Claim hex territory
-		if (action === 'c') {
-			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			if (thisHex.tile.player === this.player) return;
-			thisHex.tile.claimTerritory(this.player, 10);
-			this.moves--;
+		if (this.moves > 0) {
+			this.player.activateUnit();
+		} else {
 			this.deactivate();
-			return;
 		}
 	},
 });
