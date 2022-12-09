@@ -485,7 +485,10 @@ Object.assign(Unit.prototype, {
 		currentGame.activeUnit = this;
 		this.scene.input.keyboard.enabled = true;
 	},
-	deactivate() {
+	deactivate(endMoves = false) {
+		if (endMoves === true) {
+			this.moves = 0;
+		}
 		hideActionSprites();
 		this.sprite.setDepth(depths.inactiveUnits);
 		currentGame.activeUnit = null;
@@ -500,8 +503,7 @@ Object.assign(Unit.prototype, {
 		}
 		// Stay here
 		if (action === ' ') {
-			this.moves = 0;
-			this.deactivate();
+			this.deactivate(true);
 			return;
 		}
 		// Move unit
