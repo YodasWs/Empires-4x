@@ -810,6 +810,9 @@ yodasws.page('pageGame').setRoute({
 }).on('load', () => {
 	const game = new Phaser.Game(Object.assign({}, config, {
 		parent: document.querySelector('main'),
+		dom: {
+			createContainer: true,
+		},
 	}));
 
 	game.scene.add('mainControls', {
