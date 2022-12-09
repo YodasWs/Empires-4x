@@ -150,8 +150,8 @@ const Tile = (() => {
 					prevPlayer = this.player.index;
 				}
 				this.claims(player, claimIncrement);
-				// TODO: Only update scene if player owner has changed
-				if (prevPlayer !== undefined && this.player instanceof Player && this.player.index !== prevPlayer) {
+				// Only update scene if player owner has changed
+				if (this.player instanceof Player && this.player.index !== prevPlayer) {
 					currentGame.markTerritory();
 				}
 			}
