@@ -78,56 +78,87 @@ const actionSprites = (() => {
 const depths = {
 	map: 0,
 	territoryLines: 1,
-	cities: 2,
-	inactiveUnits: 3,
+	overlay: 2,
+	cities: 3,
+	inactiveUnits: 4,
 	actionSprites: 98,
 	activeUnit: 100,
 };
 
-function Tile() {
-	let player = undefined;
-	const claims = new Map();
-	Object.defineProperties(this, {
-		claims: {
-			enumerable: true,
-			get: () => (lookupPlayer, claimIncrement) => {
-				if (lookupPlayer instanceof Player) {
-					if (Number.isInteger(claimIncrement)) {
-						claims.set(lookupPlayer, (claims.get(lookupPlayer) || 0) + claimIncrement);
+const Tile = (() => {
+	function Tile({
+		scene,
+		hex,
+	}) {
+		let player = undefined;
+		const claims = new Map();
+		let improvement = undefined;
+		Object.defineProperties(this, {
+			claims: {
+				enumerable: true,
+				get: () => (lookupPlayer, claimIncrement) => {
+					if (lookupPlayer instanceof Player) {
+						if (Number.isInteger(claimIncrement)) {
+							claims.set(lookupPlayer, (claims.get(lookupPlayer) || 0) + claimIncrement);
+						}
+						return claims.get(lookupPlayer) || 0;
 					}
-					return claims.get(lookupPlayer) || 0;
-				}
-				return claims;
+					return claims;
+				},
 			},
-		},
-		// TODO: Cache player
-		player: {
-			enumerable: true,
-			get: () => {
-				const topClaimant = {
-					player: null,
-					claim: 0,
-				};
-				claims.forEach((val, claimPlayer) => {
-					if (topClaimant.claim < val) {
-						topClaimant.player = claimPlayer;
-						topClaimant.claim = val;
+			// TODO: Cache player
+			player: {
+				enumerable: true,
+				get: () => {
+					const topClaimant = {
+						player: null,
+						claim: 0,
+					};
+					claims.forEach((val, claimPlayer) => {
+						if (topClaimant.claim < val) {
+							topClaimant.player = claimPlayer;
+							topClaimant.claim = val;
+						}
+					});
+					return topClaimant.player;
+				},
+			},
+			improvement: {
+				enumerable: true,
+				get: () => improvement || {},
+				set(val) {
+					console.log('Sam, improvement:', improvement);
+					if (Object.keys(json.world.improvements).includes(val)) {
+						improvement = {
+							...json.world.improvements[val],
+							key: val,
+						};
+						scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay);
+						console.log('Sam, improvement:', improvement);
+						return true;
 					}
-				});
-				return topClaimant.player;
+					return false;
+				},
 			},
-		},
-	});
-}
-Object.assign(Tile.prototype, {
-	claimTerritory(player, claimIncrement = 0) {
-		if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
-			this.claims(player, claimIncrement);
-			// TODO: Only update scene if player owner has changed
-			currentGame.markTerritory();
-		}
+		});
 	}
-});
+	Object.assign(Tile.prototype, {
+		claimTerritory(player, claimIncrement = 0) {
+			if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
+				let prevPlayer = undefined;
+				if (this.player instanceof Player) {
+					prevPlayer = this.player.index;
+				}
+				this.claims(player, claimIncrement);
+				// TODO: Only update scene if player owner has changed
+				if (prevPlayer !== undefined && this.player instanceof Player && this.player.index !== prevPlayer) {
+					currentGame.markTerritory();
+				}
+			}
+		}
+	});
+	return Tile;
+})();
 
 function City({
 	col,
@@ -536,49 +567,76 @@ Object.assign(Unit.prototype, {
 			if (thisHex.tile.player === this.player) return;
 			thisHex.tile.claimTerritory(this.player, 10);
 			this.moves--;
-		} else switch (this.unitType) {
-			case 'settler':
-				switch (action) {
-					// Build city
-					case 'b':
-						const thisHex = grid.getHex({ col: this.col, row: this.row });
-						// Do not build on water
-						if (thisHex.terrain.isWater) {
-							return;
-						}
-						// Make sure there is no city on this tile or an adjacent tile
-						if (grid.traverse(Honeycomb.spiral({
-							start: [ thisHex.q, thisHex.r ],
-							radius: 1,
-						})).filter((hex) => {
-							if (typeof hex.city === 'object' && hex.city !== null) {
-								return true;
-							}
-							return false;
-						}).size > 0) {
-							return;
-						}
+		} else {
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			switch (this.unitType) {
+				case 'settler':
+					switch (action) {
 						// Build city
-						const city = new City({
-							col: this.col,
-							row: this.row,
-							player: this.player,
-							scene: this.scene,
-						});
-						// Remove unit from game
-						const i = this.player.units.indexOf(this);
-						if (i >= 0) {
-							this.player.units.splice(i, 1);
-						}
-						this.deactivate();
-						this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-						delete this;
-						return;
-				}
-				break;
-			case 'worker':
-				switch (action) {
-				}
+						case 'b':
+							// Do not build on water
+							if (thisHex.terrain.isWater) {
+								return;
+							}
+							// Make sure there is no city on this tile or an adjacent tile
+							if (grid.traverse(Honeycomb.spiral({
+								start: [ thisHex.q, thisHex.r ],
+								radius: 1,
+							})).filter((hex) => {
+								if (typeof hex.city === 'object' && hex.city !== null) {
+									return true;
+								}
+								return false;
+							}).size > 0) {
+								// TODO: Warn player
+								console.warn('Cannot place city adjacent to another city');
+								return;
+							}
+							// Build city
+							const city = new City({
+								col: this.col,
+								row: this.row,
+								player: this.player,
+								scene: this.scene,
+							});
+							// Remove unit from game
+							const i = this.player.units.indexOf(this);
+							if (i >= 0) {
+								this.player.units.splice(i, 1);
+							}
+							this.deactivate();
+							this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+							delete this;
+							return;
+					}
+					break;
+				case 'worker':
+					switch (action) {
+						// Build farm
+						case 'f':
+							// Check valid terrain
+							if (![
+								'swamp',
+								'desert',
+								'grass',
+								'hill',
+							].includes(thisHex.terrain.terrain)) {
+								return;
+							}
+							// Cannot build in city
+							if (thisHex.city instanceof City) {
+								return;
+							}
+							// Cannot replace another farm
+							if (thisHex.tile.improvement.key === 'farm') {
+								return;
+							}
+							thisHex.tile.improvement = 'farm';
+							this.deactivate(true);
+							return;
+					}
+					break;
+			}
 		}
 		if (this.moves > 0) {
 			this.player.activateUnit();
@@ -649,6 +707,9 @@ const config = {
 				frameHeight: 200,
 				frameWidth: 200,
 			});
+			Object.entries(json.world.improvements).forEach(([key, improvement]) => {
+				this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
+			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			Object.entries(actionSprites).forEach(([action, sprite]) => {
@@ -664,7 +725,10 @@ const config = {
 			grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
-					tile: new Tile(),
+					tile: new Tile({
+						scene: this,
+						hex,
+					}),
 					terrain: {
 						...json.world.terrains[tile.terrain],
 						terrain: tile.terrain,
@@ -685,6 +749,9 @@ const config = {
 						scene: this,
 						player: currentGame.players[hex.city.player],
 					});
+				}
+				if (typeof hex.improvement === 'string') {
+					hex.tile.improvement = hex.improvement;
 				}
 			});
 

@@ -1,4 +1,10 @@
 {
+	"improvements": {
+		"farm": {
+			"food": 1,
+			"tile": "farm"
+		}
+	},
 	"terrains": {
 		"desert": {
 			"food": 0,
