@@ -210,8 +210,18 @@ Object.assign(City.prototype, {
 const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
+		let food = 0;
 		const units = [];
 		Object.defineProperties(this, {
+			food: {
+				enumerable: true,
+				get: () => food,
+				set(val) {
+					if (Number.isInteger(val) && val >= 0) {
+						food = val;
+					}
+				},
+			},
 			frame: {
 				enumerable: true,
 				get: () => index % 3,
@@ -331,6 +341,10 @@ const currentGame = {
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	startRound() {
+		// Reset count of economy
+		currentGame.players.forEach((player) => {
+			player.food = 0;
+		});
 		grid.forEach((hex) => {
 			// Adjust each player's claim on territory
 			currentGame.players.forEach((player) => {
@@ -340,6 +354,13 @@ const currentGame = {
 					hex.tile.claimTerritory(player, -1);
 				}
 			});
+			// Collect food
+			if (hex.tile.player instanceof Player) {
+				let food = 0;
+				food += hex.terrain.food || 0;
+				food += hex.tile.improvement.food || 0;
+				hex.tile.player.food += food;
+			}
 			// Check cities
 			if (hex.city instanceof City) {
 				const city = hex.city;
