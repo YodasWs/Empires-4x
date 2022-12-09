@@ -106,6 +106,9 @@ const Tile = (() => {
 					return claims;
 				},
 			},
+			hex: {
+				get: () => hex,
+			},
 			// TODO: Cache player
 			player: {
 				enumerable: true,
@@ -152,7 +155,7 @@ const Tile = (() => {
 				this.claims(player, claimIncrement);
 				// Only update scene if player owner has changed
 				if (this.player instanceof Player && this.player.index !== prevPlayer) {
-					currentGame.markTerritory();
+					currentGame.markTerritory(this.hex);
 				}
 			}
 		}
@@ -367,16 +370,15 @@ const currentGame = {
 		this.currentPlayer.units.forEach((unit) => {
 			unit.moves = unit.base.movementPoints;
 		});
-		this.markTerritory();
 		// Activate first unit
 		this.currentPlayer.activateUnit(0);
 	},
-	markTerritory() {
+	markTerritory(thisHex = null) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		const graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
-		grid.forEach((hex) => {
-			if (!hex.tile || !(hex.tile.player instanceof Player)) return;
+		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
+			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
 			graphics.lineStyle(5, hex.tile.player.color);
 			graphics.beginPath();
 			// Draw points closer to center of hex
