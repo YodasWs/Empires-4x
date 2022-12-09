@@ -147,11 +147,11 @@ function City({
 		hex.tile.claimTerritory(player, 100);
 	});
 	// Claim water territory
-	grid.traverse(Honeycomb.spiral({
-		start: [ thisHex.q, thisHex.r ],
+	grid.traverse(Honeycomb.ring({
+		center: [ thisHex.q, thisHex.r ],
 		radius: 2,
 	})).forEach((hex) => {
-		if (hex.terrain.isWater && !hex.tile.player) {
+		if (hex.terrain.isWater) {
 			hex.tile.claimTerritory(player, 50);
 		}
 	});
@@ -747,6 +747,7 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create() {
+			return;
 			console.log('Sam, mainControls created');
 			const graphics = this.add.graphics({ x: 0, y: 0 });
 			graphics.lineStyle(5, 0x0000ff);
@@ -778,6 +779,7 @@ yodasws.page('pageGame').setRoute({
 	});
 
 	setTimeout(() => {
+		return;
 		game.scene.pause('mainGameScene');
 		setTimeout(() => {
 			game.scene.switch('mainControls', 'city-view');
