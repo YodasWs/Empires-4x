@@ -131,12 +131,19 @@ const Tile = (() => {
 				get: () => improvement || {},
 				set(val) {
 					console.log('Sam, improvement:', improvement);
+					if (val === 'destroy') {
+						if (typeof improvement === 'object' && improvement.image instanceof Phaser.GameObjects.Image) {
+							improvement.image.destroy();
+						}
+						improvement = undefined;
+						return true;
+					}
 					if (Object.keys(json.world.improvements).includes(val)) {
 						improvement = {
 							...json.world.improvements[val],
+							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay),
 							key: val,
 						};
-						scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay);
 						console.log('Sam, improvement:', improvement);
 						return true;
 					}
@@ -171,6 +178,7 @@ function City({
 }) {
 	// Tie to hex
 	const thisHex = grid.getHex({ row, col });
+	thisHex.tile.improvement = 'destroy';
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
 	thisHex.city = this;
 	// Claim this tile and adjacent tiles
@@ -628,7 +636,7 @@ Object.assign(Unit.prototype, {
 								this.player.units.splice(i, 1);
 							}
 							this.deactivate();
-							this.sprite.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+							this.sprite.destroy();
 							delete this;
 							return;
 					}
