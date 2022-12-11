@@ -665,6 +665,13 @@ Object.assign(Unit.prototype, {
 							thisHex.tile.improvement = 'farm';
 							this.deactivate(true);
 							return;
+						// Clear Improvement or Overlay
+						case 'C':
+							if (thisHex.tile.improvement.key === 'farm') {
+								thisHex.tile.improvement = 'destroy';
+								this.deactivate(true);
+								return;
+							}
 					}
 					break;
 			}
@@ -812,7 +819,7 @@ const config = {
 				].includes(evt.key)) {
 					return;
 				}
-				if (evt.ctrlKey && evt.shiftKey && evt.key === 'i') return;
+				if (evt.ctrlKey && evt.key === 'I') return;
 				evt.preventDefault();
 				doAction(evt);
 			}).enabled = false;
