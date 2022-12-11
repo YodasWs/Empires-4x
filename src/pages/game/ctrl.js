@@ -139,11 +139,11 @@ const Tile = (() => {
 						return true;
 					}
 					if (Object.keys(json.world.improvements).includes(val)) {
-						improvement = {
-							...json.world.improvements[val],
-							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay),
-							key: val,
-						};
+						improvement = Object.assign({}, json.world.improvements[val],
+							{
+								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay),
+								key: val,
+							});
 						console.log('Sam, improvement:', improvement);
 						return true;
 					}
