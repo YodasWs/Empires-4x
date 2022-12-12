@@ -1,6 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
-const offscreen = window.visualViewport.width * -2;
+const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
 const grid = new Honeycomb.Grid(Honeycomb.defineHex({
 	dimensions: tileWidth / 2,
@@ -8,79 +8,13 @@ const grid = new Honeycomb.Grid(Honeycomb.defineHex({
 	origin: 'topLeft',
 }), Honeycomb.rectangle({ width: 15, height: 6 }));
 
-const actionSprites = (() => {
-	const deltaX = tileWidth * (Math.sqrt(3) - 1);
-	const deltaY = tileWidth * (2 * Math.sqrt(2) - 2);
-	const halfTile = tileWidth / 2;
-	const polygonPoints = [
-		{ x: -2, y: 0 },
-		{ x: -1, y: 0 - Math.sqrt(3) },
-		{ x: 1, y: 0 - Math.sqrt(3) },
-		{ x: 2, y: 0 },
-		{ x: 1, y: Math.sqrt(3) },
-		{ x: -1, y: Math.sqrt(3) },
-	].map((point) => ({
-		x: point.x * tileWidth / 4 + 150,
-		y: point.y * tileWidth / 4 + 150,
-	}));
-	return {
-		moveU: {
-			src: 'img/actions/moveU.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x - deltaX,
-				y: point.y - deltaY / 2,
-			})),
-			key: 'u',
-		},
-		moveI: {
-			src: 'img/actions/moveI.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x,
-				y: point.y - deltaY,
-			})),
-			key: 'i',
-		},
-		moveO: {
-			src: 'img/actions/moveO.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x + deltaX,
-				y: point.y - deltaY / 2,
-			})),
-			key: 'o',
-		},
-		moveJ: {
-			src: 'img/actions/moveJ.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x - deltaX,
-				y: point.y + deltaY / 2,
-			})),
-			key: 'j',
-		},
-		moveK: {
-			src: 'img/actions/moveK.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x,
-				y: point.y + deltaY,
-			})),
-			key: 'k',
-		},
-		moveL: {
-			src: 'img/actions/moveL.png',
-			polygon: polygonPoints.map((point) => ({
-				x: point.x + deltaX,
-				y: point.y + deltaY / 2,
-			})),
-			key: 'l',
-		},
-	};
-})();
-
 const depths = {
-	map: 0,
-	territoryLines: 1,
-	overlay: 2,
-	cities: 3,
-	inactiveUnits: 4,
+	offscreen: 0,
+	map: 1,
+	territoryLines: 2,
+	overlay: 3,
+	cities: 4,
+	inactiveUnits: 5,
 	actionSprites: 98,
 	activeUnit: 100,
 };
@@ -405,7 +339,7 @@ const currentGame = {
 	markTerritory(thisHex = null) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
-		const graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines);
+		const graphics = currentGame.graphics.territoryLines;
 		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
 			graphics.lineStyle(5, hex.tile.player.color);
@@ -480,10 +414,11 @@ function actionTileCoordinates(action, row, col) {
 }
 
 function hideActionSprites() {
-	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-	Object.entries(actionSprites).forEach(([action, sprite]) => {
-		sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
-	});
+	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.offscreen);
+	actionOutlines.graphics.destroy();
+	while (actionOutlines.text.length > 0) {
+		actionOutlines.text.pop().destroy();
+	}
 }
 
 function Unit(unitType, {
@@ -530,20 +465,53 @@ function Unit(unitType, {
 		},
 	});
 }
+const actionOutlines = {
+	text: [],
+};
 Object.assign(Unit.prototype, {
 	activate() {
-		const { x, y } = grid.getHex({ row: this.row, col: this.col });
-		this.scene.cameras.main.centerOn(x, y);
+		const thisHex = grid.getHex({ row: this.row, col: this.col });
+		this.scene.cameras.main.centerOn(thisHex.x, thisHex.y);
 		this.sprite.setDepth(depths.activeUnit);
-		currentGame.sprActiveUnit.setActive(true).setPosition(x, y).setDepth(depths.activeUnit - 1);
-		Object.entries(actionSprites).forEach(([action, sprite]) => {
-			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			if (isLegalMove(this, row, col)) {
-				sprite.img.setActive(true).setPosition(x, y).setDepth(depths.actionSprites);
-			} else {
-				sprite.img.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.map);
+		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
+
+		actionOutlines.graphics = currentGame.scenes.getScene( 'mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines + 1);
+		const graphics = actionOutlines.graphics;
+		const moves = [
+			'L',
+			'K',
+			'J',
+			'U',
+			'I',
+			'O',
+		];
+
+		// Set text and listeners on hexes to move unit
+		grid.traverse(Honeycomb.ring({
+			center: [ thisHex.q, thisHex.r ],
+			radius: 1,
+		})).forEach((hex) => {
+			const key = moves.shift();
+			if (isLegalMove(this, hex.row, hex.col)) {
+				hex.sprite.once('pointerdown', () => doAction({
+					key: key.substring(0, 1).toLowerCase(),
+				}));
+				actionOutlines.text.push(currentGame.scenes.getScene( 'mainGameScene').add.text(
+					hex.x - tileWidth / 2,
+					hex.y + tileWidth / 6,
+					key,
+					{
+						fixedWidth: tileWidth,
+						font: '25pt Trebuchet MS',
+						align: 'center',
+						color: 'khaki',
+						stroke: 'black',
+						strokeThickness: 7,
+					}
+				).setOrigin(0).setDepth(depths.actionSprites));
 			}
 		});
+
 		currentGame.activeUnit = this;
 		this.scene.input.keyboard.enabled = true;
 	},
@@ -551,6 +519,12 @@ Object.assign(Unit.prototype, {
 		if (endMoves === true) {
 			this.moves = 0;
 		}
+		grid.traverse(Honeycomb.ring({
+			center: [ this.hex.q, this.hex.r ],
+			radius: 1,
+		})).forEach((hex) => {
+			hex.sprite.removeAllListeners();
+		});
 		hideActionSprites();
 		this.sprite.setDepth(depths.inactiveUnits);
 		currentGame.activeUnit = null;
@@ -600,6 +574,7 @@ Object.assign(Unit.prototype, {
 			this.moves--;
 		} else {
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
+			// Unit-specific actions
 			switch (this.unitType) {
 				case 'settler':
 					switch (action) {
@@ -693,7 +668,7 @@ function doAction(evt) {
 		return false;
 	}
 	// No active unit, leave
-	if (typeof currentGame.activeUnit !== 'object' || currentGame.activeUnit === null) {
+	if (!(currentGame.activeUnit instanceof Unit)) {
 		return false;
 	}
 	currentGame.activeUnit.doAction(evt.key);
@@ -702,7 +677,7 @@ function doAction(evt) {
 function isLegalMove(unit, row, col) {
 	// Grab Target Tile
 	const target = grid.getHex({ row, col });
-	if (target === undefined) return false;
+	if (!(target instanceof Honeycomb.Hex)) return false;
 	// console.log('Sam, isLegalMove, target:', target);
 
 	// TODO: Check move into City
@@ -750,15 +725,17 @@ const config = {
 			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
-			Object.entries(actionSprites).forEach(([action, sprite]) => {
-				this.load.image(action, sprite.src);
-			});
 			// Load Unit Images
 			Object.keys(json.world.units).forEach((unit) => {
 				this.load.image(`unit.${unit}`, `img/units/${unit}.png`);
 			});
 		},
 		create() {
+			// Add graphics objects
+			currentGame.graphics = {
+				territoryLines: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines),
+			};
+
 			// Build World from Honeycomb Grid
 			grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
@@ -771,7 +748,10 @@ const config = {
 						...json.world.terrains[tile.terrain],
 						terrain: tile.terrain,
 					},
-					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map),
+					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map).setInteractive(
+						new Phaser.Geom.Polygon(grid.getHex({ row: 0, col: 0}).corners),
+						Phaser.Geom.Polygon.Contains
+					),
 					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
 						fixedWidth: tileWidth,
 						font: '12pt Trebuchet MS',
@@ -795,15 +775,6 @@ const config = {
 
 			// Add Game Sprites and Images
 			currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
-			Object.entries(actionSprites).forEach(([action, sprite]) => {
-				sprite.img = this.add.image(offscreen, offscreen, action).setInteractive(
-					new Phaser.Geom.Polygon(sprite.polygon),
-					Phaser.Geom.Polygon.Contains
-				).on('pointerdown', () => {
-					console.log('Sam, pointerdown on', action);
-					doAction({ key: action });
-				}).setActive(false);
-			});
 
 			// TODO: Build Starting Players and Units
 			currentGame.players[0].addUnit('settler', 2, 3, this);
