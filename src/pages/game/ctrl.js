@@ -493,9 +493,6 @@ Object.assign(Unit.prototype, {
 		})).forEach((hex) => {
 			const key = moves.shift();
 			if (isLegalMove(this, hex.row, hex.col)) {
-				hex.sprite.once('pointerdown', () => doAction({
-					key: key.substring(0, 1).toLowerCase(),
-				}));
 				actionOutlines.text.push(currentGame.scenes.getScene( 'mainGameScene').add.text(
 					hex.x - tileWidth / 2,
 					hex.y + tileWidth / 6,
@@ -519,12 +516,6 @@ Object.assign(Unit.prototype, {
 		if (endMoves === true) {
 			this.moves = 0;
 		}
-		grid.traverse(Honeycomb.ring({
-			center: [ this.hex.q, this.hex.r ],
-			radius: 1,
-		})).forEach((hex) => {
-			hex.sprite.removeAllListeners();
-		});
 		hideActionSprites();
 		this.sprite.setDepth(depths.inactiveUnits);
 		currentGame.activeUnit = null;
@@ -558,15 +549,10 @@ Object.assign(Unit.prototype, {
 			'l',
 		].includes(action)) {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			if (!isLegalMove(this, row, col)) {
-				return;
-			}
-			this.row = row;
-			this.col = col;
-			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			this.sprite.setPosition(thisHex.x, thisHex.y).setDepth(depths.inactiveUnits);
-			this.moves -= this.base.movementCosts[thisHex.terrain.terrain];
-		} else if (action === 'c') {
+			this.moveTo(grid.getHex({ row, col }));
+			return;
+		}
+		if (action === 'c') {
 			// Claim hex territory
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			if (thisHex.tile.player === this.player) return;
@@ -651,6 +637,19 @@ Object.assign(Unit.prototype, {
 					break;
 			}
 		}
+		if (this.moves > 0) {
+			this.player.activateUnit();
+		} else {
+			this.deactivate();
+		}
+	},
+	moveTo(hex) {
+		if (!(hex instanceof Honeycomb.Hex)) return;
+		if (!isLegalMove(this, hex.row, hex.col)) return;
+		this.row = hex.row;
+		this.col = hex.col;
+		this.sprite.setPosition(hex.x, hex.y).setDepth(depths.inactiveUnits);
+		this.moves -= this.base.movementCosts[hex.terrain.terrain];
 		if (this.moves > 0) {
 			this.player.activateUnit();
 		} else {
@@ -775,6 +774,18 @@ const config = {
 
 			// Add Game Sprites and Images
 			currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
+			this.input.on('pointerdown', (evt) => {
+				const hex = grid.pointToHex({
+					x: evt.worldX,
+					y: evt.worldY,
+				});
+				if (currentGame.activeUnit instanceof Unit) {
+					if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
+						// TODO: Offer to move unit here
+						currentGame.activeUnit.moveTo(hex);
+					}
+				}
+			});
 
 			// TODO: Build Starting Players and Units
 			currentGame.players[0].addUnit('settler', 2, 3, this);
