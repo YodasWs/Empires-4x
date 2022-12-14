@@ -434,7 +434,7 @@ function Unit(unitType, {
 	}
 	// Add sprite
 	const { x, y } = grid.getHex({ row, col });
-	const sprite = scene.add.sprite(x, y, `unit.${unitType}`);
+	const sprite = scene.add.sprite(x, y, `unit.${unitType}`).setDepth(depths.inactiveUnits);
 	// Define properties
 	this.col = col;
 	this.row = row;
@@ -474,6 +474,12 @@ Object.assign(Unit.prototype, {
 		this.scene.cameras.main.centerOn(thisHex.x, thisHex.y);
 		this.sprite.setDepth(depths.activeUnit);
 		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
+
+		// Not the human player's unit
+		if (this.player.index !== 0) {
+			this.deactivate(true);
+			return;
+		}
 
 		actionOutlines.graphics = currentGame.scenes.getScene( 'mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines + 1);
 		const graphics = actionOutlines.graphics;
@@ -791,6 +797,7 @@ const config = {
 			currentGame.players[0].addUnit('settler', 2, 3, this);
 			currentGame.players[0].addUnit('warrior', 2, 3, this);
 			currentGame.players[0].addUnit('worker', 2, 3, this);
+			currentGame.players[2].addUnit('warrior', 2, 8, this);
 			console.log('Sam, players:', currentGame.players);
 			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
