@@ -445,7 +445,7 @@ function Unit(unitType, {
 		},
 		hex: {
 			enumerable: true,
-			get: () => grid.getHex({ row, col }),
+			get: () => grid.getHex({ row: this.row, col: this.col }),
 		},
 		player: {
 			enumerable: true,
@@ -785,12 +785,48 @@ const config = {
 					x: evt.worldX,
 					y: evt.worldY,
 				});
-				if (currentGame.activeUnit instanceof Unit) {
-					if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
-						// TODO: Offer to move unit here
-						currentGame.activeUnit.moveTo(hex);
-					}
+				// List possible actions on the hex to build menu
+				const possibleActions = [];
+
+				if (currentGame.activeUnit instanceof Unit && isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
+					// TODO: Offer to move unit here
+					possibleActions.push('moveTo');
 				}
+
+				if (hex.city instanceof City) {
+					console.log('Sam, tapped on city');
+					possibleActions.push('city');
+				}
+
+				// If only one action, do it
+				if (possibleActions.length === 1) switch (possibleActions[0]) {
+					case 'moveTo':
+						// Automatically move to adjacent hex
+						if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
+							currentGame.activeUnit.moveTo(hex);
+							return;
+						}
+						break;
+					case 'city':
+						console.log('Sam, only action is city-view');
+						currentGame.scenes.start('city-view', {
+							hex,
+						});
+						return;
+				}
+
+				// Sam, temporarily force show city-view scene
+				if (possibleActions.includes('city')) {
+					console.log('Sam, force show city-view');
+					currentGame.scenes.start('city-view', {
+						hex,
+					});
+					return;
+				}
+
+				// TODO: Show menu with action options
+				possibleActions.forEach((action) => {
+				});
 			});
 
 			// TODO: Build Starting Players and Units
@@ -817,6 +853,7 @@ const config = {
 
 			this.events.on('pause', () => {
 				console.log('Sam, mainGameScene paused');
+				currentGame.scenes.sleep('mainControls');
 				hideActionSprites();
 			});
 			this.events.on('resume', () => {
@@ -871,7 +908,48 @@ yodasws.page('pageGame').setRoute({
 	game.scene.add('city-view', {
 		preload() {
 		},
-		create() {
+		create(data) {
+			if (!(data.hex instanceof Honeycomb.Hex) || !(data.hex.tile instanceof Tile)) {
+				game.scene.resume('mainGameScene');
+				return;
+			}
+			console.log('Sam, city-view created');
+			game.scene.pause('mainGameScene');
+
+			// Start building graphics scene
+			const graphics = this.add.graphics({ x: 0, y: 0 });
+			graphics.fillStyle(0x000000, 0.5);
+			graphics.fillRect(0, 0, config.width, config.height);
+
+			// Important constants for translating city tiles locations
+			const [offsetX, offsetY] = [data.hex.x, data.hex.y];
+			const tileScale = 1.5;
+			const center = {
+				x: config.width / 2,
+				y: config.height / 3,
+			};
+
+			// Grab city hexes
+			grid.traverse(Honeycomb.spiral({
+				start: [ data.hex.q, data.hex.r ],
+				radius: 2,
+			})).forEach((hex) => {
+				// TODO: Display city hexes
+				if (!(hex.player instanceof Player) || hex.player.index !== 0) {
+					return;
+				}
+				const [x, y] = [
+					(hex.x - offsetX) * tileScale + center.x,
+					(hex.y - offsetY) * tileScale + center.y,
+				];
+				const img = this.add.image(x, y, `tile.${hex.terrain.terrain}`);
+				img.scale = tileScale;
+			});
+
+			this.events.on('sleep', () => {
+				console.log('Sam, city-view sleep');
+				game.scene.wake('mainGameScene');
+			});
 		},
 		update() {
 		},
@@ -881,7 +959,7 @@ yodasws.page('pageGame').setRoute({
 		return;
 		game.scene.pause('mainGameScene');
 		setTimeout(() => {
-			game.scene.switch('mainControls', 'city-view');
+			game.scene.start('city-view');
 			setTimeout(() => {
 				game.scene.resume('mainGameScene');
 			}, 1000);
