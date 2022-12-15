@@ -923,7 +923,11 @@ yodasws.page('pageGame').setRoute({
 
 			// Important constants for translating city tiles locations
 			const [offsetX, offsetY] = [data.hex.x, data.hex.y];
-			const tileScale = 1.5;
+			// TODO: Need to either make sure tiles fit in screen or that user can pan camera
+			const tileScale = {
+				x: 1.5,
+				y: 1.0,
+			};
 			const center = {
 				x: config.width / 2,
 				y: config.height / 3,
@@ -934,16 +938,10 @@ yodasws.page('pageGame').setRoute({
 				start: [ data.hex.q, data.hex.r ],
 				radius: 2,
 			})).forEach((hex) => {
-				// TODO: Display city hexes
-				if (!(hex.player instanceof Player) || hex.player.index !== 0) {
-					return;
-				}
-				const [x, y] = [
-					(hex.x - offsetX) * tileScale + center.x,
-					(hex.y - offsetY) * tileScale + center.y,
-				];
-				const img = this.add.image(x, y, `tile.${hex.terrain.terrain}`);
-				img.scale = tileScale;
+				// Display city hexes
+				const img = this.add.image((hex.x - offsetX) * tileScale.x + center.x, (hex.y - offsetY) * tileScale.y + center.y, `tile.${hex.terrain.terrain}`);
+				img.scaleX = tileScale.x;
+				img.scaleY = tileScale.y;
 			});
 
 			this.events.on('sleep', () => {
