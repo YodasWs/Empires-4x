@@ -860,6 +860,10 @@ const config = {
 				console.log('Sam, mainGameScene resumed');
 				currentGame.scenes.wake('mainControls');
 				currentGame.currentPlayer.activateUnit();
+			}).on('wake', () => {
+				console.log('Sam, mainGameScene woken');
+				currentGame.scenes.wake('mainControls');
+				currentGame.currentPlayer.activateUnit();
 			});
 		},
 		update() {
@@ -921,6 +925,21 @@ yodasws.page('pageGame').setRoute({
 			graphics.fillStyle(0x000000, 0.5);
 			graphics.fillRect(0, 0, config.width, config.height);
 
+			// Close button
+			graphics.fillStyle(0x000000, 1);
+			graphics.fillRect(config.width - 100, 0, 100, 100);
+			this.add.text(0, 0, '× ', {
+				fixedWidth: config.width,
+				font: '60pt Trebuchet MS',
+				align: 'right',
+				color: 'white',
+				stroke: 'black',
+				strokeThickness: 7,
+			}).setInteractive().on('pointerdown', () => {
+				console.log('Sam, pointerdown');
+				game.scene.stop('city-view');
+			});
+
 			// Important constants for translating city tiles locations
 			const [offsetX, offsetY] = [data.hex.x, data.hex.y];
 			// TODO: Need to either make sure tiles fit in screen or that user can pan camera
@@ -944,8 +963,19 @@ yodasws.page('pageGame').setRoute({
 				img.scaleY = tileScale.y;
 			});
 
+			// Set event listeners
+			this.input.keyboard.enabled = true;
+			this.input.keyboard.on('keydown', (evt) => {
+				if (evt.key === 'Escape') {
+					game.scene.stop('city-view');
+				}
+			});
+
 			this.events.on('sleep', () => {
 				console.log('Sam, city-view sleep');
+				game.scene.wake('mainGameScene');
+			}).on('shutdown', () => {
+				console.log('Sam, city-view shutdown');
 				game.scene.wake('mainGameScene');
 			});
 		},
