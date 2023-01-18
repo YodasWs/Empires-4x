@@ -135,7 +135,7 @@ function City({
 	Object.defineProperties(this, {
 		hex: {
 			enumerable: true,
-			get: () => grid.getHex({ row, col }),
+			get: () => thisHex,
 		},
 		player: {
 			enumerable: true,
@@ -336,22 +336,26 @@ const currentGame = {
 		// Activate first unit
 		this.currentPlayer.activateUnit(0);
 	},
-	markTerritory(thisHex = null) {
+	markTerritory(thisHex = null, options = {
+		graphics: currentGame.graphics.territoryLines,
+		lineShift: 0.97,
+		offsetX: 0,
+		offsetY: 0,
+	}) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
-		const graphics = currentGame.graphics.territoryLines;
 		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
-			graphics.lineStyle(5, hex.tile.player.color);
-			graphics.beginPath();
+			options.graphics.lineStyle(5, hex.tile.player.color);
+			options.graphics.beginPath();
 			// Draw points closer to center of hex
-			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, 0.97));
-			graphics.moveTo(firstCorner.x, firstCorner.y);
+			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, options.lineShift));
+			options.graphics.moveTo(firstCorner.x + options.offsetX, firstCorner.y + options.offsetY);
 			otherCorners.forEach(({x, y}) => {
-				graphics.lineTo(x, y);
+				options.graphics.lineTo(x + options.offsetX, y + options.offsetY);
 			});
-			graphics.closePath();
-			graphics.strokePath();
+			options.graphics.closePath();
+			options.graphics.strokePath();
 		});
 	},
 	endTurn() {
@@ -921,9 +925,13 @@ yodasws.page('pageGame').setRoute({
 			game.scene.pause('mainGameScene');
 
 			// Start building graphics scene
-			const graphics = this.add.graphics({ x: 0, y: 0 });
-			graphics.fillStyle(0x000000, 0.5);
-			graphics.fillRect(0, 0, config.width, config.height);
+			{
+				// Lay black background
+				const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
+				graphics.fillStyle(0x000000, 0.5);
+				graphics.fillRect(0, 0, config.width, config.height);
+			}
+			const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
 
 			// Close button
 			graphics.fillStyle(0x000000, 1);
@@ -935,7 +943,7 @@ yodasws.page('pageGame').setRoute({
 				color: 'white',
 				stroke: 'black',
 				strokeThickness: 7,
-			}).setInteractive().on('pointerdown', () => {
+			}).setDepth(2).setInteractive().on('pointerdown', () => {
 				console.log('Sam, pointerdown');
 				game.scene.stop('city-view');
 			});
@@ -943,10 +951,8 @@ yodasws.page('pageGame').setRoute({
 			// Important constants for translating city tiles locations
 			const [offsetX, offsetY] = [data.hex.x, data.hex.y];
 			// TODO: Need to either make sure tiles fit in screen or that user can pan camera
-			const tileScale = {
-				x: 1.5,
-				y: 1.0,
-			};
+
+			const tileScale = Math.min(config.height, config.width) / 7 / tileWidth;
 			const center = {
 				x: config.width / 2,
 				y: config.height / 3,
@@ -958,9 +964,15 @@ yodasws.page('pageGame').setRoute({
 				radius: 2,
 			})).forEach((hex) => {
 				// Display city hexes
-				const img = this.add.image((hex.x - offsetX) * tileScale.x + center.x, (hex.y - offsetY) * tileScale.y + center.y, `tile.${hex.terrain.terrain}`);
-				img.scaleX = tileScale.x;
-				img.scaleY = tileScale.y;
+				const img = this.add.image((hex.x - offsetX) * tileScale + center.x, (hex.y - offsetY) * tileScale + center.y, `tile.${hex.terrain.terrain}`).setDepth(1);
+				img.scaleX = tileScale;
+				img.scaleY = tileScale;
+				currentGame.markTerritory(hex, {
+					offsetX: 0 - hex.x + center.x + (hex.x - offsetX) * tileScale,
+					offsetY: 0 - hex.y + center.y + (hex.y - offsetY) * tileScale,
+					graphics: graphics.setDepth(2),
+					lineShift: 1.1,
+				});
 			});
 
 			// Set event listeners
