@@ -946,13 +946,18 @@ yodasws.page('pageGame').setRoute({
 				y: config.height / 3,
 			};
 
-			// Grab city hexes
+			// Grab and render city hexes
 			grid.traverse(Honeycomb.spiral({
 				start: [ data.hex.q, data.hex.r ],
 				radius: 2,
 			})).forEach((hex) => {
 				// Display city hexes
-				const img = this.add.image((hex.x - offsetX) * tileScale + center.x, (hex.y - offsetY) * tileScale + center.y, `tile.${hex.terrain.terrain}`).setDepth(1);
+				// TODO: Basic rendering each hex should be done in one function and then called here and by the global world map. Only further tile details not shown on world map should be added here
+				const tileCenter = {
+					x: (hex.x - offsetX) * tileScale + center.x,
+					y: (hex.y - offsetY) * tileScale + center.y,
+				};
+				const img = this.add.image(tileCenter.x, tileCenter.y, `tile.${hex.terrain.terrain}`).setDepth(1);
 				img.scaleX = tileScale;
 				img.scaleY = tileScale;
 				currentGame.markTerritory(hex, {
@@ -961,6 +966,21 @@ yodasws.page('pageGame').setRoute({
 					graphics: graphics.setDepth(2),
 					lineShift: 1.1,
 				});
+				// TODO: Show food production on tiles
+				const fixedWidth = tileWidth * tileScale;
+				this.add.text(
+					tileCenter.x - fixedWidth / 2,
+					tileCenter.y + fixedWidth / 4,
+					`Food: ${(hex.terrain.food || 0) + (hex.tile.improvement.food || 0)}`,
+					{
+						font: '14pt Trebuchet MS',
+						align: 'center',
+						color: 'white',
+						stroke: 'black',
+						strokeThickness: 7,
+						fixedWidth,
+					}
+				).setDepth(3);
 			});
 
 			// Set event listeners
