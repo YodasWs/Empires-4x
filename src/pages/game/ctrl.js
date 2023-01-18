@@ -385,30 +385,24 @@ function lineShift(point1, point2, t = 0.9) {
 
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
-	case 'moveU':
 	case 'u':
 		if (col % 2 == 0) row--;
 		col--;
 		break;
-	case 'moveI':
 	case 'i':
 		row--;
 		break;
-	case 'moveO':
 	case 'o':
 		if (col % 2 == 0) row--;
 		col++;
 		break;
-	case 'moveJ':
 	case 'j':
 		if (col % 2 == 1) row++;
 		col--;
 		break;
-	case 'moveK':
 	case 'k':
 		row++;
 		break;
-	case 'moveL':
 	case 'l':
 		if (col % 2 == 1) row++;
 		col++;
@@ -501,6 +495,7 @@ Object.assign(Unit.prototype, {
 			center: [ thisHex.q, thisHex.r ],
 			radius: 1,
 		})).forEach((hex) => {
+			// TODO: BUG! Need to mark the correct key for the hex, not the one in order from the array
 			const key = moves.shift();
 			if (isLegalMove(this, hex.row, hex.col)) {
 				actionOutlines.text.push(currentGame.scenes.getScene( 'mainGameScene').add.text(
@@ -532,7 +527,7 @@ Object.assign(Unit.prototype, {
 		this.scene.input.keyboard.enabled = false;
 		currentGame.currentPlayer.checkEndTurn();
 	},
-	doAction(action) {
+	doAction(action, hex = null) {
 		// Wait, to do action later in turn
 		if (action === 'w' || action === 'Tab') {
 			this.deactivate();
@@ -544,28 +539,25 @@ Object.assign(Unit.prototype, {
 			return;
 		}
 		// Move unit
-		if ([
-			'moveU',
+		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
+			this.moveTo(hex);
+		} else if ([
 			'u',
-			'moveI',
 			'i',
-			'moveO',
 			'o',
-			'moveJ',
 			'j',
-			'moveK',
 			'k',
-			'moveL',
 			'l',
 		].includes(action)) {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			this.moveTo(grid.getHex({ row, col }));
-			return;
-		}
-		if (action === 'c') {
+		} else if (action === 'c') {
 			// Claim hex territory
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			if (thisHex.tile.player === this.player) return;
+			if (thisHex.tile.player === this.player) {
+				// TODO: Show message to Player that territory already belongs to them!
+				return;
+			}
 			thisHex.tile.claimTerritory(this.player, 10);
 			this.moves--;
 		} else {
@@ -656,15 +648,11 @@ Object.assign(Unit.prototype, {
 	moveTo(hex) {
 		if (!(hex instanceof Honeycomb.Hex)) return;
 		if (!isLegalMove(this, hex.row, hex.col)) return;
+		hideActionSprites();
 		this.row = hex.row;
 		this.col = hex.col;
 		this.sprite.setPosition(hex.x, hex.y).setDepth(depths.inactiveUnits);
 		this.moves -= this.base.movementCosts[hex.terrain.terrain];
-		if (this.moves > 0) {
-			this.player.activateUnit();
-		} else {
-			this.deactivate();
-		}
 	},
 });
 
@@ -807,7 +795,7 @@ const config = {
 					case 'moveTo':
 						// Automatically move to adjacent hex
 						if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
-							currentGame.activeUnit.moveTo(hex);
+							currentGame.activeUnit.doAction('moveTo', hex);
 							return;
 						}
 						break;
