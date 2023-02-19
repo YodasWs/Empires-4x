@@ -284,12 +284,12 @@ const currentGame = {
 	sprActiveUnit: null,
 	startRound() {
 		// Reset count of economy
-		currentGame.players.forEach((player) => {
+		this.players.forEach((player) => {
 			player.food = 0;
 		});
 		grid.forEach((hex) => {
 			// Adjust each player's claim on territory
-			currentGame.players.forEach((player) => {
+			this.players.forEach((player) => {
 				if (hex.tile.player === player) {
 					hex.tile.claimTerritory(player, 1);
 				} else if (hex.tile.claims(player) > 0) {
@@ -337,7 +337,7 @@ const currentGame = {
 		this.currentPlayer.activateUnit(0);
 	},
 	markTerritory(thisHex = null, options = {
-		graphics: currentGame.graphics.territoryLines,
+		graphics: this.graphics.territoryLines,
 		lineShift: 0.97,
 		offsetX: 0,
 		offsetY: 0,
@@ -370,6 +370,9 @@ const currentGame = {
 	endRound() {
 		console.log('Sam, endRound!');
 		this.startRound();
+	},
+	closeUnitActionMenu() {
+		this.domContainer.innerHTML = '';
 	},
 };
 
@@ -528,6 +531,7 @@ Object.assign(Unit.prototype, {
 		currentGame.currentPlayer.checkEndTurn();
 	},
 	doAction(action, hex = null) {
+		currentGame.closeUnitActionMenu();
 		// Wait, to do action later in turn
 		if (action === 'w' || action === 'Tab') {
 			this.deactivate();
@@ -656,11 +660,26 @@ Object.assign(Unit.prototype, {
 	},
 });
 
+// TODO: This object should define every action and handle all of each action's programming
+// Object to convert action code to User-facing content
+const actionMenuText = {
+	moveTo: ({ hex }) => `Move to ${hex.row}×${hex.col}`,
+	city: () => 'View city',
+	b: () => '<u>B</u>uild city',
+	c: () => '<u>C</u>laim territory',
+	C: () => 'Clear land <kbd>Shift+C</kbd>',
+	f: () => 'Build <u>f</u>arm',
+	w: () => '<u>W</u>ait',
+	' ': () => 'Hold <kbd>Space</kbd>',
+	'': () => 'Cancel',
+};
+
 function doAction(evt) {
 	// Not the player's turn, leave
 	if (currentGame.currentPlayer !== currentGame.players[0]) {
 		return false;
 	}
+	// Repeating keyboard/pointer action, ignore
 	if (evt.repeat) {
 		return false;
 	}
@@ -780,14 +799,33 @@ const config = {
 				// List possible actions on the hex to build menu
 				const possibleActions = [];
 
-				if (currentGame.activeUnit instanceof Unit && isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
-					// TODO: Offer to move unit here
-					possibleActions.push('moveTo');
+				if (currentGame.activeUnit instanceof Unit) {
+					console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
+					if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
+						switch (currentGame.activeUnit.unitType) {
+							case 'settler':
+								possibleActions.push('b');
+								break;
+							case 'worker':
+								possibleActions.push('f', 'C');
+								break;
+						}
+						possibleActions.push('c');
+					} else if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
+						// Offer to move unit here
+						possibleActions.push('moveTo');
+					}
 				}
 
 				if (hex.city instanceof City) {
 					console.log('Sam, tapped on city');
 					possibleActions.push('city');
+				}
+
+				// No actions, do nothing
+				if (possibleActions.length === 0) {
+					currentGame.closeUnitActionMenu();
+					return;
 				}
 
 				// If only one action, do it
@@ -807,18 +845,28 @@ const config = {
 						return;
 				}
 
-				// Sam, temporarily force show city-view scene
-				if (possibleActions.includes('city')) {
-					console.log('Sam, force show city-view');
-					currentGame.scenes.start('city-view', {
+				// Show menu with action options
+				this.game.domContainer.innerHTML = '';
+				const div = document.createElement('div');
+				div.classList.add('menu');
+				possibleActions.concat([
+					'w',
+					' ',
+					'',
+				]).forEach((action) => {
+					const button = document.createElement('button');
+					button.innerHTML = actionMenuText[action]({
 						hex,
 					});
-					return;
-				}
-
-				// TODO: Show menu with action options
-				possibleActions.forEach((action) => {
+					button.addEventListener('click', () => {
+						currentGame.activeUnit.doAction(action, hex);
+					});
+					button.style.pointerEvents = 'auto';
+					div.appendChild(button);
 				});
+				div.style.pointerEvents = 'auto';
+				this.game.domContainer.appendChild(div);
+				this.game.domContainer.style.zIndex = 1;
 			});
 
 			// TODO: Build Starting Players and Units
@@ -831,11 +879,13 @@ const config = {
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
+				// Ctrl+R, reload; Ctrl+1, change browser tab
 				if (evt.ctrlKey && [
 					'r', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 				].includes(evt.key)) {
 					return;
 				}
+				// Ctrl+Shift+I, open Chrome dev tools
 				if (evt.ctrlKey && evt.key === 'I') return;
 				evt.preventDefault();
 				doAction(evt);
@@ -879,22 +929,6 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create() {
-			return;
-			console.log('Sam, mainControls created');
-			const graphics = this.add.graphics({ x: 0, y: 0 });
-			graphics.lineStyle(5, 0x0000ff);
-			graphics.beginPath();
-			graphics.moveTo(1000, 0);
-			graphics.lineTo(1000, 1000);
-			graphics.lineTo(0, 1000);
-			graphics.closePath();
-			graphics.strokePath();
-
-			graphics.fillStyle(0x00ff00);
-			graphics.fillCircle(window.visualViewport.width / scale / 2, window.visualViewport.height / scale - 150, 150);
-			this.events.on('sleep', () => {
-				console.log('Sam, mainControls sleep');
-			});
 		},
 		update() {
 		},
@@ -1032,6 +1066,10 @@ yodasws.page('pageGame').setRoute({
 		},
 	});
 
-	currentGame.scenes = game.scene;
+	Object.assign(currentGame, {
+		scenes: game.scene,
+		domContainer: game.domContainer,
+	});
 	console.log('Sam, scenes:', game.scene.scenes);
+	game.domContainer.classList.add('game');
 });
