@@ -426,7 +426,7 @@ function Unit(unitType, {
 	row,
 	col,
 	scene,
-	player
+	player,
 }) {
 	// Check unitType exists
 	const base = json.world.units[unitType];
@@ -538,7 +538,7 @@ Object.assign(Unit.prototype, {
 			return;
 		}
 		// Stay here
-		if (action === ' ') {
+		if (action === 's') {
 			this.deactivate(true);
 			return;
 		}
@@ -556,12 +556,13 @@ Object.assign(Unit.prototype, {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			this.moveTo(grid.getHex({ row, col }));
 		} else if (action === 'c') {
-			// Claim hex territory
 			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			if (thisHex.tile.player === this.player) {
+			if (!Actions['c'].isValidOption({ hex: thisHex, player: this.player })) {
 				// TODO: Show message to Player that territory already belongs to them!
+				console.warn('Sam, you own this already');
 				return;
 			}
+			// Claim hex territory
 			thisHex.tile.claimTerritory(this.player, 10);
 			this.moves--;
 		} else {
@@ -572,20 +573,7 @@ Object.assign(Unit.prototype, {
 					switch (action) {
 						// Build city
 						case 'b':
-							// Do not build on water
-							if (thisHex.terrain.isWater) {
-								return;
-							}
-							// Make sure there is no city on this tile or an adjacent tile
-							if (grid.traverse(Honeycomb.spiral({
-								start: [ thisHex.q, thisHex.r ],
-								radius: 1,
-							})).filter((hex) => {
-								if (typeof hex.city === 'object' && hex.city !== null) {
-									return true;
-								}
-								return false;
-							}).size > 0) {
+							if (!Actions['b'].isValidOption({ hex: thisHex })) {
 								// TODO: Warn player
 								console.warn('Cannot place city adjacent to another city');
 								return;
@@ -612,21 +600,9 @@ Object.assign(Unit.prototype, {
 					switch (action) {
 						// Build farm
 						case 'f':
-							// Check valid terrain
-							if (![
-								'swamp',
-								'desert',
-								'grass',
-								'hill',
-							].includes(thisHex.terrain.terrain)) {
-								return;
-							}
-							// Cannot build in city
-							if (thisHex.city instanceof City) {
-								return;
-							}
-							// Cannot replace another farm
-							if (thisHex.tile.improvement.key === 'farm') {
+							if (!Actions['f'].isValidOption({ hex: thisHex })) {
+								// TODO: Warn player
+								console.warn('Cannot place farm here');
 								return;
 							}
 							thisHex.tile.improvement = 'farm';
@@ -634,6 +610,9 @@ Object.assign(Unit.prototype, {
 							return;
 						// Clear Improvement or Overlay
 						case 'C':
+							if (!Actions['C'].isValidOption({ hex: thisHex })) {
+								return;
+							}
 							if (thisHex.tile.improvement.key === 'farm') {
 								thisHex.tile.improvement = 'destroy';
 								this.deactivate(true);
@@ -660,19 +639,128 @@ Object.assign(Unit.prototype, {
 	},
 });
 
+function Action(def) {
+	Object.defineProperties(this, {
+		text: {
+			enumerable: true,
+			get() {
+				switch (typeof def.text) {
+					case 'function':
+						return def.text;
+					case 'text':
+						return () => def.text;
+				}
+				return () => '[action text missing]';
+			},
+		},
+		isValidOption: {
+			enumerable: true,
+			get() {
+				if (typeof def.isValidOption === 'function') return def.isValidOption;
+				return () => true;
+			},
+		},
+	});
+}
+Object.assign(Action.prototype, {
+});
+
 // TODO: This object should define every action and handle all of each action's programming
-// Object to convert action code to User-facing content
-const actionMenuText = {
-	moveTo: ({ hex }) => `Move to ${hex.row}×${hex.col}`,
-	city: () => 'View city',
-	b: () => '<u>B</u>uild city',
-	c: () => '<u>C</u>laim territory',
-	C: () => 'Clear land <kbd>Shift+C</kbd>',
-	f: () => 'Build <u>f</u>arm',
-	w: () => '<u>W</u>ait',
-	' ': () => 'Hold <kbd>Space</kbd>',
-	'': () => 'Cancel',
-};
+const Actions = [
+	{
+		key: 'moveTo',
+		text: ({ hex }) => hex instanceof Honeycomb.Hex ? `Move to ${hex.row}×${hex.col}` : 'Move here',
+		isValidOption({ hex }) {
+			return false;
+		},
+	},
+	{
+		key: 'city',
+		text: () => 'View city',
+		isValidOption({ hex }) {
+			return false;
+		},
+	},
+	{
+		key: 'b', // build city
+		text: () => '<u>B</u>uild city',
+		isValidOption({ hex }) {
+			// Do not build on water
+			if (hex.terrain.isWater) {
+				return false;
+			}
+			// Make sure there is no city on this tile or an adjacent tile
+			if (grid.traverse(Honeycomb.spiral({
+				start: [ hex.q, hex.r ],
+				radius: 1,
+			})).filter((hex) => {
+				if (typeof hex.city === 'object' && hex.city !== null) {
+					return true;
+				}
+				return false;
+			}).size > 0) {
+				return false;
+			}
+			return true;
+		},
+	},
+	{
+		key: 'c', // claim territory
+		text: () => '<u>C</u>laim territory',
+		isValidOption: ({ hex, player }) => {
+			console.log('Sam, claim is valid?', hex.tile.player !== player);
+			return hex.tile.player !== player;
+		},
+	},
+	{
+		key: 'C',
+		text: () => 'Clear land <kbd>Shift+C</kbd>',
+		isValidOption({ hex }) {
+			return [
+				'farm',
+			].includes(hex.tile.improvement.key);
+		},
+	},
+	{
+		key: 'f', // farm
+		text: () => 'Build <u>f</u>arm',
+		isValidOption({ hex }) {
+			// Check valid terrain
+			if (![
+				'swamp',
+				'desert',
+				'grass',
+				'hill',
+			].includes(hex.terrain.terrain)) {
+				return false;
+			}
+			// Cannot build in city
+			if (hex.city instanceof City) {
+				return false;
+			}
+			// Cannot replace another farm
+			if (hex.tile.improvement.key === 'farm') {
+				return false;
+			}
+			return true;
+		},
+	},
+	{
+		key: 'w', // wait
+		text: () => '<u>W</u>ait',
+	},
+	{
+		key: 's', // stay
+		text: () => '<u>S</u>tay here',
+	},
+	{
+		key: '',
+		text: () => 'Cancel',
+	},
+].reduce((obj, action) => Object.assign(obj, {
+	[action.key]: new Action(action),
+}), {});
+console.log('Sam, Actions:', Actions);
 
 function doAction(evt) {
 	// Not the player's turn, leave
@@ -791,6 +879,8 @@ const config = {
 
 			// Add Game Sprites and Images
 			currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
+
+			// TODO: Open this menu when user presses the spacebar
 			this.input.on('pointerdown', (evt) => {
 				const hex = grid.pointToHex({
 					x: evt.worldX,
@@ -802,24 +892,46 @@ const config = {
 				if (currentGame.activeUnit instanceof Unit) {
 					console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
 					if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
+						// Check conditions to add actions based on unit type
 						switch (currentGame.activeUnit.unitType) {
 							case 'settler':
-								possibleActions.push('b');
+								// Build city option
+								if (Actions['b'].isValidOption({ hex })) {
+									possibleActions.push('b');
+								}
 								break;
 							case 'worker':
-								possibleActions.push('f', 'C');
+								// TODO: Centralize check for hex's overlay
+								[
+									'f',
+									'C',
+								].forEach((action) => {
+									if (Actions[action].isValidOption({ hex })) {
+										possibleActions.push(action);
+									}
+								});
 								break;
 						}
-						possibleActions.push('c');
+						// Check if territory is under our control
+						if (Actions['c'].isValidOption({ hex, player: currentGame.activeUnit.player })) {
+							possibleActions.push('c');
+						}
 					} else if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
 						// Offer to move unit here
 						possibleActions.push('moveTo');
 					}
 				}
 
+				// Add option to view city
 				if (hex.city instanceof City) {
-					console.log('Sam, tapped on city');
 					possibleActions.push('city');
+				}
+
+				// TODO: If more units here, add option to view units
+
+				// If clicked on unit's tile, add options to wait and hold
+				if (currentGame.activeUnit.hex.row === hex.row && currentGame.activeUnit.hex.col === hex.col) {
+					possibleActions.push('w', 's');
 				}
 
 				// No actions, do nothing
@@ -850,14 +962,10 @@ const config = {
 				const div = document.createElement('div');
 				div.classList.add('menu');
 				possibleActions.concat([
-					'w',
-					' ',
 					'',
 				]).forEach((action) => {
 					const button = document.createElement('button');
-					button.innerHTML = actionMenuText[action]({
-						hex,
-					});
+					button.innerHTML = Actions[action].text({ hex });
 					button.addEventListener('click', () => {
 						currentGame.activeUnit.doAction(action, hex);
 					});
