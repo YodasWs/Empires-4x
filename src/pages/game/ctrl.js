@@ -7,9 +7,9 @@ class gameHex extends Honeycomb.defineHex({
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 }) {
-	f_cost;
-	h_cost;
-	g_cost;
+	f_cost
+	h_cost
+	g_cost
 }
 
 const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
@@ -570,27 +570,23 @@ Object.assign(Unit.prototype, {
 
 		actionOutlines.graphics = currentGame.scenes.getScene( 'mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines + 1);
 		const graphics = actionOutlines.graphics;
-		const moves = [
+
+		// Set text and listeners on hexes to move unit
+		[
 			'L',
 			'K',
 			'J',
 			'U',
 			'I',
 			'O',
-		];
-
-		// Set text and listeners on hexes to move unit
-		grid.traverse(Honeycomb.ring({
-			center: [ thisHex.q, thisHex.r ],
-			radius: 1,
-		})).forEach((hex) => {
-			// TODO: BUG! Need to mark the correct key for the hex, not the one in order from the array
-			const key = moves.shift();
-			if (isLegalMove(this, hex.row, hex.col)) {
+		].forEach((move) => {
+			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
+			if (isLegalMove(this, row, col)) {
+				const hex = grid.getHex({ row, col });
 				actionOutlines.text.push(currentGame.scenes.getScene( 'mainGameScene').add.text(
 					hex.x - tileWidth / 2,
 					hex.y + tileWidth / 6,
-					key,
+					move,
 					{
 						fixedWidth: tileWidth,
 						font: '25pt Trebuchet MS',
