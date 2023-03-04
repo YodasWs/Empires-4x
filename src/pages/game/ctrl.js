@@ -364,6 +364,7 @@ const currentGame = {
 		});
 	},
 	endTurn() {
+		// TODO: Pause for User to acknowledge end of turn
 		console.log('Sam, endTurn!');
 		this.intCurrentPlayer++;
 		if (this.intCurrentPlayer >= this.players.length) {
@@ -558,8 +559,12 @@ Object.assign(Unit.prototype, {
 			return;
 		}
 
-		if (this.path.length > 0) {
-			this.doAction('moveTo', this.path.shift());
+		if (Array.isArray(this.path) && this.path.length > 0) {
+			if (this.moves > 0) {
+				this.doAction('moveTo', this.path.shift());
+			} else {
+				this.deactivate(true);
+			}
 			return;
 		}
 
@@ -631,13 +636,14 @@ Object.assign(Unit.prototype, {
 			} else {
 				// Find path
 				const path = findPath(this, this.hex, hex);
-				console.log('Sam, found path:', path);
-				if (path.length === 0) {
+				if (!Array.isArray(path) || path.length === 0) {
 					// TODO: Warn User no path was found
 					console.warn('Sam, no path found!');
 					return;
 				}
-				this.path = path;
+				if (Array.isArray(path)) {
+					this.path = path;
+				}
 			}
 		} else if ([
 			'u',
@@ -802,7 +808,6 @@ const Actions = [
 		key: 'c', // claim territory
 		text: () => '<u>C</u>laim territory',
 		isValidOption: ({ hex, player }) => {
-			console.log('Sam, claim is valid?', hex.tile.player !== player);
 			return hex.tile.player !== player;
 		},
 	},
@@ -876,7 +881,6 @@ function isLegalMove(unit, row, col) {
 	// Grab Target Tile
 	const target = grid.getHex({ row, col });
 	if (!(target instanceof Honeycomb.Hex)) return false;
-	// console.log('Sam, isLegalMove, target:', target);
 
 	// TODO: Check move into City
 	if (target.city instanceof City && target.city.player.index !== unit.player.index) {
@@ -890,7 +894,6 @@ function isLegalMove(unit, row, col) {
 		if (!unit.attack) return false;
 		if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
 	}
-	// console.log('Sam, isLegalMove, unit:', unit);
 
 	// Check movement into terrain
 	const movementCost = unit.base.movementCosts[target.terrain.terrain];
@@ -1168,7 +1171,6 @@ yodasws.page('pageGame').setRoute({
 				stroke: 'black',
 				strokeThickness: 7,
 			}).setDepth(2).setInteractive().on('pointerdown', () => {
-				console.log('Sam, pointerdown');
 				game.scene.stop('city-view');
 			});
 
