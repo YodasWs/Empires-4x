@@ -2,11 +2,17 @@ import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
-const grid = new Honeycomb.Grid(Honeycomb.defineHex({
+class gameHex extends Honeycomb.defineHex({
 	dimensions: tileWidth / 2,
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
-}), Honeycomb.rectangle({ width: 15, height: 6 }));
+}) {
+	f_cost;
+	h_cost;
+	g_cost;
+}
+
+const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
 
 const depths = {
 	offscreen: 0,
@@ -64,7 +70,6 @@ const Tile = (() => {
 				enumerable: true,
 				get: () => improvement || {},
 				set(val) {
-					console.log('Sam, improvement:', improvement);
 					if (val === 'destroy') {
 						if (typeof improvement === 'object' && improvement.image instanceof Phaser.GameObjects.Image) {
 							improvement.image.destroy();
@@ -422,6 +427,75 @@ function hideActionSprites() {
 	}
 }
 
+// Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
+function findPath(unit, start, end) {
+	let openHexes = [];
+	let closedHexes = [];
+	let explored = 0;
+	let foundPath = false;
+
+	// Initialize path
+	start.parent = undefined;
+	openHexes.push(start);
+	start.g_cost = 0;
+
+	while (openHexes.length > 0) {
+		// Sort array by f_cost, then by h_cost for hexes with equal f_cost
+		const current = openHexes.sort((a, b) => a.f_cost - b.f_cost || a.h_cost - b.h_cost)[0];
+
+		// Check if finished
+		if (current === end) {
+			console.log('Sam,', `Found target after exploring ${explored} hexes.`);
+			foundPath = true;
+			break;
+		}
+
+		openHexes = openHexes.filter((hex) => current !== hex);
+		closedHexes.push(current);
+
+		// Check the neighbors
+		grid.traverse(Honeycomb.ring({
+			center: [ current.q, current.r ],
+			radius: 1,
+		})).forEach((neighbor) => {
+			// If checked path already
+			if (closedHexes.includes(neighbor)) return;
+			// If Unit cannot move here, do not include in path
+			if (!isLegalMove(unit, neighbor.row, neighbor.col)) return;
+
+			// g_cost is movement cost from start
+			neighbor.g_cost = current.g_cost + unit.base.movementCosts[neighbor.terrain.terrain];
+			// h_cost is simple distance to end
+			neighbor.h_cost = grid.distance(current, end);
+			// f_cost is sum of above two
+			neighbor.f_cost = neighbor.g_cost + neighbor.h_cost;
+
+			if (!openHexes.includes(neighbor)) {
+				neighbor.parent = current;
+				explored++;
+				openHexes.push(neighbor);
+			}
+		});
+	}
+
+	if (!foundPath) {
+		console.warn('Sam,', `Ran out of hexes to explore after exploring ${explored} hexes.`);
+		return;
+	}
+
+	// TODO: Return the hexes from end.parent back
+	const path = [end];
+	let pathHex = end;
+	do {
+		pathHex = pathHex.parent;
+		if (pathHex !== start) {
+			path.unshift(pathHex);
+		}
+	} while (pathHex.parent instanceof Honeycomb.Hex);
+
+	return path;
+}
+
 function Unit(unitType, {
 	row,
 	col,
@@ -439,6 +513,7 @@ function Unit(unitType, {
 	// Define properties
 	this.col = col;
 	this.row = row;
+	this.path = [];
 	Object.defineProperties(this, {
 		base: {
 			enumerable: true,
@@ -471,6 +546,7 @@ const actionOutlines = {
 };
 Object.assign(Unit.prototype, {
 	activate() {
+		// TODO: Add setting to skip this if automated movement
 		const thisHex = grid.getHex({ row: this.row, col: this.col });
 		this.scene.cameras.main.centerOn(thisHex.x, thisHex.y);
 		this.sprite.setDepth(depths.activeUnit);
@@ -479,6 +555,11 @@ Object.assign(Unit.prototype, {
 		// Not the human player's unit
 		if (this.player.index !== 0) {
 			this.deactivate(true);
+			return;
+		}
+
+		if (this.path.length > 0) {
+			this.doAction('moveTo', this.path.shift());
 			return;
 		}
 
@@ -544,7 +625,20 @@ Object.assign(Unit.prototype, {
 		}
 		// Move unit
 		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
-			this.moveTo(hex);
+			if (grid.distance(this.hex, hex) === 1) {
+				// Neighbor, move there
+				this.moveTo(hex);
+			} else {
+				// Find path
+				const path = findPath(this, this.hex, hex);
+				console.log('Sam, found path:', path);
+				if (path.length === 0) {
+					// TODO: Warn User no path was found
+					console.warn('Sam, no path found!');
+					return;
+				}
+				this.path = path;
+			}
 		} else if ([
 			'u',
 			'i',
