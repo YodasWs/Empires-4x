@@ -7,9 +7,9 @@ class gameHex extends Honeycomb.defineHex({
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 }) {
-	f_cost
-	h_cost
-	g_cost
+	f_cost;
+	h_cost;
+	g_cost;
 }
 
 const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
@@ -547,24 +547,38 @@ const actionOutlines = {
 };
 Object.assign(Unit.prototype, {
 	activate() {
-		// TODO: Add setting to skip this if automated movement
 		const thisHex = grid.getHex({ row: this.row, col: this.col });
-		this.scene.cameras.main.centerOn(thisHex.x, thisHex.y);
-		this.sprite.setDepth(depths.activeUnit);
 		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
 
-		// Not the human player's unit
-		if (this.player.index !== 0) {
-			this.deactivate(true);
-			return;
-		}
+		// Pan camera to active unit
+		// TODO: Add setting to skip this if automated movement
+		// TODO: Add setting to skip if not human player's unit
+		const startPos = lineShift(this.scene.cameras.main.getScroll(thisHex.x, thisHex.y), {
+			x: this.scene.cameras.main.scrollX,
+			y: this.scene.cameras.main.scrollY,
+		}, 0.2);
+		this.scene.cameras.main.setScroll(startPos.x, startPos.y);
+		setTimeout(() => {
+			console.log('Sam, jump 2');
+			const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
+			this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
+		}, 0);
+		this.sprite.setDepth(depths.activeUnit);
 
+		// Continue on path
 		if (Array.isArray(this.path) && this.path.length > 0) {
+			// Only move along path is able
 			if (this.moves > 0) {
 				this.doAction('moveTo', this.path.shift());
 			} else {
 				this.deactivate(true);
 			}
+			return;
+		}
+
+		// Not the human player's unit, do nothing (for now)
+		if (this.player.index !== 0) {
+			this.deactivate(true);
 			return;
 		}
 
@@ -973,6 +987,23 @@ const config = {
 			// Add Game Sprites and Images
 			currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
 
+			{
+				// TODO: Calculate the zoom and size to show the whole map
+				const w = grid.pixelWidth;
+				const h = grid.pixelHeight;
+				const padLeft = window.visualViewport.width / scale / 2;
+				const padTop = window.visualViewport.height / scale / 2;
+				this.cameras.main.setBounds(
+					-padLeft,
+					-padTop,
+					w + padLeft * 2,
+					h + padTop * 2
+				);
+				const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
+				minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
+				minimap.centerOn(grid.pixelWidth / 2, grid.pixelHeight / 2);
+			}
+
 			// TODO: Open this menu when user presses the spacebar
 			this.input.on('pointerdown', (evt) => {
 				const hex = grid.pointToHex({
@@ -1089,6 +1120,24 @@ const config = {
 				// Ctrl+Shift+I, open Chrome dev tools
 				if (evt.ctrlKey && evt.key === 'I') return;
 				evt.preventDefault();
+				switch (evt.key) {
+					case 'ArrowUp':
+						console.log('Sam, pan up');
+						this.cameras.main.scrollY -= 4;
+						return;
+					case 'ArrowDown':
+						console.log('Sam, pan down');
+						this.cameras.main.scrollY += 4;
+						return;
+					case 'ArrowLeft':
+						console.log('Sam, pan left');
+						this.cameras.main.scrollX -= 4;
+						return;
+					case 'ArrowRight':
+						console.log('Sam, pan right');
+						this.cameras.main.scrollX += 4;
+						return;
+				}
 				doAction(evt);
 			}).enabled = false;
 
