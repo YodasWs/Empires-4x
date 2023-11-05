@@ -580,11 +580,12 @@ Object.assign(Unit.prototype, {
 			x: this.scene.cameras.main.scrollX,
 			y: this.scene.cameras.main.scrollY,
 		}, 0.2);
-		this.scene.cameras.main.setScroll(startPos.x, startPos.y);
 		setTimeout(() => {
-			console.log('Sam, jump 2');
-			const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
-			this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
+			this.scene.cameras.main.setScroll(startPos.x, startPos.y);
+			setTimeout(() => {
+				const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
+				this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
+			}, 0);
 		}, 0);
 		this.sprite.setDepth(depths.activeUnit);
 
