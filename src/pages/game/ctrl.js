@@ -1162,19 +1162,19 @@ const config = {
 				switch (evt.key) {
 					case 'ArrowUp':
 						console.log('Sam, pan up');
-						this.cameras.main.scrollY -= 4;
+						this.cameras.main.scrollY -= 25;
 						return;
 					case 'ArrowDown':
 						console.log('Sam, pan down');
-						this.cameras.main.scrollY += 4;
+						this.cameras.main.scrollY += 25;
 						return;
 					case 'ArrowLeft':
 						console.log('Sam, pan left');
-						this.cameras.main.scrollX -= 4;
+						this.cameras.main.scrollX -= 25;
 						return;
 					case 'ArrowRight':
 						console.log('Sam, pan right');
-						this.cameras.main.scrollX += 4;
+						this.cameras.main.scrollX += 25;
 						return;
 					case 'ContextMenu':
 					case ' ':
