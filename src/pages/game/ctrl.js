@@ -662,6 +662,12 @@ Object.assign(Unit.prototype, {
 			this.deactivate(true);
 			return;
 		}
+		if (action === 'city' && hex instanceof Honeycomb.Hex) {
+			currentGame.scenes.start('city-view', {
+				hex,
+			});
+			return;
+		}
 		// Move unit
 		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
 			if (grid.distance(this.hex, hex) === 1) {
@@ -936,6 +942,103 @@ function isLegalMove(unit, row, col) {
 	return false;
 }
 
+function openUnitActionMenu(hex) {
+	if (!(hex instanceof Honeycomb.Hex)) {
+		// Not valid hex, exit
+		return;
+	}
+
+	// List possible actions on the hex to build menu
+	const possibleActions = [];
+
+	if (currentGame.activeUnit instanceof Unit) {
+		console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
+		if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
+			// Check conditions to add actions based on unit type
+			switch (currentGame.activeUnit.unitType) {
+				case 'settler':
+					// Build city option
+					if (Actions['b'].isValidOption({ hex })) {
+						possibleActions.push('b');
+					}
+					break;
+				case 'worker':
+					// TODO: Centralize check for hex's overlay
+					[
+						'f',
+						'C',
+					].forEach((action) => {
+						if (Actions[action].isValidOption({ hex })) {
+							possibleActions.push(action);
+						}
+					});
+					break;
+			}
+			// Check if territory is under our control
+			if (Actions['c'].isValidOption({ hex, player: currentGame.activeUnit.player })) {
+				possibleActions.push('c');
+			}
+		} else if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
+			// Offer to move unit here
+			possibleActions.push('moveTo');
+		}
+	}
+
+	// Add option to view city
+	if (hex.city instanceof City) {
+		possibleActions.push('city');
+	}
+
+	// TODO: If more units here, add option to view units
+
+	// If clicked on unit's tile, add options to wait and hold
+	if (currentGame.activeUnit.hex.row === hex.row && currentGame.activeUnit.hex.col === hex.col) {
+		possibleActions.push('w', 's');
+	}
+
+	// No actions, do nothing
+	if (possibleActions.length === 0) {
+		currentGame.closeUnitActionMenu();
+		return;
+	}
+
+	// If only one action, do it
+	if (possibleActions.length === 1) switch (possibleActions[0]) {
+		case 'moveTo':
+			// Automatically move to adjacent hex
+			if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
+				currentGame.activeUnit.doAction('moveTo', hex);
+				return;
+			}
+			break;
+		case 'city':
+			console.log('Sam, only action is city-view');
+			currentGame.scenes.start('city-view', {
+				hex,
+			});
+			return;
+	}
+
+	// Show menu with action options
+	currentGame.domContainer.innerHTML = '';
+	const div = document.createElement('div');
+	div.classList.add('menu');
+	possibleActions.concat([
+		'',
+	]).forEach((action) => {
+		const button = document.createElement('button');
+		button.innerHTML = Actions[action].text({ hex });
+		button.addEventListener('click', () => {
+			currentGame.activeUnit.doAction(action, hex);
+		});
+		button.style.pointerEvents = 'auto';
+		div.appendChild(button);
+	});
+	div.style.pointerEvents = 'auto';
+	currentGame.domContainer.appendChild(div);
+	currentGame.domContainer.style.zIndex = 1;
+}
+
 const scale = 0.5;
 
 const config = {
@@ -1034,95 +1137,7 @@ const config = {
 					x: evt.worldX,
 					y: evt.worldY,
 				});
-				// List possible actions on the hex to build menu
-				const possibleActions = [];
-
-				if (currentGame.activeUnit instanceof Unit) {
-					console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
-					if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
-						// Check conditions to add actions based on unit type
-						switch (currentGame.activeUnit.unitType) {
-							case 'settler':
-								// Build city option
-								if (Actions['b'].isValidOption({ hex })) {
-									possibleActions.push('b');
-								}
-								break;
-							case 'worker':
-								// TODO: Centralize check for hex's overlay
-								[
-									'f',
-									'C',
-								].forEach((action) => {
-									if (Actions[action].isValidOption({ hex })) {
-										possibleActions.push(action);
-									}
-								});
-								break;
-						}
-						// Check if territory is under our control
-						if (Actions['c'].isValidOption({ hex, player: currentGame.activeUnit.player })) {
-							possibleActions.push('c');
-						}
-					} else if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
-						// Offer to move unit here
-						possibleActions.push('moveTo');
-					}
-				}
-
-				// Add option to view city
-				if (hex.city instanceof City) {
-					possibleActions.push('city');
-				}
-
-				// TODO: If more units here, add option to view units
-
-				// If clicked on unit's tile, add options to wait and hold
-				if (currentGame.activeUnit.hex.row === hex.row && currentGame.activeUnit.hex.col === hex.col) {
-					possibleActions.push('w', 's');
-				}
-
-				// No actions, do nothing
-				if (possibleActions.length === 0) {
-					currentGame.closeUnitActionMenu();
-					return;
-				}
-
-				// If only one action, do it
-				if (possibleActions.length === 1) switch (possibleActions[0]) {
-					case 'moveTo':
-						// Automatically move to adjacent hex
-						if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
-							currentGame.activeUnit.doAction('moveTo', hex);
-							return;
-						}
-						break;
-					case 'city':
-						console.log('Sam, only action is city-view');
-						currentGame.scenes.start('city-view', {
-							hex,
-						});
-						return;
-				}
-
-				// Show menu with action options
-				this.game.domContainer.innerHTML = '';
-				const div = document.createElement('div');
-				div.classList.add('menu');
-				possibleActions.concat([
-					'',
-				]).forEach((action) => {
-					const button = document.createElement('button');
-					button.innerHTML = Actions[action].text({ hex });
-					button.addEventListener('click', () => {
-						currentGame.activeUnit.doAction(action, hex);
-					});
-					button.style.pointerEvents = 'auto';
-					div.appendChild(button);
-				});
-				div.style.pointerEvents = 'auto';
-				this.game.domContainer.appendChild(div);
-				this.game.domContainer.style.zIndex = 1;
+				openUnitActionMenu(hex);
 			});
 
 			// TODO: Build Starting Players and Units
@@ -1300,9 +1315,11 @@ yodasws.page('pageGame').setRoute({
 
 			this.events.on('sleep', () => {
 				console.log('Sam, city-view sleep');
+				game.domContainer.innerHTML = '';
 				game.scene.wake('mainGameScene');
 			}).on('shutdown', () => {
 				console.log('Sam, city-view shutdown');
+				game.domContainer.innerHTML = '';
 				game.scene.wake('mainGameScene');
 			});
 		},
