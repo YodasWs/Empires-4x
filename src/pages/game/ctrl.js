@@ -1176,6 +1176,12 @@ const config = {
 						console.log('Sam, pan right');
 						this.cameras.main.scrollX += 4;
 						return;
+					case 'ContextMenu':
+					case ' ':
+						if (currentGame.activeUnit instanceof Unit) {
+							openUnitActionMenu(currentGame.activeUnit.hex);
+						}
+						return;
 				}
 				doAction(evt);
 			}).enabled = false;
