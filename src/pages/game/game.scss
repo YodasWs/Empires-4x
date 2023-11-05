@@ -1,4 +1,4 @@
-[y-page='pageGame'] {
+[y-page="pageGame"] {
 	&, > * {
 		padding: 0;
 		position: fixed;
@@ -35,17 +35,17 @@
 			padding: 2px 5px;
 			width: 100%;
 			text-align: left;
-			font-family: 'Trebuchet MS', 'Open Sans', 'Helvetica Neue', sans-serif;
+			font-family: "Trebuchet MS", "Open Sans", "Helvetica Neue", sans-serif;
 
 			> kbd {
 				font-size: 20pt;
 
 				&::before {
-					content: '(';
+					content: "(";
 				}
 
 				&::after {
-					content: ')';
+					content: ")";
 				}
 			}
 		}
