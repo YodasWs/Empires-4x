@@ -18,9 +18,10 @@ const depths = {
 	offscreen: 0,
 	map: 1,
 	territoryLines: 2,
-	overlay: 3,
-	cities: 4,
-	inactiveUnits: 5,
+	improvement: 5,
+	road: 6,
+	cities: 10,
+	inactiveUnits: 11,
 	actionSprites: 98,
 	activeUnit: 100,
 };
@@ -33,6 +34,7 @@ const Tile = (() => {
 		let player = undefined;
 		const claims = new Map();
 		let improvement = undefined;
+		let road = undefined;
 		Object.defineProperties(this, {
 			claims: {
 				enumerable: true,
@@ -80,10 +82,31 @@ const Tile = (() => {
 					if (Object.keys(json.world.improvements).includes(val)) {
 						improvement = Object.assign({}, json.world.improvements[val],
 							{
-								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.overlay),
+								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
 								key: val,
 							});
-						console.log('Sam, improvement:', improvement);
+						return true;
+					}
+					return false;
+				},
+			},
+			road: {
+				enumerable: true,
+				get: () => road || {},
+				set(val) {
+					if (val === 'destroy') {
+						if (typeof road === 'object' && road.image instanceof Phaser.GameObjects.Image) {
+							road.image.destroy();
+						}
+						road = undefined;
+						return true;
+					}
+					if (Object.keys(json.world.improvements).includes(val)) {
+						road = Object.assign({}, json.world.roads[val],
+							{
+								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.road),
+								key: val,
+							});
 						return true;
 					}
 					return false;
