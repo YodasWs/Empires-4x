@@ -310,6 +310,7 @@ const currentGame = {
 	currentPlayer: null,
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
+	graphics: {},
 	startRound() {
 		// Reset count of economy
 		this.players.forEach((player) => {
@@ -606,7 +607,7 @@ Object.assign(Unit.prototype, {
 			return;
 		}
 
-		actionOutlines.graphics = currentGame.scenes.getScene( 'mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines + 1);
+		actionOutlines.graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.actionSprites - 1);
 		const graphics = actionOutlines.graphics;
 
 		// Set text and listeners on hexes to move unit
@@ -621,7 +622,7 @@ Object.assign(Unit.prototype, {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (isLegalMove(this, row, col)) {
 				const hex = grid.getHex({ row, col });
-				actionOutlines.text.push(currentGame.scenes.getScene( 'mainGameScene').add.text(
+				actionOutlines.text.push(currentGame.scenes.getScene('mainGameScene').add.text(
 					hex.x - tileWidth / 2,
 					hex.y + tileWidth / 6,
 					move,
@@ -662,6 +663,7 @@ Object.assign(Unit.prototype, {
 			this.deactivate(true);
 			return;
 		}
+		// Open City View
 		if (action === 'city' && hex instanceof Honeycomb.Hex) {
 			currentGame.scenes.start('city-view', {
 				hex,
@@ -1071,6 +1073,7 @@ const config = {
 		create() {
 			// Add graphics objects
 			currentGame.graphics = {
+				...currentGame.graphics,
 				territoryLines: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines),
 			};
 
@@ -1098,6 +1101,7 @@ const config = {
 					}).setOrigin(0),
 				});
 			}).forEach((hex) => {
+				// Build City
 				if (typeof hex.city === 'object' && hex.city !== null) {
 					hex.city = new City({
 						col: hex.col,
@@ -1106,6 +1110,7 @@ const config = {
 						player: currentGame.players[hex.city.player],
 					});
 				}
+				// Build Improvement
 				if (typeof hex.improvement === 'string') {
 					hex.tile.improvement = hex.improvement;
 				}
@@ -1131,13 +1136,12 @@ const config = {
 				minimap.centerOn(grid.pixelWidth / 2, grid.pixelHeight / 2);
 			}
 
-			// TODO: Open this menu when user presses the spacebar
+			// Open the Action Menu for the hex User clicked
 			this.input.on('pointerdown', (evt) => {
-				const hex = grid.pointToHex({
+				openUnitActionMenu(grid.pointToHex({
 					x: evt.worldX,
 					y: evt.worldY,
-				});
-				openUnitActionMenu(hex);
+				}));
 			});
 
 			// TODO: Build Starting Players and Units
@@ -1161,19 +1165,15 @@ const config = {
 				evt.preventDefault();
 				switch (evt.key) {
 					case 'ArrowUp':
-						console.log('Sam, pan up');
 						this.cameras.main.scrollY -= 25;
 						return;
 					case 'ArrowDown':
-						console.log('Sam, pan down');
 						this.cameras.main.scrollY += 25;
 						return;
 					case 'ArrowLeft':
-						console.log('Sam, pan left');
 						this.cameras.main.scrollX -= 25;
 						return;
 					case 'ArrowRight':
-						console.log('Sam, pan right');
 						this.cameras.main.scrollX += 25;
 						return;
 					case 'ContextMenu':
@@ -1220,10 +1220,54 @@ yodasws.page('pageGame').setRoute({
 		},
 	}));
 
+	// TODO: House main controls above the world map
 	game.scene.add('mainControls', {
 		preload() {
 		},
 		create() {
+			const graphics = currentGame.graphics.mainControls = this.add.graphics({ x: 0, y: 0 });
+			graphics.fillStyle(0x000000, 0.5);
+			graphics.fillRect(0, 0, config.width, 200);
+			this.input.keyboard.on('keydown', (evt) => {
+				evt.preventDefault();
+				switch (evt.key) {
+					case 'F1':
+						// TODO: Help
+						break;
+					case 'F2':
+						// TODO: Remove all layers, return to main map
+						currentGame.graphics.gfxClaims.destroy();
+						break;
+					case 'F3': {
+						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines - 1);
+						// Show territorial claims
+						grid.forEach((hex) => {
+							if (!(hex.tile instanceof Tile)) return;
+							if (!(hex.tile.claims() instanceof Map)) return;
+							hex.tile.claims().forEach((intClaim, player) => {
+								if (hex.tile.player === player) return;
+								graphics.lineStyle(3, player.color);
+								graphics.beginPath();
+								// TODO: Draw as a dashed line
+								// Draw points closer to center of hex
+								const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, 0.9));
+								graphics.moveTo(firstCorner.x, firstCorner.y);
+								otherCorners.forEach(({x, y}) => {
+									graphics.lineTo(x, y);
+								});
+								graphics.closePath();
+								graphics.strokePath();
+							});
+						});
+						break;
+					}
+					case 'F4':
+						break;
+					case 'F5':
+						break;
+				}
+			});
+			// buildMainControls();
 		},
 		update() {
 		},
