@@ -7,9 +7,11 @@ class gameHex extends Honeycomb.defineHex({
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 }) {
-	f_cost;
-	h_cost;
-	g_cost;
+	constructor() {
+		this.f_cost;
+		this.h_cost;
+		this.g_cost;
+	}
 }
 
 const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
