@@ -3,7 +3,7 @@
  */
 'use strict';
 
-const fs = require('fs');
+import fs from 'fs';
 const packageJson = JSON.parse(fs.readFileSync('./package.json'));
 
 function camelCase() {
@@ -17,7 +17,8 @@ function camelCase() {
 	}).join('');
 }
 
-const argv = require('yargs')
+import yargs from 'yargs';
+const argv = yargs()
 	.usage("\n\x1b[1mUsage:\x1b[0m gulp \x1b[36m<command>\x1b[0m \x1b[34m[options]\x1b[0m")
 	.command('init', 'Initialize app', {
 		name: {
@@ -69,34 +70,43 @@ const argv = require('yargs')
 	.epilog(' ©2017–2025 Samuel B Grundman')
 	.argv;
 
-const gulp = require('gulp');
-const path = require('path');
-const fileExists = require('file-exists');
+import gulp from 'gulp';
+import path from 'path';
+import fileExists from 'file-exists';
 
-const plugins = {
-	...require('gulp-load-plugins')({
-		rename: {
-			'gulp-autoprefixer': 'prefixCSS',
-			'gulp-run-command': 'cli',
-			'gulp-sass-lint': 'lintSass',
-			'gulp-htmlmin': 'compileHTML',
-			'gulp-eslint': 'lintES',
-			'gulp-babel': 'compileJS',
-			'gulp-order': 'sort',
-			'gulp-file': 'newFile',
+import * as sass from 'sass';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const plugins = require('gulp-load-plugins')({
+	rename: {
+		'@yodasws/gulp-pattern-replace': 'replaceString',
+		'gulp-autoprefixer': 'prefixCSS',
+		'gulp-run-command': 'cli',
+		'gulp-eslint-new': 'lintES',
+		'gulp-sass-lint': 'lintSass',
+		'gulp-htmlmin': 'compileHTML',
+		'gulp-babel': 'compileJS',
+		'gulp-order': 'sort',
+		'gulp-file': 'newFile',
+		'webpack': 'webpack-stream',
+		'named': 'vinyl-named',
+		'gulp-sass': 'compileSass',
+	},
+	postRequireTransforms: {
+		cli(runCommand) {
+			return runCommand.default;
 		},
-		postRequireTransforms: {
-			cli(cli) {
-				return cli.default;
-			},
+		compileSass(gulpSass) {
+			return gulpSass(sass);
 		},
-	}),
-	replaceString: require('@yodasws/gulp-pattern-replace'),
-	compileSass: require('gulp-sass')(require('sass')),
-	webpack: require('webpack-stream'),
-	named: require('vinyl-named'),
-};
-plugins['connect.reload'] = plugins.connect.reload;
+		['connect.reload']() {
+			return plugins.connect.reload;
+		},
+	},
+});
+// import gulpSass from 'gulp-sass';
+// plugins.compileSass = gulpSass(sass);
+// plugins['connect.reload'] = plugins.connect.reload;
 
 // more options at https://github.com/postcss/autoprefixer#options
 const browsers = [
@@ -140,15 +150,14 @@ const options = {
 		useShortDoctype: true,
 	},
 	lintES: {
-		parserOptions: {
-			sourceType: 'module',
-			ecmaVersion: 2021,
-		},
-		env: {
-			browser: true,
-			es6: true,
-		},
-		rules: {
+		overrideConfig: {
+			languageOptions: {
+				parserOptions: {
+					sourceType: 'module',
+					ecmaVersion: 2021,
+				},
+			},
+			rules: {
 
 'strict': [
 	2, 'global',
@@ -164,6 +173,7 @@ const options = {
 'no-var': 2,
 'semi': 0,
 
+			},
 		},
 	},
 	lintSass: {
@@ -315,9 +325,9 @@ const options = {
 	replaceString: {
 		js: {
 			pattern:/\/\* app\.json \*\//,
-			replacement: () => {
+			replacement: async () => {
 				// Read app.json to build site!
-				const site = require('./src/app.json');
+				const site = await import('./src/app.json');
 				const requiredFiles = [];
 				[
 					{
@@ -356,7 +366,7 @@ const options = {
 						} catch (e) {}
 					});
 				});
-				let requires = 'const json = {};\n';
+				let requires = 'window.json = {};\n';
 				Object.keys(requiredFiles).forEach((i) => {
 					if (Number.isNaN(Number.parseInt(i, 10))) {
 						requires += `json.${i} = `;
@@ -383,7 +393,7 @@ const options = {
 						loader: 'babel-loader',
 						options: {
 							presets: ['@babel/preset-env'],
-							plugins: ['@babel/plugin-proposal-class-properties'],
+							plugins: ['@babel/plugin-transform-class-properties'],
 						},
 					},
 				},
@@ -510,7 +520,7 @@ function runTasks(task) {
 	});
 });
 
-gulp.task('lint:sass', () => {
+export function lintSass() {
 	return gulp.src([
 		'src/**/*.{sa,sc,c}ss',
 		'!**/*.min.css',
@@ -518,9 +528,9 @@ gulp.task('lint:sass', () => {
 	])
 		.pipe(plugins.lintSass(options.lintSass))
 		.pipe(plugins.lintSass.format());
-});
+};
 
-gulp.task('lint:js', () => {
+export function lintJs() {
 	return gulp.src([
 		'src/**/*.js',
 		'!**/*.min.js',
@@ -528,9 +538,9 @@ gulp.task('lint:js', () => {
 	])
 		.pipe(plugins.lintES(options.lintES))
 		.pipe(plugins.lintES.format());
-});
+};
 
-gulp.task('lint', gulp.parallel('lint:sass', 'lint:js'));
+export const lint = gulp.parallel(lintSass, lintJs);
 
 gulp.task('transfer:fonts', () => gulp.src([
 	'./node_modules/font-awesome/fonts/fontawesome-webfont.*',
@@ -616,9 +626,9 @@ gulp.task('generate:page', gulp.series(
 			return plugins.newFile(`ctrl.js`, str, { src: true })
 				.pipe(gulp.dest(`./src/pages/${argv.sectionCC}${argv.nameCC}`));
 		},
-		() => {
+		async () => {
 			// Add to app.json
-			const site = require('./src/app.json');
+			const site = await import('./src/app.json');
 			if (!site.pages) site.pages = [];
 			site.pages.push(`${argv.sectionCC}${argv.nameCC}`);
 			return plugins.newFile('app.json', JSON.stringify(site, null, '\t'), { src: true })
@@ -668,9 +678,9 @@ gulp.task('generate:section', gulp.series(
 			return plugins.newFile(`ctrl.js`, str, { src: true })
 				.pipe(gulp.dest(`./src/pages/${argv.nameCC}`));
 		},
-		() => {
+		async () => {
 			// Add to app.json
-			const site = require('./src/app.json');
+			const site = await import('./src/app.json');
 			if (!site.pages) site.pages = [];
 			site.pages.push(`${argv.nameCC}`);
 			return plugins.newFile('app.json', JSON.stringify(site, null, '\t'), { src: true })

@@ -67,6 +67,7 @@ typings/
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+package-lock.json
 
 # Yarn Integrity file
 .yarn-integrity
