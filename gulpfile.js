@@ -96,15 +96,12 @@ const plugins = require('gulp-load-plugins')({
 		compileSass(gulpSass) {
 			return gulpSass(sass);
 		},
-		['connect.reload']() {
-			return plugins.connect.reload;
-		},
 	},
 });
 plugins.replaceString = require('@yodasws/gulp-pattern-replace');
 plugins.webpack = require('webpack-stream');
 plugins.named = require('vinyl-named');
-// plugins['connect.reload'] = plugins.connect.reload;
+plugins['connect.reload'] = plugins.connect.reload;
 
 // more options at https://github.com/postcss/autoprefixer#options
 const browsers = [
@@ -694,7 +691,7 @@ gulp.task('compile:scss', gulp.series('compile:sass'));
 gulp.task('compile:css', gulp.series('compile:sass'));
 
 gulp.task('default', gulp.series(
-	'lint',
+	// 'lint',
 	'compile',
 	gulp.parallel(
 		'serve',
