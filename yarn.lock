@@ -1710,7 +1710,6 @@ __metadata:
   resolution: "@yodasws/empires-4x@workspace:."
   dependencies:
     "@babel/core": "npm:^7.20.2"
-    "@babel/plugin-transform-class-properties": "npm:^7.25.9"
     "@babel/preset-env": "npm:^7.20.2"
     "@yodasws/gulp-pattern-replace": "npm:^1.1.1"
     babel-loader: "npm:^9.1.0"

@@ -15,7 +15,6 @@
 	"homepage": "https://github.com/YodasWs/Empires-4x#readme",
 	"devDependencies": {
 		"@babel/core": "^7.20.2",
-		"@babel/plugin-transform-class-properties": "^7.25.9",
 		"@babel/preset-env": "^7.20.2",
 		"@yodasws/gulp-pattern-replace": "^1.1.1",
 		"babel-loader": "^9.1.0",

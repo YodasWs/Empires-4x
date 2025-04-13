@@ -79,7 +79,6 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const plugins = require('gulp-load-plugins')({
 	rename: {
-		'@yodasws/gulp-pattern-replace': 'replaceString',
 		'gulp-autoprefixer': 'prefixCSS',
 		'gulp-run-command': 'cli',
 		'gulp-eslint-new': 'lintES',
@@ -88,13 +87,11 @@ const plugins = require('gulp-load-plugins')({
 		'gulp-babel': 'compileJS',
 		'gulp-order': 'sort',
 		'gulp-file': 'newFile',
-		'webpack': 'webpack-stream',
-		'named': 'vinyl-named',
 		'gulp-sass': 'compileSass',
 	},
 	postRequireTransforms: {
-		cli(runCommand) {
-			return runCommand.default;
+		cli(gulpRunCommand) {
+			return gulpRunCommand.default;
 		},
 		compileSass(gulpSass) {
 			return gulpSass(sass);
@@ -104,8 +101,9 @@ const plugins = require('gulp-load-plugins')({
 		},
 	},
 });
-// import gulpSass from 'gulp-sass';
-// plugins.compileSass = gulpSass(sass);
+plugins.replaceString = require('@yodasws/gulp-pattern-replace');
+plugins.webpack = require('webpack-stream');
+plugins.named = require('vinyl-named');
 // plugins['connect.reload'] = plugins.connect.reload;
 
 // more options at https://github.com/postcss/autoprefixer#options
@@ -325,9 +323,9 @@ const options = {
 	replaceString: {
 		js: {
 			pattern:/\/\* app\.json \*\//,
-			replacement: async () => {
+			replacement: () => {
 				// Read app.json to build site!
-				const site = await import('./src/app.json');
+				const site = require('./src/app.json');
 				const requiredFiles = [];
 				[
 					{
@@ -626,9 +624,9 @@ gulp.task('generate:page', gulp.series(
 			return plugins.newFile(`ctrl.js`, str, { src: true })
 				.pipe(gulp.dest(`./src/pages/${argv.sectionCC}${argv.nameCC}`));
 		},
-		async () => {
+		() => {
 			// Add to app.json
-			const site = await import('./src/app.json');
+			const site = require('./src/app.json');
 			if (!site.pages) site.pages = [];
 			site.pages.push(`${argv.sectionCC}${argv.nameCC}`);
 			return plugins.newFile('app.json', JSON.stringify(site, null, '\t'), { src: true })
@@ -678,9 +676,9 @@ gulp.task('generate:section', gulp.series(
 			return plugins.newFile(`ctrl.js`, str, { src: true })
 				.pipe(gulp.dest(`./src/pages/${argv.nameCC}`));
 		},
-		async () => {
+		() => {
 			// Add to app.json
-			const site = await import('./src/app.json');
+			const site = require('./src/app.json');
 			if (!site.pages) site.pages = [];
 			site.pages.push(`${argv.nameCC}`);
 			return plugins.newFile('app.json', JSON.stringify(site, null, '\t'), { src: true })
