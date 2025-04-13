@@ -38,6 +38,10 @@ h6 {
 a:link,
 a:visited {
 	color: dodgerblue;
+
+	&:focus {
+		outline: 1px solid;
+	}
 }
 
 #y-spinner {
