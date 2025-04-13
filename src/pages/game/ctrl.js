@@ -8,6 +8,7 @@ class gameHex extends Honeycomb.defineHex({
 	origin: 'topLeft',
 }) {
 	constructor() {
+		super();
 		this.f_cost;
 		this.h_cost;
 		this.g_cost;
