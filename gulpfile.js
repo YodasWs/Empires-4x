@@ -691,7 +691,6 @@ gulp.task('compile:scss', gulp.series('compile:sass'));
 gulp.task('compile:css', gulp.series('compile:sass'));
 
 gulp.task('default', gulp.series(
-	// 'lint',
 	'compile',
 	gulp.parallel(
 		'serve',
