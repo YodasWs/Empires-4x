@@ -14,7 +14,11 @@ module.exports = defineConfig([
 	2, 'global',
 ],
 'indent': [
-	2, 'tab',
+	2,
+	'tab',
+	{
+		'SwitchCase': 1,
+	},
 ],
 'space-before-function-paren': 0,
 'comma-dangle': 0,

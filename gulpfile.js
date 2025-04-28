@@ -144,33 +144,6 @@ const options = {
 		removeStyleLinkTypeAttributes: true,
 		useShortDoctype: true,
 	},
-	lintES: {
-		overrideConfig: {
-			languageOptions: {
-				parserOptions: {
-					sourceType: 'module',
-					ecmaVersion: 2021,
-				},
-			},
-			rules: {
-
-'strict': [
-	2, 'global',
-],
-'indent': [
-	2, 'tab',
-],
-'space-before-function-paren': 0,
-'comma-dangle': 0,
-'no-console': 0,
-'no-undef': 0,
-'no-tabs': 0,
-'no-var': 2,
-'semi': 0,
-
-			},
-		},
-	},
 	lintSass: {
 		files: {
 			ignore: '**/*.min.css',
@@ -407,24 +380,30 @@ function runTasks(task) {
 	(task.tasks || []).forEach((subtask) => {
 		let option = options[subtask] || {};
 		if (option[fileType]) option = option[fileType];
-		if (['lintSass', 'lintES'].includes(subtask)) {
-			stream = stream.pipe(plugins[subtask](option));
-			// Linting requires special formatting
-			stream = stream.pipe(plugins[subtask].format());
-			return;
-		}
 		if (subtask === 'compileSass') {
 			stream = stream.pipe(plugins[subtask].sync(option)).on('error', function (error) {
-				console.error('Error!');
-				console.log(JSON.stringify(error, '  '));
+				if (typeof error.messageFormatted === 'string') {
+					console.error('Error!', error.messageFormatted);
+				} else {
+					console.error('Error!');
+					console.log(JSON.stringify(error, '  '));
+				}
 				this.emit('end');
 			});
 			return;
 		}
 		stream = stream.pipe(plugins[subtask](option)).on('error', function (error) {
-			console.error('Error!', error);
+			if (typeof error.messageFormatted === 'string') {
+				console.error('Error!', error.messageFormatted);
+			} else {
+				console.error('Error!', error);
+			}
 			this.emit('end');
 		});
+		if (['lintSass', 'lintES'].includes(subtask)) {
+			// Linting requires special formatting
+			stream = stream.pipe(plugins[subtask].format());
+		}
 	});
 
 	// Output Files
@@ -452,35 +431,15 @@ function runTasks(task) {
 		fileType: 'css',
 	},
 	{
-		name: 'build:js',
+		name: 'compile:js',
 		src: [
 			'src/app.js',
 		],
 		tasks: [
 			'lintES',
 			'replaceString',
-		],
-		dest: 'build/',
-		fileType: 'js',
-	},
-	{
-		name: 'webpack:js',
-		src: [
-			'build/app.js',
-		],
-		tasks: [
 			'named',
 			'webpack',
-		],
-		dest: 'bundle/',
-		fileType: 'js',
-	},
-	{
-		name: 'minify:js',
-		src: [
-			'bundle/app.js',
-		],
-		tasks: [
 			'compileJS',
 			'rmLines',
 		],
@@ -520,7 +479,7 @@ export function lintSass() {
 		'!**/*.min.css',
 		'!**/min.css'
 	])
-		.pipe(plugins.lintSass(options.lintSass))
+		.pipe(plugins.lintSass(options.lintSass || {}))
 		.pipe(plugins.lintSass.format());
 };
 
@@ -530,7 +489,7 @@ export function lintJs() {
 		'!**/*.min.js',
 		'!**/min.js',
 	])
-		.pipe(plugins.lintES(options.lintES))
+		.pipe(plugins.lintES(options.lintES || {}))
 		.pipe(plugins.lintES.format());
 };
 
@@ -552,16 +511,6 @@ gulp.task('transfer-files', gulp.parallel(
 	'transfer:assets',
 	'transfer:fonts',
 	'transfer:res',
-));
-
-gulp.task('bundle:js', gulp.series(
-	'build:js',
-	'webpack:js',
-));
-
-gulp.task('compile:js', gulp.series(
-	'bundle:js',
-	'minify:js',
 ));
 
 gulp.task('compile', gulp.parallel('compile:html', 'compile:js', 'compile:sass', 'transfer-files'));

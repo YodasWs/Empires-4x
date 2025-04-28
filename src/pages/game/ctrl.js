@@ -7,12 +7,9 @@ class gameHex extends Honeycomb.defineHex({
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 }) {
-	constructor() {
-		super();
-		this.f_cost;
-		this.h_cost;
-		this.g_cost;
-	}
+	f_cost
+	h_cost
+	g_cost
 }
 
 const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
@@ -130,7 +127,7 @@ const Tile = (() => {
 					currentGame.markTerritory(this.hex);
 				}
 			}
-		}
+		},
 	});
 	return Tile;
 })();
@@ -174,7 +171,7 @@ function City({
 		},
 		sprite: {
 			get: () => sprite,
-		}
+		},
 	});
 }
 Object.assign(City.prototype, {
@@ -421,28 +418,28 @@ function lineShift(point1, point2, t = 0.9) {
 
 function actionTileCoordinates(action, row, col) {
 	switch (action) {
-	case 'u':
-		if (col % 2 == 0) row--;
-		col--;
-		break;
-	case 'i':
-		row--;
-		break;
-	case 'o':
-		if (col % 2 == 0) row--;
-		col++;
-		break;
-	case 'j':
-		if (col % 2 == 1) row++;
-		col--;
-		break;
-	case 'k':
-		row++;
-		break;
-	case 'l':
-		if (col % 2 == 1) row++;
-		col++;
-		break;
+		case 'u':
+			if (col % 2 == 0) row--;
+			col--;
+			break;
+		case 'i':
+			row--;
+			break;
+		case 'o':
+			if (col % 2 == 0) row--;
+			col++;
+			break;
+		case 'j':
+			if (col % 2 == 1) row++;
+			col--;
+			break;
+		case 'k':
+			row++;
+			break;
+		case 'l':
+			if (col % 2 == 1) row++;
+			col++;
+			break;
 	}
 	return [row, col];
 }
