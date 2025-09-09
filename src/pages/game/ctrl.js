@@ -805,7 +805,7 @@ function Action(def) {
 				switch (typeof def.text) {
 					case 'function':
 						return def.text;
-					case 'text':
+					case 'string':
 						return () => def.text;
 				}
 				return () => '[action text missing]';
@@ -834,14 +834,14 @@ const Actions = [
 	},
 	{
 		key: 'city',
-		text: () => 'View city',
+		text: 'View city',
 		isValidOption({ hex }) {
-			return false;
+			return hex.tile.player === currentGame.currentPlayer && hex.city instanceof City;
 		},
 	},
 	{
 		key: 'b', // build city
-		text: () => '<u>B</u>uild city',
+		text: '<u>B</u>uild city',
 		isValidOption({ hex }) {
 			// Do not build on water
 			if (hex.terrain.isWater) {
@@ -852,7 +852,7 @@ const Actions = [
 				start: [ hex.q, hex.r ],
 				radius: 1,
 			})).filter((hex) => {
-				if (typeof hex.city === 'object' && hex.city !== null) {
+				if (hex.city instanceof City) {
 					return true;
 				}
 				return false;
@@ -864,14 +864,14 @@ const Actions = [
 	},
 	{
 		key: 'c', // claim territory
-		text: () => '<u>C</u>laim territory',
+		text: '<u>C</u>laim territory',
 		isValidOption: ({ hex, player }) => {
 			return hex.tile.player !== player;
 		},
 	},
 	{
 		key: 'C',
-		text: () => 'Clear land <kbd>Shift+C</kbd>',
+		text: 'Clear land <kbd>Shift+C</kbd>',
 		isValidOption({ hex }) {
 			return [
 				'farm',
@@ -880,7 +880,7 @@ const Actions = [
 	},
 	{
 		key: 'f', // farm
-		text: () => 'Build <u>f</u>arm',
+		text: 'Build <u>f</u>arm',
 		isValidOption({ hex }) {
 			// Check valid terrain
 			if (![
@@ -904,15 +904,15 @@ const Actions = [
 	},
 	{
 		key: 'w', // wait
-		text: () => '<u>W</u>ait',
+		text: '<u>W</u>ait',
 	},
 	{
 		key: 's', // stay
-		text: () => '<u>S</u>tay here',
+		text: '<u>S</u>tay here',
 	},
 	{
 		key: '',
-		text: () => 'Cancel',
+		text: 'Cancel',
 	},
 ].reduce((obj, action) => Object.assign(obj, {
 	[action.key]: new Action(action),
@@ -1003,7 +1003,7 @@ function openUnitActionMenu(hex) {
 	}
 
 	// Add option to view city
-	if (hex.city instanceof City) {
+	if (Actions['city'].isValidOption({ hex })) {
 		possibleActions.push('city');
 	}
 
@@ -1353,7 +1353,7 @@ yodasws.page('pageGame').setRoute({
 					offsetX: 0 - hex.x + center.x + (hex.x - offsetX) * tileScale,
 					offsetY: 0 - hex.y + center.y + (hex.y - offsetY) * tileScale,
 					graphics: graphics.setDepth(2),
-					lineShift: 1.1,
+					lineShift: 0.95 * tileScale,
 				});
 				// TODO: Show food production on tiles
 				const fixedWidth = tileWidth * tileScale;
