@@ -160,6 +160,8 @@ function City({
 		}
 	});
 	// Properties
+	this.level = 1;
+	this.housing = this.level === 1 ? 3 : 6;
 	Object.defineProperties(this, {
 		hex: {
 			enumerable: true,
@@ -171,6 +173,14 @@ function City({
 		},
 		sprite: {
 			get: () => sprite,
+		},
+		level: {
+			enumerable: true,
+			get: () => this.level,
+		},
+		housing: {
+			enumerable: true,
+			get: () => this.housing,
 		},
 	});
 }
