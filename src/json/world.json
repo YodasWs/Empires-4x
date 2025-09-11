@@ -188,8 +188,7 @@
 			{
 				"terrain": "hill",
 				"city": {
-						"player": 0,
-						"level": 2
+					"player": 0
 				}
 			},
 			{
@@ -207,8 +206,7 @@
 			{
 				"terrain": "grass",
 				"city": {
-						"player": 2,
-						"level": 2
+					"player": 2
 				}
 			},
 			{
@@ -270,8 +268,7 @@
 			{
 				"terrain": "grass",
 				"city": {
-						"player": 1,
-						"level": 2
+					"player": 1
 				}
 			},
 			{

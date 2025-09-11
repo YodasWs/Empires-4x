@@ -63,7 +63,7 @@ a:visited {
 		fill: none;
 		stroke: black;
 		stroke-width: 10px;
-		opa: 0.5;
+		opacity: 0.5;
 
 		&:nth-of-type(odd) {
 			animation: 2s linear infinite rotate;
