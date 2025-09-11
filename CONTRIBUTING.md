@@ -10,9 +10,13 @@ gulp
 ```
 Then open http://localhost:3000/ in your browser.
 
-## Found a bug? Have an idea to contribute?
+## Found a bug?
 
-Please feel free to open a new Issue for any bugs or feature requests. This is always the best first step to improving any project.
+Please feel free to open a new Issue to report any bugs. Please include as much detail as possible and how to recreate it.
+
+## Have an idea to contribute?
+
+If you have any feature requests or ideas for the game, please open a new Discussion so we can work to flesh out if it's appropriate for the game, how it could work, and how it might be implemented in the code.
 
 ## Open Issues
 
@@ -23,3 +27,7 @@ Please feel free to take on any Open Issue. You can get started by following the
 4. **Submit a Pull Request** in this project when it's ready for review.
 
 If you have any questions or get stuck at any point, just let me know in the comments on that Issue.
+
+## Documentation
+
+This repo has a Wiki. Please feel help expand the information there as we develop the game.
