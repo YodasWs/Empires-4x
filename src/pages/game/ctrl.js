@@ -159,6 +159,9 @@ function City({
 			hex.tile.claimTerritory(player, 50);
 		}
 	});
+	// Set city level and housing
+	this.level = 1;
+	this.housing = this.level === 1 ? 3 : 6;
 	// Properties
 	Object.defineProperties(this, {
 		hex: {
@@ -171,6 +174,14 @@ function City({
 		},
 		sprite: {
 			get: () => sprite,
+		},
+		level: {
+			enumerable: true,
+			get: () => this.level,
+		},
+		housing: {
+			enumerable: true,
+			get: () => this.housing,
 		},
 	});
 }
