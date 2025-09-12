@@ -136,8 +136,9 @@ function City({
 	col,
 	row,
 	scene,
+	level = 1,
 	player,
-}) {
+} = {}) {
 	// Tie to hex
 	const thisHex = grid.getHex({ row, col });
 	thisHex.tile.improvement = 'destroy';
@@ -160,8 +161,13 @@ function City({
 		}
 	});
 	// Properties
-	this.level = 1;
-	this.housing = this.level === 1 ? 3 : 6;
+	this.housing = (() => {
+		switch (level) {
+			case 1: return 3;
+			case 2: return 6;
+		}
+		return 0;
+	})();
 	Object.defineProperties(this, {
 		hex: {
 			enumerable: true,
@@ -1114,6 +1120,7 @@ const config = {
 				// Build City
 				if (typeof hex.city === 'object' && hex.city !== null) {
 					hex.city = new City({
+						...hex.city,
 						col: hex.col,
 						row: hex.row,
 						scene: this,

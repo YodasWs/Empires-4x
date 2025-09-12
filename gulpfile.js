@@ -431,15 +431,35 @@ function runTasks(task) {
 		fileType: 'css',
 	},
 	{
-		name: 'compile:js',
+		name: 'build:js',
 		src: [
 			'src/app.js',
 		],
 		tasks: [
 			'lintES',
 			'replaceString',
+		],
+		dest: 'build/',
+		fileType: 'js',
+	},
+	{
+		name: 'webpack:js',
+		src: [
+			'build/app.js',
+		],
+		tasks: [
 			'named',
 			'webpack',
+		],
+		dest: 'bundle/',
+		fileType: 'js',
+	},
+	{
+		name: 'minify:js',
+		src: [
+			'bundle/app.js',
+		],
+		tasks: [
 			'compileJS',
 			'rmLines',
 		],
@@ -511,6 +531,16 @@ gulp.task('transfer-files', gulp.parallel(
 	'transfer:assets',
 	'transfer:fonts',
 	'transfer:res',
+));
+
+gulp.task('bundle:js', gulp.series(
+	'build:js',
+	'webpack:js',
+));
+
+gulp.task('compile:js', gulp.series(
+	'bundle:js',
+	'minify:js',
 ));
 
 gulp.task('compile', gulp.parallel('compile:html', 'compile:js', 'compile:sass', 'transfer-files'));
