@@ -1,6 +1,31 @@
 # Contributing
 
-I hope you all enjoy what I've started and I look forward to seeing how we can grow the project together.
+Thank you for your interest in contributing!
+I am excited to build this game together.
+This document outlines how you can contribute and what to expect.
+
+## Our Vision and Future Plans
+
+This project was started as a fun, open-source game. My goal is to build a fun and engaging game with the community.
+
+**Please be aware that if the game becomes successful, there is a possibility that it may transition to a commercial, closed-source project.** This is to help fund its continued development and to compensate for the significant investment of time required to bring it to a high-quality finished state.
+
+### Contributor License Agreement (CLA)
+
+To ensure that I can legally transition the project for commercial purposes in the future, all contributors must agree to the terms of our Contributor License Agreement.
+
+*   By submitting a pull request, you will be asked to confirm your agreement to the CLA.
+*   The CLA grants me the necessary rights to use your contributions in a potential future commercial version of the game while you retain the copyright to your original work.
+*   You can read the full text of the CLA here: [`[Link to CLA.md file in your repo]`].
+
+## How to Contribute
+
+We welcome contributions of all kinds!
+
+*   **Ideas and Feedback:** Share your thoughts on gameplay, features, and design in the [Discussions section](https://github.com/YodasWs/Empires-4x/discussions).
+*   **Boring Bits:** Help out with necessary but less glamorous tasks, like setting up the main menu, creating configuration screens, or writing documentation.
+*   **UX/UI Design and Art:** If you have design or artistic skills, we'd love your help creating a better user experience and graphics.
+*   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/Empires-4x/issues) for areas where help is needed.
 
 ## Running on your computer
 
@@ -12,7 +37,7 @@ Then open http://localhost:3000/ in your browser.
 
 ## Found a bug?
 
-Please feel free to open a new Issue to report any bugs. Please include as much detail as possible and how to recreate it.
+Please feel free to open a new [Issue](https://github.com/YodasWs/Empires-4x/issues) to report any bugs. Please include as much detail as possible and how to recreate it.
 
 ## Have an idea to contribute?
 
@@ -31,3 +56,9 @@ If you have any questions or get stuck at any point, just let me know in the com
 ## Documentation
 
 This repo has a Wiki. Please feel help expand the information there as we develop the game.
+
+## What if the game becomes commercial?
+
+If we decide to go commercial, we will clearly communicate our plans and timeline to the community. While we cannot guarantee payment for past contributions, we will explore ways to recognize and reward our early contributors who helped make the project a success.
+
+We believe that being transparent from the start is the best way to build a trusting and collaborative community. Thanks for being part of this journey!
