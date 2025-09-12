@@ -16,7 +16,7 @@ To ensure that I can legally transition the project for commercial purposes in t
 
 *   By submitting a pull request, you will be asked to confirm your agreement to the CLA.
 *   The CLA grants me the necessary rights to use your contributions in a potential future commercial version of the game while you retain the copyright to your original work.
-*   You can read the full text of the CLA here: [`[Link to CLA.md file in your repo]`].
+*   You can read the full text of the CLA [here](https://github.com/YodasWs/Empires-4x/blob/master/CLA.md).
 
 ## How to Contribute
 
