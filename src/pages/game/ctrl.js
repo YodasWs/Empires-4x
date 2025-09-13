@@ -31,21 +31,37 @@ const Tile = (() => {
 		scene,
 		hex,
 	}) {
-		let player = undefined;
 		const claims = new Map();
+		let food = 0;
 		let improvement = undefined;
+		const laborers = new Set();
+		let player = undefined;
 		let road = undefined;
+
 		Object.defineProperties(this, {
 			claims: {
 				enumerable: true,
 				get: () => (lookupPlayer, claimIncrement) => {
+					// Get numerical value of Player's claim
 					if (lookupPlayer instanceof Player) {
 						if (Number.isInteger(claimIncrement)) {
+							// But first, increment claim value
 							claims.set(lookupPlayer, (claims.get(lookupPlayer) || 0) + claimIncrement);
 						}
 						return claims.get(lookupPlayer) || 0;
 					}
 					return claims;
+				},
+			},
+			food: {
+				enumerable: true,
+				get: () => food,
+				set(val) {
+					if (Number.isInteger(val) && val >= 0) {
+						food = val;
+						return true;
+					}
+					return false;
 				},
 			},
 			hex: {
@@ -72,13 +88,15 @@ const Tile = (() => {
 				enumerable: true,
 				get: () => improvement || {},
 				set(val) {
+					// Destroy all improvements on Tile
 					if (val === 'destroy') {
-						if (typeof improvement === 'object' && improvement.image instanceof Phaser.GameObjects.Image) {
+						if (improvement?.image instanceof Phaser.GameObjects.Image) {
 							improvement.image.destroy();
 						}
 						improvement = undefined;
 						return true;
 					}
+					// Check that improvement exists in world and add to Tile
 					if (Object.keys(json.world.improvements).includes(val)) {
 						improvement = Object.assign({}, json.world.improvements[val],
 							{
@@ -90,12 +108,24 @@ const Tile = (() => {
 					return false;
 				},
 			},
+			laborers: {
+				enumerable: true,
+				get: () => laborers,
+				set(val) {
+					if (!(val instanceof Citizen)) {
+						throw new TypeError('Tile.laborers expects to be assigned object instance of Citizen!');
+					}
+					laborers.add(val);
+					return true;
+				},
+			},
 			road: {
 				enumerable: true,
 				get: () => road || {},
 				set(val) {
+					// Destroy all roads on Tile
 					if (val === 'destroy') {
-						if (typeof road === 'object' && road.image instanceof Phaser.GameObjects.Image) {
+						if (road?.image instanceof Phaser.GameObjects.Image) {
 							road.image.destroy();
 						}
 						road = undefined;
@@ -132,6 +162,36 @@ const Tile = (() => {
 	return Tile;
 })();
 
+function Citizen({
+	city,
+	tile,
+}) {
+	if (city instanceof City) {
+		Object.defineProperty(this, 'city', {
+			enumerable: true,
+			get: () => city,
+		});
+	}
+	if (tile instanceof Tile) {
+		Object.defineProperty(this, 'tile', {
+			enumerable: true,
+			get: () => tile,
+		});
+	}
+	Object.defineProperties(this, {
+	});
+}
+Object.assign(Citizen.prototype, {
+	FOOD_CONSUMPTION: 2,
+	assignTile(tile) {
+		if (!(tile instanceof Tile)) {
+			throw new TypeError('Citizen.assignTile expects to be passed object instance of Tile!');
+		}
+		// TODO: Check if Tile has already been assigned and is at its capacity
+		this.tile = tile;
+	},
+});
+
 function City({
 	col,
 	row,
@@ -144,6 +204,8 @@ function City({
 	thisHex.tile.improvement = 'destroy';
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
 	thisHex.city = this;
+	const laborers = new Set();
+
 	// Claim this tile and adjacent tiles
 	grid.traverse(Honeycomb.spiral({
 		start: [ thisHex.q, thisHex.r ],
@@ -151,6 +213,7 @@ function City({
 	})).forEach((hex) => {
 		hex.tile.claimTerritory(player, 100);
 	});
+
 	// Claim water territory
 	grid.traverse(Honeycomb.ring({
 		center: [ thisHex.q, thisHex.r ],
@@ -160,6 +223,7 @@ function City({
 			hex.tile.claimTerritory(player, 50);
 		}
 	});
+
 	// Properties
 	this.housing = (() => {
 		switch (level) {
@@ -173,6 +237,17 @@ function City({
 			enumerable: true,
 			get: () => thisHex,
 		},
+		laborers: {
+			enumerable: true,
+			get: () => laborers,
+			set(val) {
+				if (!(val instanceof Citizen)) {
+					throw new TypeError('City.laborers expects to be assigned object instance of Citizen!');
+				}
+				laborers.add(val);
+				return true;
+			},
+		},
 		player: {
 			enumerable: true,
 			get: () => player,
@@ -182,7 +257,7 @@ function City({
 		},
 		level: {
 			enumerable: true,
-			get: () => this.level,
+			get: () => level,
 		},
 		housing: {
 			enumerable: true,
@@ -328,27 +403,28 @@ const currentGame = {
 	sprActiveUnit: null,
 	graphics: {},
 	startRound() {
-		// Reset count of economy
-		this.players.forEach((player) => {
-			player.food = 0;
-		});
 		grid.forEach((hex) => {
 			// Adjust each player's claim on territory
 			this.players.forEach((player) => {
 				if (hex.tile.player === player) {
+					// Strengthen top claimant's claim
 					hex.tile.claimTerritory(player, 1);
 				} else if (hex.tile.claims(player) > 0) {
+					// Weaken foreign claimant's claim
 					hex.tile.claimTerritory(player, -1);
 				}
 			});
+
 			// Collect food
-			if (hex.tile.player instanceof Player) {
-				let food = 0;
-				food += hex.terrain.food || 0;
-				food += hex.tile.improvement.food || 0;
-				hex.tile.player.food += food;
+			hex.tile.food = 0;
+			if (hex.tile.laborers.length > 0) {
+				hex.tile.food += hex.terrain.food || 0;
+				hex.tile.food += hex.tile.improvement.food || 0;
 			}
-			// Check cities
+		});
+
+		// Check Cities
+		grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				const city = hex.city;
 				console.log('Sam, startRound, city:', city);
@@ -415,6 +491,12 @@ const currentGame = {
 	},
 	endRound() {
 		console.log('Sam, endRound!');
+		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
+		grid.forEach((hex) => {
+			if (hex.tile.laborers.length > 0 && hex.tile.food < hex.tile.laborers.length * Citizen.FOOD_CONSUMPTION) {
+				// TODO: Citizen Starves!
+			}
+		});
 		this.startRound();
 	},
 	closeUnitActionMenu() {
@@ -1355,21 +1437,26 @@ yodasws.page('pageGame').setRoute({
 					graphics: graphics.setDepth(2),
 					lineShift: 0.95 * tileScale,
 				});
-				// TODO: Show food production on tiles
-				const fixedWidth = tileWidth * tileScale;
-				this.add.text(
-					tileCenter.x - fixedWidth / 2,
-					tileCenter.y + fixedWidth / 4,
-					`Food: ${(hex.terrain.food || 0) + (hex.tile.improvement.food || 0)}`,
-					{
-						font: '14pt Trebuchet MS',
-						align: 'center',
-						color: 'white',
-						stroke: 'black',
-						strokeThickness: 7,
-						fixedWidth,
-					}
-				).setDepth(3);
+				// TODO: Show number of laborers on tile
+				// TODO: Show tile improvement
+				// TODO: Allow User to click tile to assign laborers
+				// TODO: Show food production on tile
+				if (hex.tile.laborers.length > 0) {
+					const fixedWidth = tileWidth * tileScale;
+					this.add.text(
+						tileCenter.x - fixedWidth / 2,
+						tileCenter.y + fixedWidth / 4,
+						`Food: ${(hex.terrain.food || 0) + (hex.tile.improvement.food || 0)}`,
+						{
+							font: '14pt Trebuchet MS',
+							align: 'center',
+							color: 'white',
+							stroke: 'black',
+							strokeThickness: 7,
+							fixedWidth,
+						}
+					).setDepth(3);
+				}
 			});
 
 			// Set event listeners
