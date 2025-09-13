@@ -1,11 +1,10 @@
-License
-=======
+# License
 
 Except where otherwise stated, all images here are Copyright © 2022 Samuel B Grundman, all rights reserved.
 
 ## tiles
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/tiles/LICENSE).
+See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/tiles/LICENSE.md).
 
 ## farm.png
 
