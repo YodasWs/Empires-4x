@@ -1,4 +1,14 @@
-MIT License
+# License
+
+## cities.png
+
+Copyright ©️ 2022 Samuel B Grundman.
+
+[Creative Commons Non-Commercial, Attribution, Share-Alike License](https://creativecommons.org/licenses/by-nc-sa/3.0/us/deed.en)
+
+## Terrain Tiles
+
+### MIT License
 
 Copyright (c) 2019 Jack Heimrath
 
