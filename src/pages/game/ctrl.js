@@ -27,6 +27,22 @@ const depths = {
 };
 
 const Tile = (() => {
+	function isValidImprovement(hex, improvement, builtImprovement) {
+		if (!(hex instanceof Honeycomb.Hex)) return false;
+		if (typeof improvement !== 'string' || improvement === '') return false;
+		// Improvement must exist
+		if (!Object.keys(json.world.improvements).includes(improvement)) return false;
+		// Improvement must be same as current, or new
+		if (builtImprovement.key !== '' && builtImprovement.key !== improvement) return false;
+		// Improvement must have next level
+		if (typeof json.world.improvements[improvement][builtImprovement.level] === 'undefined') return false;
+		// Improvement must be valid for terrain
+		if (!Object.keys(json.world.improvements[improvement][builtImprovement.level]?.terrains || {}).includes(hex.terrain.terrain)) return false;
+		// Cannot build improvement in city
+		if (hex.city instanceof City) return false;
+		return true;
+	}
+
 	function Tile({
 		scene,
 		hex,
@@ -93,45 +109,6 @@ const Tile = (() => {
 			improvement: {
 				enumerable: true,
 				get: () => objImprovement || {},
-				set(val) {
-					// Destroy all improvements on Tile
-					if (val === 'destroy') {
-						if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
-							objImprovement.image.destroy();
-						}
-						objImprovement = undefined;
-						builtImprovement = {
-							key: '',
-							level: 0,
-						};
-						return true;
-					}
-
-					// Does improvement exist and is it a new or the same improvement?
-					if (Object.keys(json.world.improvements).includes(val)
-						&& (builtImprovement.key === '' || builtImprovement.key === val)
-					) {
-						// Exit if next improvement level does not exist
-						if (!Object.keys(json.world.improvements[val]).includes(builtImprovement.level.toString())) {
-							return false;
-						}
-
-						// Is improvement valid for this tile?
-						if (!Object.keys(json.world.improvements[val][builtImprovement.level].terrains).includes(hex.terrain.terrain)) {
-							return false;
-						}
-
-						objImprovement = Object.assign({}, json.world.improvements[val][builtImprovement.level],
-							{
-								image: scene.add.image(hex.x, hex.y, `improvements.${val}.${builtImprovement.level}`).setDepth(depths.improvement),
-								key: val,
-							});
-						builtImprovement.key = val;
-						builtImprovement.level++;
-						return true;
-					}
-					return false;
-				},
 			},
 			laborers: {
 				enumerable: true,
@@ -165,6 +142,39 @@ const Tile = (() => {
 						return true;
 					}
 					return false;
+				},
+			},
+			setImprovement: {
+				get: () => (val) => {
+					// Destroy all improvements on Tile
+					if (val === 'destroy') {
+						if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
+							objImprovement.image.destroy();
+						}
+						objImprovement = undefined;
+						builtImprovement = {
+							key: '',
+							level: 0,
+						};
+						return true;
+					}
+
+					if (isValidImprovement(hex, val, builtImprovement)) {
+						objImprovement = Object.assign({}, json.world.improvements[val][builtImprovement.level],
+							{
+								image: scene.add.image(hex.x, hex.y, `improvements.${val}.${builtImprovement.level}`).setDepth(depths.improvement),
+								key: val,
+							});
+						builtImprovement.key = val;
+						builtImprovement.level++;
+						return true;
+					}
+					return false;
+				},
+			},
+			isValidImprovement: {
+				get() {
+					return (improvement) => isValidImprovement(hex, improvement, builtImprovement);
 				},
 			},
 		});
@@ -226,7 +236,7 @@ function City({
 } = {}) {
 	// Tie to hex
 	const thisHex = grid.getHex({ row, col });
-	thisHex.tile.improvement = 'destroy';
+	thisHex.tile.setImprovement('destroy');
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
 	thisHex.city = this;
 	const laborers = new Set();
@@ -865,13 +875,12 @@ Object.assign(Unit.prototype, {
 					switch (action) {
 						// Build farm
 						case 'f':
-							if (!Actions['f'].isValidOption({ hex: thisHex })) {
+							if (thisHex.tile.setImprovement('farm')) {
+								this.deactivate(true);
+							} else {
 								// TODO: Warn player
-								console.warn('Cannot place farm here');
-								return;
+								console.warn('Could not build farm here');
 							}
-							thisHex.tile.improvement = 'farm';
-							this.deactivate(true);
 							return;
 						// Clear Improvement or Overlay
 						case 'C':
@@ -879,7 +888,7 @@ Object.assign(Unit.prototype, {
 								return;
 							}
 							if (thisHex.tile.improvement.key === 'farm') {
-								thisHex.tile.improvement = 'destroy';
+								thisHex.tile.setImprovement('destroy');
 								this.deactivate(true);
 								return;
 							}
@@ -989,24 +998,7 @@ const Actions = [
 		key: 'f', // farm
 		text: 'Build <u>f</u>arm',
 		isValidOption({ hex }) {
-			// Check valid terrain
-			if (![
-				'swamp',
-				'desert',
-				'grass',
-				'hill',
-			].includes(hex.terrain.terrain)) {
-				return false;
-			}
-			// Cannot build in city
-			if (hex.city instanceof City) {
-				return false;
-			}
-			// Cannot replace another farm
-			if (hex.tile.improvement.key === 'farm') {
-				return false;
-			}
-			return true;
+			return hex.tile.isValidImprovement('farm');
 		},
 	},
 	{
@@ -1244,7 +1236,7 @@ const config = {
 				}
 				// Build Improvement
 				if (typeof hex.improvement === 'string') {
-					hex.tile.improvement = hex.improvement;
+					hex.tile.setImprovement(hex.improvement);
 				}
 			});
 
