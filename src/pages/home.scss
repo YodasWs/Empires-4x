@@ -1,3 +1,14 @@
+body:has([y-page="home"]) {
+	display: flex;
+	flex-direction: column;
+}
+
 [y-page="home"] {
-	/* SCSS Goes Here */
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+
+	> p:last-of-type {
+		flex-grow: 1;
+	}
 }
