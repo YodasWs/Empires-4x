@@ -33,7 +33,13 @@ const Tile = (() => {
 	}) {
 		const claims = new Map();
 		let food = 0;
-		let improvement = undefined;
+
+		let objImprovement = undefined;
+		let builtImprovement = {
+			key: '',
+			level: 0,
+		};
+
 		const laborers = new Set();
 		let player = undefined;
 		let road = undefined;
@@ -86,23 +92,42 @@ const Tile = (() => {
 			},
 			improvement: {
 				enumerable: true,
-				get: () => improvement || {},
+				get: () => objImprovement || {},
 				set(val) {
 					// Destroy all improvements on Tile
 					if (val === 'destroy') {
-						if (improvement?.image instanceof Phaser.GameObjects.Image) {
-							improvement.image.destroy();
+						if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
+							objImprovement.image.destroy();
 						}
-						improvement = undefined;
+						objImprovement = undefined;
+						builtImprovement = {
+							key: '',
+							level: 0,
+						};
 						return true;
 					}
-					// Check that improvement exists in world and add to Tile
-					if (Object.keys(json.world.improvements).includes(val)) {
-						improvement = Object.assign({}, json.world.improvements[val],
+
+					// Does improvement exist and is it a new or the same improvement?
+					if (Object.keys(json.world.improvements).includes(val)
+						&& (builtImprovement.key === '' || builtImprovement.key === val)
+					) {
+						// Exit if next improvement level does not exist
+						if (!Object.keys(json.world.improvements[val]).includes(builtImprovement.level.toString())) {
+							return false;
+						}
+
+						// Is improvement valid for this tile?
+						if (!Object.keys(json.world.improvements[val][builtImprovement.level].terrains).includes(hex.terrain.terrain)) {
+							return false;
+						}
+
+						objImprovement = Object.assign({}, json.world.improvements[val][builtImprovement.level],
 							{
-								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
+								image: scene.add.image(hex.x, hex.y, `improvements.${val}.${builtImprovement.level}`).setDepth(depths.improvement),
 								key: val,
 							});
+						builtImprovement.key = val;
+						builtImprovement.level++;
 						return true;
 					}
 					return false;
@@ -1159,7 +1184,15 @@ const config = {
 				frameWidth: 200,
 			});
 			Object.entries(json.world.improvements).forEach(([key, improvement]) => {
-				this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
+				if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
+					this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
+				}
+				if (Array.isArray(improvement)) improvement.forEach((level, i) => {
+					if (typeof level.tile === 'string' && level.tile.length > 0) {
+						console.log('Sam, loading image for improvement:', `improvements.${key}.${i}`, `img/improvements/${level.tile}.png`);
+						this.load.image(`improvements.${key}.${i}`, `img/improvements/${level.tile}.png`);
+					}
+				});
 			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
