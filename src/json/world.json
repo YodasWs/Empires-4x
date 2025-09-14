@@ -41,6 +41,11 @@
 			}
 		]
 	},
+	"resources": {
+		"wheat": {
+			"tile": "wheat"
+		}
+	},
 	"terrains": {
 		"desert": {
 			"food": 0,
@@ -268,13 +273,13 @@
 		],
 		[
 			{
-				"terrain": "hill"
+				"terrain": "grass"
 			},
 			{
 				"terrain": "mountain"
 			},
 			{
-				"terrain": "hill"
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass"

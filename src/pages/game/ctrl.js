@@ -22,6 +22,7 @@ const depths = {
 	road: 6,
 	cities: 10,
 	inactiveUnits: 11,
+	resources: 20,
 	actionSprites: 98,
 	activeUnit: 100,
 };
@@ -199,6 +200,7 @@ const Tile = (() => {
 
 function Citizen({
 	city,
+	hex,
 	tile,
 }) {
 	if (city instanceof City) {
@@ -207,10 +209,16 @@ function Citizen({
 			get: () => city,
 		});
 	}
-	if (tile instanceof Tile) {
+	if (hex instanceof Honeycomb.Hex || tile?.hex instanceof Honeycomb.Hex) {
+		Object.defineProperty(this, 'hex', {
+			enumerable: true,
+			get: () => hex || tile?.hex,
+		});
+	}
+	if (tile instanceof Tile || hex?.tile instanceof Tile) {
 		Object.defineProperty(this, 'tile', {
 			enumerable: true,
-			get: () => tile,
+			get: () => tile || hex?.tile,
 		});
 	}
 	Object.defineProperties(this, {
@@ -452,9 +460,13 @@ const currentGame = {
 
 			// Collect food
 			hex.tile.food = 0;
-			if (hex.tile.laborers.length > 0) {
+			if (hex.tile.laborers.size > 0) {
 				hex.tile.food += hex.terrain.food || 0;
 				hex.tile.food += hex.tile.improvement.food || 0;
+				if (hex.tile.food > 0) {
+					const { x, y } = hex;
+					const sprite = currentGame.scenes.getScene('mainGameScene').add.sprite(x, y, `resources.wheat`).setDepth(depths.resources);
+				}
 			}
 		});
 
@@ -528,7 +540,7 @@ const currentGame = {
 		console.log('Sam, endRound!');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 		grid.forEach((hex) => {
-			if (hex.tile.laborers.length > 0 && hex.tile.food < hex.tile.laborers.length * Citizen.FOOD_CONSUMPTION) {
+			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
 				// TODO: Citizen Starves!
 			}
 		});
@@ -877,6 +889,8 @@ Object.assign(Unit.prototype, {
 						case 'f':
 							if (thisHex.tile.setImprovement('farm')) {
 								this.deactivate(true);
+								// TODO: Destroy unit after building improvement
+								thisHex.tile.laborers = new Citizen({ hex: thisHex });
 							} else {
 								// TODO: Warn player
 								console.warn('Could not build farm here');
@@ -1186,6 +1200,11 @@ const config = {
 					}
 				});
 			});
+			Object.entries(json.world.resources).forEach(([key, resource]) => {
+				if (typeof resource.tile === 'string' && resource.tile.length > 0) {
+					this.load.image(`resources.${key}`, `img/resources/${resource.tile}.png`);
+				}
+			});
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			// Load Unit Images
@@ -1466,7 +1485,7 @@ yodasws.page('pageGame').setRoute({
 				// TODO: Show tile improvement
 				// TODO: Allow User to click tile to assign laborers
 				// TODO: Show food production on tile
-				if (hex.tile.laborers.length > 0) {
+				if (hex.tile.laborers.size > 0) {
 					const fixedWidth = tileWidth * tileScale;
 					this.add.text(
 						tileCenter.x - fixedWidth / 2,
