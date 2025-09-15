@@ -17,8 +17,9 @@ function camelCase() {
 	}).join('');
 }
 
+import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
-const argv = yargs()
+const argv = yargs(hideBin(process.argv))
 	.usage("\n\x1b[1mUsage:\x1b[0m gulp \x1b[36m<command>\x1b[0m \x1b[34m[options]\x1b[0m")
 	.command('init', 'Initialize app', {
 		name: {
