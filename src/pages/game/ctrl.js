@@ -433,6 +433,8 @@ const Player = (() => {
 	return Player;
 })();
 
+let FoodSprites = [];
+
 const currentGame = {
 	players: [
 		new Player(0),
@@ -458,14 +460,21 @@ const currentGame = {
 				}
 			});
 
-			// Collect food
 			hex.tile.food = 0;
+
+			// Produce Food
 			if (hex.tile.laborers.size > 0) {
-				hex.tile.food += hex.terrain.food || 0;
-				hex.tile.food += hex.tile.improvement.food || 0;
-				if (hex.tile.food > 0) {
+				let food = 0;
+				food += hex.terrain.food || 0;
+				food += hex.tile.improvement.food || 0;
+				if (food > 0) {
+					// TODO: Add some particle effect to show food being generated and not stacked
 					const { x, y } = hex;
-					const sprite = currentGame.scenes.getScene('mainGameScene').add.sprite(x, y, `resources.wheat`).setDepth(depths.resources);
+					FoodSprites.push({
+						hex,
+						food,
+						sprite: currentGame.scenes.getScene('mainGameScene').add.sprite(x, y, `resources.wheat`).setDepth(depths.resources),
+					});
 				}
 			}
 		});
@@ -548,18 +557,27 @@ const currentGame = {
 			}
 		});
 
-		// TODO: It'd be better to start from the City and spiral outward so that the food moves no more than one hex each Round…
-		grid.forEach((hex) => {
-			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
-				// TODO: Citizen Starves!
+		// Move Food towards nearest City
+		FoodSprites.forEach(({ hex, food, sprite }) => {
+			if (food <= 0) {
+				sprite.destroy();
+				return;
 			}
 
-			// TODO: Feed Laborers from Tile food reserves
-			hex.tile.food -= hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION;
+			// Leave Food on tile for Laborers
+			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
+				const neededFood = hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food;
+				const takeFood = Math.min(neededFood, food);
+				food -= takeFood;
+				hex.tile.food += takeFood;
+			}
 
-			if (hex.tile.food <= 0) return;
+			if (food <= 0) {
+				sprite.destroy();
+				return;
+			}
 
-			// TODO: Move surplus Food to City
+			// Move surplus Food to City
 			let closestHex = null;
 			let closestDistance = Infinity;
 			cities.forEach((cityHex) => {
@@ -569,19 +587,35 @@ const currentGame = {
 					closestDistance = dist;
 				}
 			});
+
 			if (closestHex instanceof Honeycomb.Hex && closestHex.city instanceof City) {
 				const path = findPath(hex, closestHex);
 				if (Array.isArray(path) && path.length > 0) {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
-						// TODO: Food arrives at City
+						nextHex.city.player.food += food;
+						sprite.destroy();
 					} else {
-						// TODO: add to nextHex tile
-						nextHex.tile.food += hex.tile.food;
+						hex = nextHex;
+						sprite.setPosition(hex.x, hex.y);
 					}
-					hex.tile.food = 0;
 				}
 			}
+
+		});
+
+		// Remove any FoodSprites that have no food or have been destroyed
+		FoodSprites = FoodSprites.filter(({ food, sprite }) => {
+			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && !sprite.destroyed;
+		});
+
+		grid.forEach((hex) => {
+			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
+				// TODO: Citizen Starves!
+			}
+
+			// TODO: Feed Laborers from Tile food reserves
+			hex.tile.food -= hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION;
 		});
 		this.startRound();
 	},

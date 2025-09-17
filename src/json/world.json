@@ -49,8 +49,8 @@
 				"grass": 12,
 				"hill": 12,
 				"moor": 12,
-				"mountain": 12,
-				"swamp": 12
+				"mountain": 24,
+				"swamp": 24
 			}
 		}
 	},
