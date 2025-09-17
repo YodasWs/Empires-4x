@@ -539,9 +539,48 @@ const currentGame = {
 	endRound() {
 		console.log('Sam, endRound!');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
+
+		// Collect list of villages and cities
+		const cities = [];
+		grid.forEach((hex) => {
+			if (hex.city instanceof City) {
+				cities.push(hex);
+			}
+		});
+
+		// TODO: It'd be better to start from the City and spiral outward so that the food moves no more than one hex each Round…
 		grid.forEach((hex) => {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
 				// TODO: Citizen Starves!
+			}
+
+			// TODO: Feed Laborers from Tile food reserves
+			hex.tile.food -= hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION;
+
+			if (hex.tile.food <= 0) return;
+
+			// TODO: Move surplus Food to City
+			let closestHex = null;
+			let closestDistance = Infinity;
+			cities.forEach((cityHex) => {
+				const dist = grid.distance(hex, cityHex);
+				if (dist < closestDistance) {
+					closestHex = cityHex;
+					closestDistance = dist;
+				}
+			});
+			if (closestHex instanceof Honeycomb.Hex && closestHex.city instanceof City) {
+				const path = findPath(hex, closestHex);
+				if (Array.isArray(path) && path.length > 0) {
+					const nextHex = path.shift();
+					if (nextHex.city instanceof City) {
+						// TODO: Food arrives at City
+					} else {
+						// TODO: add to nextHex tile
+						nextHex.tile.food += hex.tile.food;
+					}
+					hex.tile.food = 0;
+				}
 			}
 		});
 		this.startRound();
@@ -597,8 +636,11 @@ function hideActionSprites() {
 	}
 }
 
+// The basic resource transporter unit, used to move resources to the nearest City
+let ResourceTransporter = null;
+
 // Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
-function findPath(unit, start, end) {
+function findPath(start, end, unit = ResourceTransporter) {
 	let openHexes = [];
 	let closedHexes = [];
 	let explored = 0;
@@ -630,8 +672,9 @@ function findPath(unit, start, end) {
 		})).forEach((neighbor) => {
 			// If checked path already
 			if (closedHexes.includes(neighbor)) return;
+
 			// If Unit cannot move here, do not include in path
-			if (!isLegalMove(unit, neighbor.row, neighbor.col)) return;
+			if (!isLegalMove(neighbor.row, neighbor.col, unit)) return;
 
 			// g_cost is movement cost from start
 			neighbor.g_cost = current.g_cost + unit.base.movementCosts[neighbor.terrain.terrain];
@@ -661,7 +704,7 @@ function findPath(unit, start, end) {
 		if (pathHex !== start) {
 			path.unshift(pathHex);
 		}
-	} while (pathHex.parent instanceof Honeycomb.Hex);
+	} while (pathHex?.parent instanceof Honeycomb.Hex);
 
 	return path;
 }
@@ -765,7 +808,7 @@ Object.assign(Unit.prototype, {
 			'O',
 		].forEach((move) => {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-			if (isLegalMove(this, row, col)) {
+			if (isLegalMove(row, col, this)) {
 				const hex = grid.getHex({ row, col });
 				actionOutlines.text.push(currentGame.scenes.getScene('mainGameScene').add.text(
 					hex.x - tileWidth / 2,
@@ -822,7 +865,7 @@ Object.assign(Unit.prototype, {
 				this.moveTo(hex);
 			} else {
 				// Find path
-				const path = findPath(this, this.hex, hex);
+				const path = findPath(this.hex, hex, this);
 				if (!Array.isArray(path) || path.length === 0) {
 					// TODO: Warn User no path was found
 					console.warn('Sam, no path found!');
@@ -918,7 +961,7 @@ Object.assign(Unit.prototype, {
 	},
 	moveTo(hex) {
 		if (!(hex instanceof Honeycomb.Hex)) return;
-		if (!isLegalMove(this, hex.row, hex.col)) return;
+		if (!isLegalMove(hex.row, hex.col, this)) return;
 		hideActionSprites();
 		this.row = hex.row;
 		this.col = hex.col;
@@ -1048,22 +1091,24 @@ function doAction(evt) {
 	currentGame.activeUnit.doAction(evt.key);
 }
 
-function isLegalMove(unit, row, col) {
+function isLegalMove(row, col, unit = ResourceTransporter) {
 	// Grab Target Tile
 	const target = grid.getHex({ row, col });
 	if (!(target instanceof Honeycomb.Hex)) return false;
 
-	// TODO: Check move into City
-	if (target.city instanceof City && target.city.player.index !== unit.player.index) {
-		if (!unit.attack || !unit.attackCities) return false;
-	}
+	if (unit instanceof Unit) {
+		// TODO: Check move into City
+		if (target.city instanceof City && target.city.player.index !== unit.player.index) {
+			if (!unit.attack || !unit.attackCities) return false;
+		}
 
-	// TODO: Check for battle
-	// const tileUnits = grabUnitsOnTile(row, col);
-	let tileUnits;
-	if (false) {
-		if (!unit.attack) return false;
-		if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
+		// TODO: Check for battle
+		// const tileUnits = grabUnitsOnTile(row, col);
+		let tileUnits;
+		if (false) {
+			if (!unit.attack) return false;
+			if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
+		}
 	}
 
 	// Check movement into terrain
@@ -1109,7 +1154,7 @@ function openUnitActionMenu(hex) {
 			if (Actions['c'].isValidOption({ hex, player: currentGame.activeUnit.player })) {
 				possibleActions.push('c');
 			}
-		} else if (isLegalMove(currentGame.activeUnit, hex.row, hex.col)) {
+		} else if (isLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
 			// Offer to move unit here
 			possibleActions.push('moveTo');
 		}
@@ -1189,6 +1234,9 @@ const config = {
 				frameHeight: 200,
 				frameWidth: 200,
 			});
+			ResourceTransporter = {
+				...json.world.Transporter,
+			};
 			Object.entries(json.world.improvements).forEach(([key, improvement]) => {
 				if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
 					this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);

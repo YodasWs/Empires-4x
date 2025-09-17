@@ -41,6 +41,19 @@
 			}
 		]
 	},
+	"Transporter": {
+		"moves": 12,
+		"base": {
+			"movementCosts": {
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 12,
+				"swamp": 12
+			}
+		}
+	},
 	"resources": {
 		"wheat": {
 			"tile": "wheat"
