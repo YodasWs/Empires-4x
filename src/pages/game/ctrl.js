@@ -49,7 +49,6 @@ const Tile = (() => {
 		hex,
 	}) {
 		const claims = new Map();
-		let food = 0;
 
 		let objImprovement = undefined;
 		let builtImprovement = {
@@ -61,6 +60,7 @@ const Tile = (() => {
 		let player = undefined;
 		let road = undefined;
 
+		this.food = 0;
 		Object.defineProperties(this, {
 			claims: {
 				enumerable: true,
@@ -74,17 +74,6 @@ const Tile = (() => {
 						return claims.get(lookupPlayer) || 0;
 					}
 					return claims;
-				},
-			},
-			food: {
-				enumerable: true,
-				get: () => food,
-				set(val) {
-					if (Number.isInteger(val) && val >= 0) {
-						food = val;
-						return true;
-					}
-					return false;
 				},
 			},
 			hex: {
@@ -314,18 +303,9 @@ Object.assign(City.prototype, {
 const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
-		let food = 0;
+		this.food = 0;
 		const units = [];
 		Object.defineProperties(this, {
-			food: {
-				enumerable: true,
-				get: () => food,
-				set(val) {
-					if (Number.isInteger(val) && val >= 0) {
-						food = val;
-					}
-				},
-			},
 			frame: {
 				enumerable: true,
 				get: () => index % 3,
@@ -471,9 +451,11 @@ const currentGame = {
 					// TODO: Add some particle effect to show food being generated and not stacked
 					const { x, y } = hex;
 					FoodSprites.push({
-						hex,
 						food,
+						hex,
+						rounds: 0,
 						sprite: currentGame.scenes.getScene('mainGameScene').add.sprite(x, y, `resources.wheat`).setDepth(depths.resources),
+						start: hex,
 					});
 				}
 			}
@@ -558,7 +540,7 @@ const currentGame = {
 		});
 
 		// Move Food towards nearest City
-		FoodSprites.forEach(({ hex, food, sprite }) => {
+		FoodSprites.forEach(({ hex, food, sprite, rounds }) => {
 			if (food <= 0) {
 				sprite.destroy();
 				return;
@@ -602,11 +584,15 @@ const currentGame = {
 				}
 			}
 
+			// TODO: Limit lifespan of FoodSprite
+			if (++rounds > 5) {
+				sprite.destroy();
+			}
 		});
 
 		// Remove any FoodSprites that have no food or have been destroyed
 		FoodSprites = FoodSprites.filter(({ food, sprite }) => {
-			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && !sprite.destroyed;
+			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
 		});
 
 		grid.forEach((hex) => {
@@ -691,7 +677,6 @@ function findPath(start, end, unit = ResourceTransporter) {
 
 		// Check if finished
 		if (current === end) {
-			console.log('Sam,', `Found target after exploring ${explored} hexes.`);
 			foundPath = true;
 			break;
 		}
@@ -726,7 +711,6 @@ function findPath(start, end, unit = ResourceTransporter) {
 	}
 
 	if (!foundPath) {
-		console.warn('Sam,', `Ran out of hexes to explore after exploring ${explored} hexes.`);
 		return;
 	}
 
@@ -1374,8 +1358,6 @@ const config = {
 			currentGame.players[0].addUnit('warrior', 2, 3, this);
 			currentGame.players[0].addUnit('worker', 2, 3, this);
 			currentGame.players[2].addUnit('warrior', 2, 8, this);
-			console.log('Sam, players:', currentGame.players);
-			console.log('Sam, unit 1:', currentGame.players[0].units[0]);
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
