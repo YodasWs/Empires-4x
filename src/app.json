@@ -3,6 +3,7 @@
 	"components": [],
 	"sections": [],
 	"pages": [
+		"blog",
 		"game"
 	],
 	"json": {
