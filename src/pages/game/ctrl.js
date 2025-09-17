@@ -1064,7 +1064,7 @@ const Actions = [
 	},
 	{
 		key: 's', // stay
-		text: '<u>S</u>tay here',
+		text: '<u>S</u>tay here this turn',
 	},
 	{
 		key: '',
@@ -1119,7 +1119,7 @@ function isLegalMove(row, col, unit = ResourceTransporter) {
 }
 
 function openUnitActionMenu(hex) {
-	if (!(hex instanceof Honeycomb.Hex)) {
+	if (!(hex instanceof Honeycomb.Hex) || !(hex.tile instanceof Tile)) {
 		// Not valid hex, exit
 		return;
 	}
