@@ -23,7 +23,7 @@ To ensure that I can legally transition the project for commercial purposes in t
 We welcome contributions of all kinds!
 
 *   **Ideas and Feedback:** Share your thoughts on gameplay, features, and design in the [Discussions section](https://github.com/YodasWs/Empires-4x/discussions).
-*   **Boring Bits:** Help out with necessary but less glamorous tasks, like setting up the main menu, creating configuration screens, or writing documentation.
+*   **Boring Bits:** Help out with necessary but less glamorous tasks, like setting up the main menu, creating configuration screens, or writing documentation. This is a good way to begin to familiarize yourself with the code.
 *   **UX/UI Design and Art:** If you have design or artistic skills, we'd love your help creating a better user experience and graphics.
 *   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/Empires-4x/issues) for areas where help is needed.
 
