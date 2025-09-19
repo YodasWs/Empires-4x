@@ -587,10 +587,30 @@ const currentGame = {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
 						nextHex.city.player.food += food;
-						sprite.destroy();
+						scene.tweens.add({
+							targets: sprite,
+							x: nextHex.x,
+							y: nextHex.y,
+							ease: 'Quad.inOut',
+							duration: 800,
+							yoyo: false,
+							onComplete(tween) {
+								sprite.destroy();
+								tween.destroy();
+							},
+						});
 					} else {
-						hex = nextHex;
-						sprite.setPosition(hex.x, hex.y);
+						scene.tweens.add({
+							targets: sprite,
+							x: nextHex.x,
+							y: nextHex.y,
+							ease: 'Linear',
+							duration: 1000,
+							yoyo: false,
+							onComplete(tween) {
+								tween.destroy();
+							},
+						});
 					}
 				}
 			}
@@ -1003,7 +1023,18 @@ const Unit = (() => {
 			hideActionSprites();
 			this.row = hex.row;
 			this.col = hex.col;
-			this.sprite.setPosition(hex.x, hex.y).setDepth(depths.inactiveUnits);
+			scene.tweens.add({
+				targets: this.sprite,
+				x: hex.x,
+				y: hex.y,
+				ease: 'Quad.inOut',
+				duration: 800,
+				yoyo: false,
+				onComplete(tween) {
+					tween.destroy();
+				},
+			});
+			this.sprite.setDepth(depths.inactiveUnits);
 			this.moves -= this.base.movementCosts[hex.terrain.terrain];
 		},
 	});
