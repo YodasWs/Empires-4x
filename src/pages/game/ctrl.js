@@ -28,6 +28,7 @@ const depths = {
 };
 
 const Tile = (() => {
+	let scene = null;
 	function isValidImprovement(hex, improvement, builtImprovement) {
 		if (!(hex instanceof Honeycomb.Hex)) return false;
 		if (typeof improvement !== 'string' || improvement === '') return false;
@@ -45,9 +46,11 @@ const Tile = (() => {
 	}
 
 	function Tile({
-		scene,
 		hex,
 	}) {
+		if (scene === null) {
+			scene = currentGame.scenes.getScene('mainGameScene');
+		}
 		const claims = new Map();
 
 		let objImprovement = undefined;
@@ -224,81 +227,88 @@ Object.assign(Citizen.prototype, {
 	},
 });
 
-function City({
-	col,
-	row,
-	scene,
-	level = 1,
-	player,
-} = {}) {
-	// Tie to hex
-	const thisHex = grid.getHex({ row, col });
-	thisHex.tile.setImprovement('destroy');
-	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
-	thisHex.city = this;
-	const laborers = new Set();
-
-	// Claim this tile and adjacent tiles
-	grid.traverse(Honeycomb.spiral({
-		start: [ thisHex.q, thisHex.r ],
-		radius: 1,
-	})).forEach((hex) => {
-		hex.tile.claimTerritory(player, 100);
-	});
-
-	// Claim water territory
-	grid.traverse(Honeycomb.ring({
-		center: [ thisHex.q, thisHex.r ],
-		radius: 2,
-	})).forEach((hex) => {
-		if (hex.terrain.isWater) {
-			hex.tile.claimTerritory(player, 50);
+const City = (() => {
+	let scene = null;
+	function City({
+		col,
+		row,
+		level = 1,
+		player,
+	} = {}) {
+		if (scene === null) {
+			scene = currentGame.scenes.getScene('mainGameScene');
 		}
-	});
+		// Tie to hex
+		const thisHex = grid.getHex({ row, col });
+		thisHex.tile.setImprovement('destroy');
 
-	// Properties
-	this.housing = (() => {
-		switch (level) {
-			case 1: return 3;
-			case 2: return 6;
-		}
-		return 0;
-	})();
-	Object.defineProperties(this, {
-		hex: {
-			enumerable: true,
-			get: () => thisHex,
-		},
-		laborers: {
-			enumerable: true,
-			get: () => laborers,
-			set(val) {
-				if (!(val instanceof Citizen)) {
-					throw new TypeError('City.laborers expects to be assigned object instance of Citizen!');
-				}
-				laborers.add(val);
-				return true;
+		const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
+		thisHex.city = this;
+		const laborers = new Set();
+
+		// Claim this tile and adjacent tiles
+		grid.traverse(Honeycomb.spiral({
+			start: [ thisHex.q, thisHex.r ],
+			radius: 1,
+		})).forEach((hex) => {
+			hex.tile.claimTerritory(player, 100);
+		});
+
+		// Claim water territory
+		grid.traverse(Honeycomb.ring({
+			center: [ thisHex.q, thisHex.r ],
+			radius: 2,
+		})).forEach((hex) => {
+			if (hex.terrain.isWater) {
+				hex.tile.claimTerritory(player, 50);
+			}
+		});
+
+		// Properties
+		this.housing = (() => {
+			switch (level) {
+				case 1: return 3;
+				case 2: return 6;
+			}
+			return 0;
+		})();
+		Object.defineProperties(this, {
+			hex: {
+				enumerable: true,
+				get: () => thisHex,
 			},
-		},
-		player: {
-			enumerable: true,
-			get: () => player,
-		},
-		sprite: {
-			get: () => sprite,
-		},
-		level: {
-			enumerable: true,
-			get: () => level,
-		},
-		housing: {
-			enumerable: true,
-			get: () => this.housing,
-		},
+			laborers: {
+				enumerable: true,
+				get: () => laborers,
+				set(val) {
+					if (!(val instanceof Citizen)) {
+						throw new TypeError('City.laborers expects to be assigned object instance of Citizen!');
+					}
+					laborers.add(val);
+					return true;
+				},
+			},
+			player: {
+				enumerable: true,
+				get: () => player,
+			},
+			sprite: {
+				get: () => sprite,
+			},
+			level: {
+				enumerable: true,
+				get: () => level,
+			},
+			housing: {
+				enumerable: true,
+				get: () => this.housing,
+			},
+		});
+	}
+	Object.assign(City.prototype, {
 	});
-}
-Object.assign(City.prototype, {
-});
+	return City;
+})();
 
 const Player = (() => {
 	let activeUnit = null;
@@ -529,6 +539,7 @@ const currentGame = {
 	},
 	endRound() {
 		console.log('Sam, endRound!');
+		const scene = currentGame.scenes.getScene('mainGameScene');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 
 		// Collect list of villages and cities
@@ -548,15 +559,15 @@ const currentGame = {
 
 			// Leave Food on tile for Laborers
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
-				const neededFood = hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food;
+				const neededFood = Math.max(0, hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food);
 				const takeFood = Math.min(neededFood, food);
 				food -= takeFood;
 				hex.tile.food += takeFood;
-			}
 
-			if (food <= 0) {
-				sprite.destroy();
-				return;
+				if (food <= 0) {
+					sprite.destroy();
+					return;
+				}
 			}
 
 			// Move surplus Food to City
@@ -610,6 +621,7 @@ const currentGame = {
 	},
 };
 
+// Helper to find a point along a line between two points
 function lineShift(point1, point2, t = 0.9) {
 	const m = (point1.y - point2.y) / (point1.x - point2.x)
 	const b = point1.y - m * point1.x
@@ -727,266 +739,276 @@ function findPath(start, end, unit = ResourceTransporter) {
 	return path;
 }
 
-function Unit(unitType, {
-	row,
-	col,
-	scene,
-	player,
-}) {
-	// Check unitType exists
-	const base = json.world.units[unitType];
-	if (typeof base !== 'object' || base === null) {
-		throw new TypeError(`Unknown unit '${unitType}'`);
-	}
-	// Add sprite
-	const { x, y } = grid.getHex({ row, col });
-	const sprite = scene.add.sprite(x, y, `unit.${unitType}`).setDepth(depths.inactiveUnits);
-	// Define properties
-	this.col = col;
-	this.row = row;
-	this.path = [];
-	Object.defineProperties(this, {
-		base: {
-			enumerable: true,
-			get: () => base,
-		},
-		hex: {
-			enumerable: true,
-			get: () => grid.getHex({ row: this.row, col: this.col }),
-		},
-		player: {
-			enumerable: true,
-			get: () => player,
-		},
-		scene: {
-			enumerable: true,
-			get: () => scene,
-		},
-		sprite: {
-			enumerable: true,
-			get: () => sprite,
-		},
-		unitType: {
-			enumerable: true,
-			get: () => unitType,
-		},
-	});
-}
 const actionOutlines = {
 	text: [],
 };
-Object.assign(Unit.prototype, {
-	activate() {
-		const thisHex = grid.getHex({ row: this.row, col: this.col });
-		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
+const Unit = (() => {
+	let scene = null;
 
-		// Pan camera to active unit
-		// TODO: Add setting to skip this if automated movement
-		// TODO: Add setting to skip if not human player's unit
-		const startPos = lineShift(this.scene.cameras.main.getScroll(thisHex.x, thisHex.y), {
-			x: this.scene.cameras.main.scrollX,
-			y: this.scene.cameras.main.scrollY,
-		}, 0.2);
-		setTimeout(() => {
-			this.scene.cameras.main.setScroll(startPos.x, startPos.y);
-			setTimeout(() => {
-				const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
-				this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
-			}, 0);
-		}, 0);
-		this.sprite.setDepth(depths.activeUnit);
-
-		// Continue on path
-		if (Array.isArray(this.path) && this.path.length > 0) {
-			// Only move along path is able
-			if (this.moves > 0) {
-				this.doAction('moveTo', this.path.shift());
-			} else {
-				this.deactivate(true);
-			}
-			return;
+	function Unit(unitType, {
+		row,
+		col,
+		player,
+	}) {
+		// Check unitType exists
+		const base = json.world.units[unitType];
+		if (typeof base !== 'object' || base === null) {
+			throw new TypeError(`Unknown unit '${unitType}'`);
 		}
 
-		// Not the human player's unit, do nothing (for now)
-		if (this.player.index !== 0) {
-			this.deactivate(true);
-			return;
+		if (scene === null) {
+			scene = currentGame.scenes.getScene('mainGameScene');
 		}
 
-		actionOutlines.graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.actionSprites - 1);
-		const graphics = actionOutlines.graphics;
-
-		// Set text and listeners on hexes to move unit
-		[
-			'L',
-			'K',
-			'J',
-			'U',
-			'I',
-			'O',
-		].forEach((move) => {
-			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-			if (isLegalMove(row, col, this)) {
-				const hex = grid.getHex({ row, col });
-				actionOutlines.text.push(currentGame.scenes.getScene('mainGameScene').add.text(
-					hex.x - tileWidth / 2,
-					hex.y + tileWidth / 6,
-					move,
-					{
-						fixedWidth: tileWidth,
-						font: '25pt Trebuchet MS',
-						align: 'center',
-						color: 'khaki',
-						stroke: 'black',
-						strokeThickness: 7,
-					}
-				).setOrigin(0).setDepth(depths.actionSprites));
-			}
+		// Add sprite
+		const { x, y } = grid.getHex({ row, col });
+		const sprite = scene.add.sprite(x, y, `unit.${unitType}`).setDepth(depths.inactiveUnits);
+		// Define properties
+		this.col = col;
+		this.row = row;
+		this.path = [];
+		Object.defineProperties(this, {
+			base: {
+				enumerable: true,
+				get: () => base,
+			},
+			hex: {
+				enumerable: true,
+				get: () => grid.getHex({ row: this.row, col: this.col }),
+			},
+			player: {
+				enumerable: true,
+				get: () => player,
+			},
+			scene: {
+				enumerable: true,
+				get: () => scene,
+			},
+			sprite: {
+				enumerable: true,
+				get: () => sprite,
+			},
+			unitType: {
+				enumerable: true,
+				get: () => unitType,
+			},
 		});
+	}
+	Object.assign(Unit.prototype, {
+		activate() {
+			const thisHex = grid.getHex({ row: this.row, col: this.col });
+			currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
 
-		currentGame.activeUnit = this;
-		this.scene.input.keyboard.enabled = true;
-	},
-	deactivate(endMoves = false) {
-		if (endMoves === true) {
-			this.moves = 0;
-		}
-		hideActionSprites();
-		this.sprite.setDepth(depths.inactiveUnits);
-		currentGame.activeUnit = null;
-		this.scene.input.keyboard.enabled = false;
-		currentGame.currentPlayer.checkEndTurn();
-	},
-	doAction(action, hex = null) {
-		currentGame.closeUnitActionMenu();
-		// Wait, to do action later in turn
-		if (action === 'w' || action === 'Tab') {
-			this.deactivate();
-			return;
-		}
-		// Stay here
-		if (action === 's') {
-			this.deactivate(true);
-			return;
-		}
-		// Open City View
-		if (action === 'city' && hex instanceof Honeycomb.Hex) {
-			currentGame.scenes.start('city-view', {
-				hex,
-			});
-			return;
-		}
-		// Move unit
-		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
-			if (grid.distance(this.hex, hex) === 1) {
-				// Neighbor, move there
-				this.moveTo(hex);
-			} else {
-				// Find path
-				const path = findPath(this.hex, hex, this);
-				if (!Array.isArray(path) || path.length === 0) {
-					// TODO: Warn User no path was found
-					console.warn('Sam, no path found!');
-					return;
+			// Pan camera to active unit
+			// TODO: Add setting to skip this if automated movement
+			// TODO: Add setting to skip if not human player's unit
+			const startPos = lineShift(this.scene.cameras.main.getScroll(thisHex.x, thisHex.y), {
+				x: this.scene.cameras.main.scrollX,
+				y: this.scene.cameras.main.scrollY,
+			}, 0.2);
+			setTimeout(() => {
+				this.scene.cameras.main.setScroll(startPos.x, startPos.y);
+				setTimeout(() => {
+					const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
+					this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
+				}, 0);
+			}, 0);
+			this.sprite.setDepth(depths.activeUnit);
+
+			// Continue on path
+			if (Array.isArray(this.path) && this.path.length > 0) {
+				// Only move along path is able
+				if (this.moves > 0) {
+					this.doAction('moveTo', this.path.shift());
+				} else {
+					this.deactivate(true);
 				}
-				if (Array.isArray(path)) {
-					this.path = path;
-				}
-			}
-		} else if ([
-			'u',
-			'i',
-			'o',
-			'j',
-			'k',
-			'l',
-		].includes(action)) {
-			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			this.moveTo(grid.getHex({ row, col }));
-		} else if (action === 'c') {
-			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			if (!Actions['c'].isValidOption({ hex: thisHex, player: this.player })) {
-				// TODO: Show message to Player that territory already belongs to them!
-				console.warn('Sam, you own this already');
 				return;
 			}
-			// Claim hex territory
-			thisHex.tile.claimTerritory(this.player, 10);
-			this.moves--;
-		} else {
-			const thisHex = grid.getHex({ row: this.row, col: this.col});
-			// Unit-specific actions
-			switch (this.unitType) {
-				case 'settler':
-					switch (action) {
-						// Build city
-						case 'b':
-							if (!Actions['b'].isValidOption({ hex: thisHex })) {
-								// TODO: Warn player
-								console.warn('Cannot place city adjacent to another city');
-								return;
-							}
-							// Build city
-							const city = new City({
-								col: this.col,
-								row: this.row,
-								player: this.player,
-								scene: this.scene,
-							});
-							// Remove unit from game
-							const i = this.player.units.indexOf(this);
-							if (i >= 0) {
-								this.player.units.splice(i, 1);
-							}
-							this.deactivate();
-							this.sprite.destroy();
-							delete this;
-							return;
-					}
-					break;
-				case 'worker':
-					switch (action) {
-						// Build farm
-						case 'f':
-							if (thisHex.tile.setImprovement('farm')) {
-								this.deactivate(true);
-								// TODO: Destroy unit after building improvement
-								thisHex.tile.laborers = new Citizen({ hex: thisHex });
-							} else {
-								// TODO: Warn player
-								console.warn('Could not build farm here');
-							}
-							return;
-						// Clear Improvement or Overlay
-						case 'C':
-							if (!Actions['C'].isValidOption({ hex: thisHex })) {
-								return;
-							}
-							if (thisHex.tile.improvement.key === 'farm') {
-								thisHex.tile.setImprovement('destroy');
-								this.deactivate(true);
-								return;
-							}
-					}
-					break;
+
+			// Not the human player's unit, do nothing (for now)
+			if (this.player.index !== 0) {
+				this.deactivate(true);
+				return;
 			}
-		}
-		if (this.moves > 0) {
-			this.player.activateUnit();
-		} else {
-			this.deactivate();
-		}
-	},
-	moveTo(hex) {
-		if (!(hex instanceof Honeycomb.Hex)) return;
-		if (!isLegalMove(hex.row, hex.col, this)) return;
-		hideActionSprites();
-		this.row = hex.row;
-		this.col = hex.col;
-		this.sprite.setPosition(hex.x, hex.y).setDepth(depths.inactiveUnits);
-		this.moves -= this.base.movementCosts[hex.terrain.terrain];
-	},
-});
+
+			actionOutlines.graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.actionSprites - 1);
+			const graphics = actionOutlines.graphics;
+
+			// Set text and listeners on hexes to move unit
+			[
+				'L',
+				'K',
+				'J',
+				'U',
+				'I',
+				'O',
+			].forEach((move) => {
+				const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
+				if (isLegalMove(row, col, this)) {
+					const hex = grid.getHex({ row, col });
+					actionOutlines.text.push(currentGame.scenes.getScene('mainGameScene').add.text(
+						hex.x - tileWidth / 2,
+						hex.y + tileWidth / 6,
+						move,
+						{
+							fixedWidth: tileWidth,
+							font: '25pt Trebuchet MS',
+							align: 'center',
+							color: 'khaki',
+							stroke: 'black',
+							strokeThickness: 7,
+						}
+					).setOrigin(0).setDepth(depths.actionSprites));
+				}
+			});
+
+			currentGame.activeUnit = this;
+			this.scene.input.keyboard.enabled = true;
+		},
+		deactivate(endMoves = false) {
+			if (endMoves === true) {
+				this.moves = 0;
+			}
+			hideActionSprites();
+			this.sprite.setDepth(depths.inactiveUnits);
+			currentGame.activeUnit = null;
+			this.scene.input.keyboard.enabled = false;
+			currentGame.currentPlayer.checkEndTurn();
+		},
+		doAction(action, hex = null) {
+			currentGame.closeUnitActionMenu();
+			// Wait, to do action later in turn
+			if (action === 'w' || action === 'Tab') {
+				// TODO: If Tab on unit action menu, do a11y instead of deactivate unit
+				this.deactivate();
+				return;
+			}
+			// Stay here
+			if (action === 's') {
+				this.deactivate(true);
+				return;
+			}
+			// Open City View
+			if (action === 'city' && hex instanceof Honeycomb.Hex) {
+				currentGame.scenes.start('city-view', {
+					hex,
+				});
+				return;
+			}
+			// Move unit
+			if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
+				if (grid.distance(this.hex, hex) === 1) {
+					// Neighbor, move there
+					this.moveTo(hex);
+				} else {
+					// Find path
+					const path = findPath(this.hex, hex, this);
+					if (!Array.isArray(path) || path.length === 0) {
+						// TODO: Warn User no path was found
+						console.warn('Sam, no path found!');
+						return;
+					}
+					if (Array.isArray(path)) {
+						this.path = path;
+					}
+				}
+			} else if ([
+				'u',
+				'i',
+				'o',
+				'j',
+				'k',
+				'l',
+			].includes(action)) {
+				const [row, col] = actionTileCoordinates(action, this.row, this.col);
+				this.moveTo(grid.getHex({ row, col }));
+			} else if (action === 'c') {
+				const thisHex = grid.getHex({ row: this.row, col: this.col});
+				if (!Actions['c'].isValidOption({ hex: thisHex, player: this.player })) {
+					// TODO: Show message to Player that territory already belongs to them!
+					console.warn('Sam, you own this already');
+					return;
+				}
+				// Claim hex territory
+				thisHex.tile.claimTerritory(this.player, 10);
+				this.moves--;
+			} else {
+				const thisHex = grid.getHex({ row: this.row, col: this.col});
+				// Unit-specific actions
+				switch (this.unitType) {
+					case 'settler':
+						switch (action) {
+								// Build city
+							case 'b':
+								if (!Actions['b'].isValidOption({ hex: thisHex })) {
+									// TODO: Warn player
+									console.warn('Cannot place city adjacent to another city');
+									return;
+								}
+								// Build city
+								const city = new City({
+									col: this.col,
+									row: this.row,
+									player: this.player,
+									scene: this.scene,
+								});
+								// Remove unit from game
+								const i = this.player.units.indexOf(this);
+								if (i >= 0) {
+									this.player.units.splice(i, 1);
+								}
+								this.deactivate();
+								this.sprite.destroy();
+								delete this;
+								return;
+						}
+						break;
+					case 'worker':
+						switch (action) {
+								// Build farm
+							case 'f':
+								if (thisHex.tile.setImprovement('farm')) {
+									this.deactivate(true);
+									// TODO: Destroy unit after building improvement
+									thisHex.tile.laborers = new Citizen({ hex: thisHex });
+								} else {
+									// TODO: Warn player
+									console.warn('Could not build farm here');
+								}
+								return;
+								// Clear Improvement or Overlay
+							case 'C':
+								if (!Actions['C'].isValidOption({ hex: thisHex })) {
+									return;
+								}
+								if (thisHex.tile.improvement.key === 'farm') {
+									thisHex.tile.setImprovement('destroy');
+									this.deactivate(true);
+									return;
+								}
+						}
+						break;
+				}
+			}
+			if (this.moves > 0) {
+				this.player.activateUnit();
+			} else {
+				this.deactivate();
+			}
+		},
+		moveTo(hex) {
+			if (!(hex instanceof Honeycomb.Hex)) return;
+			if (!isLegalMove(hex.row, hex.col, this)) return;
+			hideActionSprites();
+			this.row = hex.row;
+			this.col = hex.col;
+			this.sprite.setPosition(hex.x, hex.y).setDepth(depths.inactiveUnits);
+			this.moves -= this.base.movementCosts[hex.terrain.terrain];
+		},
+	});
+	return Unit;
+})();
 
 function Action(def) {
 	Object.defineProperties(this, {
@@ -1315,7 +1337,6 @@ const config = {
 						...hex.city,
 						col: hex.col,
 						row: hex.row,
-						scene: this,
 						player: currentGame.players[hex.city.player],
 					});
 				}
