@@ -57,6 +57,8 @@ If you have any questions or get stuck at any point, just let me know in the com
 
 This repo has a Wiki. Please feel help expand the information there as we develop the game.
 
+Documentation added on the parts of the game and how to play the game will need to be incorporated into the game's code as the Player's Help resources.
+
 ## What if the game becomes commercial?
 
 If we decide to go commercial, we will clearly communicate our plans and timeline to the community. While we cannot guarantee payment for past contributions, we will explore ways to recognize and reward our early contributors who helped make the project a success.
