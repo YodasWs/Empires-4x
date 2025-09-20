@@ -93,42 +93,54 @@
 		}
 	},
 	"units": {
-		"settler": {
-			"movementPoints": 1,
+		"homesteader": {
+			"defense": 0,
+			"movementPoints": 12,
 			"movementCosts": {
-				"desert": 1,
-				"grass": 1,
-				"hill": 1,
-				"lake": 1,
-				"mountain": false,
-				"ocean": false,
-				"swamp": false
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 24,
+				"swamp": 24
+			}
+		},
+		"rancher": {
+			"defense": 0,
+			"movementPoints": 12,
+			"movementCosts": {
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 24,
+				"swamp": 24
+			}
+		},
+		"settler": {
+			"defense": 0,
+			"movementPoints": 12,
+			"movementCosts": {
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 24,
+				"swamp": 24
 			}
 		},
 		"warrior": {
 			"attack": 1,
 			"attackCities": true,
-			"movementPoints": 1,
+			"defense": 1,
+			"movementPoints": 12,
 			"movementCosts": {
-				"desert": 1,
-				"grass": 1,
-				"hill": 1,
-				"lake": false,
-				"mountain": 1,
-				"ocean": false,
-				"swamp": 1
-			}
-		},
-		"worker": {
-			"movementPoints": 1,
-			"movementCosts": {
-				"desert": 1,
-				"grass": 1,
-				"hill": 1,
-				"lake": 1,
-				"mountain": 1,
-				"ocean": false,
-				"swamp": 1
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 24,
+				"swamp": 24
 			}
 		}
 	},

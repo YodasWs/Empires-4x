@@ -782,7 +782,11 @@ const Unit = (() => {
 
 		// Add sprite
 		const { x, y } = grid.getHex({ row, col });
-		const sprite = scene.add.sprite(x, y, `unit.${unitType}`).setDepth(depths.inactiveUnits);
+		const sprite = scene.add.sprite(x, y, `unit.${unitType}`)
+			.setTint(0x383838)
+			.setDepth(depths.inactiveUnits);
+		sprite.setScale(100 / sprite.width);
+
 		// Define properties
 		this.col = col;
 		this.row = row;
@@ -833,7 +837,7 @@ const Unit = (() => {
 					this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
 				}, 0);
 			}, 0);
-			this.sprite.setDepth(depths.activeUnit);
+			this.sprite.setTint(0xffffff).setDepth(depths.activeUnit);
 
 			// Continue on path
 			if (Array.isArray(this.path) && this.path.length > 0) {
@@ -891,7 +895,7 @@ const Unit = (() => {
 				this.moves = 0;
 			}
 			hideActionSprites();
-			this.sprite.setDepth(depths.inactiveUnits);
+			this.sprite.setTint(0x383838).setDepth(depths.inactiveUnits);
 			currentGame.activeUnit = null;
 			this.scene.input.keyboard.enabled = false;
 			currentGame.currentPlayer.checkEndTurn();
@@ -984,7 +988,7 @@ const Unit = (() => {
 								return;
 						}
 						break;
-					case 'worker':
+					case 'homesteader':
 						switch (action) {
 								// Build farm
 							case 'f':
@@ -1020,7 +1024,6 @@ const Unit = (() => {
 		moveTo(hex) {
 			if (!(hex instanceof Honeycomb.Hex)) return;
 			if (!isLegalMove(hex.row, hex.col, this)) return;
-			hideActionSprites();
 			this.row = hex.row;
 			this.col = hex.col;
 			scene.tweens.add({
@@ -1034,8 +1037,8 @@ const Unit = (() => {
 					tween.destroy();
 				},
 			});
-			this.sprite.setDepth(depths.inactiveUnits);
 			this.moves -= this.base.movementCosts[hex.terrain.terrain];
+			this.deactivate();
 		},
 	});
 	return Unit;
@@ -1209,11 +1212,10 @@ function openUnitActionMenu(hex) {
 						possibleActions.push('b');
 					}
 					break;
-				case 'worker':
+				case 'homesteader':
 					// TODO: Centralize check for hex's overlay
 					[
 						'f',
-						'C',
 					].forEach((action) => {
 						if (Actions[action].isValidOption({ hex })) {
 							possibleActions.push(action);
@@ -1327,8 +1329,8 @@ const config = {
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			// Load Unit Images
-			Object.keys(json.world.units).forEach((unit) => {
-				this.load.image(`unit.${unit}`, `img/units/${unit}.png`);
+			Object.keys(json.world.units).forEach((unitType) => {
+				this.load.image(`unit.${unitType}`, `img/units/${unitType}.png`);
 			});
 		},
 		create() {
@@ -1343,7 +1345,6 @@ const config = {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
 					tile: new Tile({
-						scene: this,
 						hex,
 					}),
 					terrain: {
@@ -1406,10 +1407,8 @@ const config = {
 			});
 
 			// TODO: Build Starting Players and Units
-			currentGame.players[0].addUnit('settler', 2, 3, this);
-			currentGame.players[0].addUnit('warrior', 2, 3, this);
-			currentGame.players[0].addUnit('worker', 2, 3, this);
-			currentGame.players[2].addUnit('warrior', 2, 8, this);
+			currentGame.players[0].addUnit('rancher', 2, 3, this);
+			currentGame.players[0].addUnit('homesteader', 2, 4, this);
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
