@@ -93,6 +93,18 @@
 		}
 	},
 	"units": {
+		"builder": {
+			"defense": 0,
+			"movementPoints": 12,
+			"movementCosts": {
+				"desert": 12,
+				"grass": 12,
+				"hill": 12,
+				"moor": 12,
+				"mountain": 24,
+				"swamp": 24
+			}
+		},
 		"homesteader": {
 			"defense": 0,
 			"movementPoints": 12,

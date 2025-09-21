@@ -1,5 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 const tileWidth = 200;
+const unitWidth = 80;
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
 class gameHex extends Honeycomb.defineHex({
@@ -785,7 +786,7 @@ const Unit = (() => {
 		const sprite = scene.add.sprite(x, y, `unit.${unitType}`)
 			.setTint(0x383838)
 			.setDepth(depths.inactiveUnits);
-		sprite.setScale(100 / sprite.width);
+		sprite.setScale(unitWidth / sprite.width);
 
 		// Define properties
 		this.col = col;
@@ -1411,6 +1412,7 @@ const config = {
 			currentGame.players[0].addUnit('homesteader', 2, 4, this);
 			currentGame.players[0].addUnit('miner', 2, 2, this);
 			currentGame.players[0].addUnit('settler', 3, 3, this);
+			currentGame.players[0].addUnit('builder', 1, 3, this);
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
