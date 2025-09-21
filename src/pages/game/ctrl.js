@@ -930,13 +930,6 @@ const Unit = (() => {
 				this.deactivate(true);
 				return;
 			}
-			// Open City View
-			if (action === 'city' && hex instanceof Honeycomb.Hex) {
-				currentGame.scenes.start('city-view', {
-					hex,
-				});
-				return;
-			}
 			// Move unit
 			if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
 				if (grid.distance(this.hex, hex) === 1) {
@@ -994,14 +987,7 @@ const Unit = (() => {
 									player: this.player,
 									scene: this.scene,
 								});
-								// Remove unit from game
-								const i = this.player.units.indexOf(this);
-								if (i >= 0) {
-									this.player.units.splice(i, 1);
-								}
-								this.deactivate();
-								this.sprite.destroy();
-								delete this;
+								this.destroy();
 								return;
 						}
 						break;
@@ -1065,27 +1051,25 @@ const Unit = (() => {
 })();
 
 function Action(def) {
-	Object.defineProperties(this, {
-		text: {
+	Object.keys(def).forEach((key) => {
+		if (typeof def[key] === 'function') {
+			Object.defineProperty(this, key, {
+				enumerable: true,
+				get: () => def[key],
+			});
+		}
+	});
+	if (typeof def.text !== 'function') {
+		Object.defineProperty(this, 'text', {
 			enumerable: true,
 			get() {
-				switch (typeof def.text) {
-					case 'function':
-						return def.text;
-					case 'string':
-						return () => def.text;
+				if (typeof def.text === 'string') {
+					return () => def.text;
 				}
 				return () => '[action text missing]';
 			},
-		},
-		isValidOption: {
-			enumerable: true,
-			get() {
-				if (typeof def.isValidOption === 'function') return def.isValidOption;
-				return () => true;
-			},
-		},
-	});
+		});
+	}
 }
 Object.assign(Action.prototype, {
 });
@@ -1095,15 +1079,33 @@ const Actions = [
 	{
 		key: 'moveTo',
 		text: ({ hex }) => hex instanceof Honeycomb.Hex ? `Move to ${hex.row}×${hex.col}` : 'Move here',
-		isValidOption({ hex }) {
-			return false;
+		isValidOption({ hex, unit }) {
+			return isLegalMove(hex.row, hex.col, unit);
+		},
+	},
+	{
+		key: 'tile',
+		text: 'Information on space',
+		doAction({ hex }) {
+			if (this.isValidOption({ hex })) {
+				currentGame.scenes.start('tile-view', {
+					hex,
+				});
+			}
 		},
 	},
 	{
 		key: 'city',
 		text: 'View city',
 		isValidOption({ hex }) {
-			return hex.tile.player === currentGame.currentPlayer && hex.city instanceof City;
+			return hex.tile?.player === currentGame.currentPlayer && hex.city instanceof City;
+		},
+		doAction({ hex }) {
+			if (this.isValidOption({ hex })) {
+				currentGame.scenes.start('city-view', {
+					hex,
+				});
+			}
 		},
 	},
 	{
@@ -1169,19 +1171,29 @@ const Actions = [
 }), {});
 console.log('Sam, Actions:', Actions);
 
-function doAction(evt) {
+function doAction(evt, hex = null) {
 	// Not the player's turn, leave
 	if (currentGame.currentPlayer !== currentGame.players[0]) {
+		console.warn('Not your turn!');
 		return false;
 	}
+
 	// Repeating keyboard/pointer action, ignore
-	if (evt.repeat) {
+	if (typeof evt === 'object' && evt.repeat) {
 		return false;
 	}
+
+	if (typeof evt === 'string' && Actions[evt] instanceof Action && typeof Actions[evt].doAction === 'function') {
+		Actions[evt].doAction({ hex });
+		return true;
+	}
+
 	// No active unit, leave
 	if (!(currentGame.activeUnit instanceof Unit)) {
 		return false;
 	}
+
+	// All that remains are Unit actions
 	currentGame.activeUnit.doAction(evt.key);
 }
 
@@ -1282,9 +1294,7 @@ function openUnitActionMenu(hex) {
 			break;
 		case 'city':
 			console.log('Sam, only action is city-view');
-			currentGame.scenes.start('city-view', {
-				hex,
-			});
+			doAction('city', hex);
 			return;
 	}
 
@@ -1298,7 +1308,7 @@ function openUnitActionMenu(hex) {
 		const button = document.createElement('button');
 		button.innerHTML = Actions[action].text({ hex });
 		button.addEventListener('click', () => {
-			currentGame.activeUnit.doAction(action, hex);
+			doAction(action, hex);
 		});
 		button.style.pointerEvents = 'auto';
 		div.appendChild(button);
