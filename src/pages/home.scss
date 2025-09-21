@@ -8,6 +8,10 @@ body:has([y-page="home"]) {
 	flex-direction: column;
 	flex-grow: 1;
 
+	> h2 + h3 {
+		margin-top: 1em;
+	}
+
 	> p:last-of-type {
 		flex-grow: 1;
 	}
