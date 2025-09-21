@@ -1410,6 +1410,7 @@ const config = {
 			currentGame.players[0].addUnit('rancher', 2, 3, this);
 			currentGame.players[0].addUnit('homesteader', 2, 4, this);
 			currentGame.players[0].addUnit('miner', 2, 2, this);
+			currentGame.players[0].addUnit('settler', 3, 3, this);
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
