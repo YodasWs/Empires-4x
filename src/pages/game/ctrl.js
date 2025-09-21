@@ -407,7 +407,7 @@ const Player = (() => {
 					return true;
 				}
 			}
-			// Check for unmove unit we skipped
+			// Check for unmoved unit we skipped
 			for (let i = 0; i <= activeUnit; i++) {
 				if (!(this.units[i] instanceof Unit)) {
 					continue;
@@ -592,7 +592,7 @@ const currentGame = {
 							x: nextHex.x,
 							y: nextHex.y,
 							ease: 'Quad.inOut',
-							duration: 800,
+							duration: 1000,
 							yoyo: false,
 							onComplete(tween) {
 								sprite.destroy();
@@ -841,7 +841,7 @@ const Unit = (() => {
 
 			// Continue on path
 			if (Array.isArray(this.path) && this.path.length > 0) {
-				// Only move along path is able
+				// Only move along path if able
 				if (this.moves > 0) {
 					this.doAction('moveTo', this.path.shift());
 				} else {
@@ -1409,6 +1409,7 @@ const config = {
 			// TODO: Build Starting Players and Units
 			currentGame.players[0].addUnit('rancher', 2, 3, this);
 			currentGame.players[0].addUnit('homesteader', 2, 4, this);
+			currentGame.players[0].addUnit('miner', 2, 2, this);
 
 			// Listen for key presses
 			this.input.keyboard.on('keydown', (evt) => {
