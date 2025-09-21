@@ -315,7 +315,7 @@ const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
 		this.food = 0;
-		const units = [];
+		let units = [];
 		Object.defineProperties(this, {
 			frame: {
 				enumerable: true,
@@ -328,6 +328,12 @@ const Player = (() => {
 			units: {
 				enumerable: true,
 				get: () => units,
+				set: (val) => {
+					if (!Array.isArray(val)) {
+						throw new TypeError('Player.units expects to be assigned an Array!');
+					}
+					units = val.filter(unit => unit instanceof Unit && unit.deleted === false);
+				},
 			},
 			activeUnit: {
 				enumerable: true,
@@ -439,6 +445,10 @@ const currentGame = {
 	sprActiveUnit: null,
 	graphics: {},
 	startRound() {
+		this.players.forEach((player) => {
+			// Reset each player's units array to remove deleted units
+			player.units = player.units;
+		});
 		grid.forEach((hex) => {
 			// Adjust each player's claim on territory
 			this.players.forEach((player) => {
@@ -792,6 +802,7 @@ const Unit = (() => {
 		this.col = col;
 		this.row = row;
 		this.path = [];
+		this.deleted = false;
 		Object.defineProperties(this, {
 			base: {
 				enumerable: true,
@@ -901,6 +912,11 @@ const Unit = (() => {
 			this.scene.input.keyboard.enabled = false;
 			currentGame.currentPlayer.checkEndTurn();
 		},
+		destroy() {
+			this.deactivate(true);
+			this.sprite.destroy();
+			this.deleted = true;
+		},
 		doAction(action, hex = null) {
 			currentGame.closeUnitActionMenu();
 			// Wait, to do action later in turn
@@ -994,14 +1010,17 @@ const Unit = (() => {
 								// Build farm
 							case 'f':
 								if (thisHex.tile.setImprovement('farm')) {
-									this.deactivate(true);
-									// TODO: Destroy unit after building improvement
 									thisHex.tile.laborers = new Citizen({ hex: thisHex });
+									this.destroy();
 								} else {
 									// TODO: Warn player
 									console.warn('Could not build farm here');
 								}
 								return;
+						}
+						break;
+					case 'builder':
+						switch (action) {
 								// Clear Improvement or Overlay
 							case 'C':
 								if (!Actions['C'].isValidOption({ hex: thisHex })) {
