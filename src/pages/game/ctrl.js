@@ -324,6 +324,7 @@ const City = (() => {
 const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
+		let money = 100;
 		this.food = 0;
 		let units = [];
 		Object.defineProperties(this, {
@@ -381,6 +382,16 @@ const Player = (() => {
 						default:
 							return 0xaaaaaa;
 					}
+				},
+			},
+			money: {
+				enumerable: true,
+				get: () => money,
+				set(val) {
+					if (!Number.isFinite(val) || val < 0) {
+						throw new TypeError('Player.money expects to be assigned a positive number!');
+					}
+					money = val;
 				},
 			},
 		});
@@ -443,6 +454,11 @@ const Player = (() => {
 })();
 
 let FoodSprites = [];
+const FoodSpriteOptions = {
+	ease: 'Linear',
+	duration: 1000,
+	yoyo: false,
+};
 
 const currentGame = {
 	players: [
@@ -577,9 +593,16 @@ const currentGame = {
 			}
 		});
 
+		// Remove any FoodSprites that have no food or have been destroyed
+		FoodSprites = FoodSprites.filter(({ food, sprite }) => {
+			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
+		});
+
 		// Move Food towards nearest City
-		FoodSprites.forEach(({ hex, food, sprite, rounds }) => {
+		FoodSprites.forEach((FoodSprite, i) => {
+			let { hex, food, sprite } = FoodSprite;
 			if (food <= 0) {
+				sprite.setActive(false);
 				sprite.destroy();
 				return;
 			}
@@ -588,10 +611,11 @@ const currentGame = {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
 				const neededFood = Math.max(0, hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food);
 				const takeFood = Math.min(neededFood, food);
-				food -= takeFood;
+				FoodSprite.food = food -= takeFood;
 				hex.tile.food += takeFood;
 
 				if (food <= 0) {
+					sprite.setActive(false);
 					sprite.destroy();
 					return;
 				}
@@ -618,22 +642,21 @@ const currentGame = {
 							targets: sprite,
 							x: nextHex.x,
 							y: nextHex.y,
-							ease: 'Quad.inOut',
-							duration: 1000,
-							yoyo: false,
+							...FoodSpriteOptions,
 							onComplete(tween) {
+								sprite.setActive(false);
 								sprite.destroy();
 								tween.destroy();
 							},
 						});
+						nextHex.city.player.money += food * 10;
 					} else {
+						FoodSprite.hex = nextHex;
 						scene.tweens.add({
 							targets: sprite,
 							x: nextHex.x,
 							y: nextHex.y,
-							ease: 'Linear',
-							duration: 1000,
-							yoyo: false,
+							...FoodSpriteOptions,
 							onComplete(tween) {
 								tween.destroy();
 							},
@@ -643,14 +666,10 @@ const currentGame = {
 			}
 
 			// TODO: Limit lifespan of FoodSprite
-			if (++rounds > 5) {
+			if (++FoodSprite.rounds > 5) {
+				sprite.setActive(false);
 				sprite.destroy();
 			}
-		});
-
-		// Remove any FoodSprites that have no food or have been destroyed
-		FoodSprites = FoodSprites.filter(({ food, sprite }) => {
-			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
 		});
 
 		grid.forEach((hex) => {
@@ -929,6 +948,7 @@ const Unit = (() => {
 		},
 		destroy() {
 			this.deactivate(true);
+			this.sprite.setActive(false);
 			this.sprite.destroy();
 			this.deleted = true;
 		},
@@ -1537,11 +1557,31 @@ yodasws.page('pageGame').setRoute({
 	// TODO: House main controls above the world map
 	game.scene.add('mainControls', {
 		preload() {
+			this.load.image('coins', `img/resources/coins.png`);
 		},
 		create() {
 			const graphics = currentGame.graphics.mainControls = this.add.graphics({ x: 0, y: 0 });
 			graphics.fillStyle(0x000000, 0.5);
 			graphics.fillRect(0, 0, config.width, 200);
+
+			// Money
+			{
+				const img = this.add.image(0, 0, 'coins').setDepth(2);
+				img.setScale(32 / img.width);
+				img.x = 20 + img.displayWidth / 2;
+				img.y = 20 + img.displayHeight / 2;
+				this.displays = {
+					money: this.add.text(img.x + 30, img.y / 2, currentGame.players[0].money.toString(), {
+						fontFamily: 'Trebuchet MS',
+						fontSize: '28px',
+						color: 'gold',
+						stroke: 'black',
+						strokeThickness: 5,
+						maxLines: 1,
+					}).setLetterSpacing(1),
+				};
+			}
+
 			this.input.keyboard.on('keydown', (evt) => {
 				evt.preventDefault();
 				switch (evt.key) {
@@ -1584,6 +1624,9 @@ yodasws.page('pageGame').setRoute({
 			// buildMainControls();
 		},
 		update() {
+			if (this.displays.money.text !== currentGame.players[0].money.toString()) {
+				this.displays.money.setText(currentGame.players[0].money.toString());
+			}
 		},
 	}, true);
 	game.scene.moveAbove('mainGameScene', 'mainControls');
