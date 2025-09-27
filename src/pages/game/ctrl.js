@@ -897,7 +897,7 @@ const Unit = (() => {
 				const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 				if (isLegalMove(row, col, this)) {
 					const hex = grid.getHex({ row, col });
-					actionOutlines.text.push(currentGame.scenes.getScene('mainGameScene').add.text(
+					const text = currentGame.scenes.getScene('mainGameScene').add.text(
 						hex.x - tileWidth / 2,
 						hex.y + tileWidth / 6,
 						move,
@@ -909,7 +909,9 @@ const Unit = (() => {
 							stroke: 'black',
 							strokeThickness: 7,
 						}
-					).setOrigin(0).setDepth(depths.actionSprites));
+					).setOrigin(0).setDepth(depths.actionSprites);
+					actionOutlines.text.push(text);
+					this.scene.cameras.getCamera('mini').ignore(text);
 				}
 			});
 
