@@ -18,6 +18,7 @@ const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height
 const depths = {
 	offscreen: 0,
 	map: 1,
+	territoryFills: 2,
 	territoryLines: 2,
 	improvement: 5,
 	road: 6,
@@ -183,7 +184,16 @@ const Tile = (() => {
 				this.claims(player, claimIncrement);
 				// Only update scene if player owner has changed
 				if (this.player instanceof Player && this.player.index !== prevPlayer) {
-					currentGame.markTerritory(this.hex);
+					currentGame.markTerritory(this.hex, {
+						graphics: currentGame.graphics.territoryFills,
+						lineOffset: 1,
+						fill: true,
+					});
+					currentGame.markTerritory(this.hex, {
+						graphics: currentGame.graphics.territoryLines,
+						lineOffset: 0.97,
+						fill: false,
+					});
 				}
 			}
 		},
@@ -516,26 +526,30 @@ const currentGame = {
 		// Activate first unit
 		this.currentPlayer.activateUnit(0);
 	},
-	markTerritory(thisHex = null, options = {
-		graphics: this.graphics.territoryLines,
-		lineShift: 0.97,
-		offsetX: 0,
-		offsetY: 0,
-	}) {
+	markTerritory(thisHex = null, {
+		graphics = this.graphics.territoryLines,
+		lineOffset = 0.97,
+		offsetX = 0,
+		offsetY = 0,
+		fill = false,
+	} = {}) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
-			options.graphics.lineStyle(5, hex.tile.player.color);
-			options.graphics.beginPath();
+			if (fill === false) {
+				graphics.lineStyle(5, hex.tile.player.color);
+			} else {
+				graphics.fillStyle(hex.tile.player.color);
+			}
+			graphics.beginPath();
 			// Draw points closer to center of hex
-			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, options.lineShift));
-			options.graphics.moveTo(firstCorner.x + options.offsetX, firstCorner.y + options.offsetY);
+			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, lineOffset));
+			graphics.moveTo(firstCorner.x + offsetX, firstCorner.y + offsetY);
 			otherCorners.forEach(({x, y}) => {
-				options.graphics.lineTo(x + options.offsetX, y + options.offsetY);
+				graphics.lineTo(x + offsetX, y + offsetY);
 			});
-			options.graphics.closePath();
-			options.graphics.strokePath();
+			graphics.closePath()[fill === false ? 'strokePath' : 'fillPath']();
 		});
 	},
 	endTurn() {
@@ -925,7 +939,7 @@ const Unit = (() => {
 				this.deactivate();
 				return;
 			}
-			// Stay here
+			// Stay here this turn
 			if (action === 's') {
 				this.deactivate(true);
 				return;
@@ -1367,6 +1381,7 @@ const config = {
 			// Add graphics objects
 			currentGame.graphics = {
 				...currentGame.graphics,
+				territoryFills: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryFills),
 				territoryLines: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines),
 			};
 
@@ -1423,9 +1438,16 @@ const config = {
 					w + padLeft * 2,
 					h + padTop * 2
 				);
+				this.cameras.main.ignore([
+					currentGame.graphics.territoryFills,
+				]);
+
 				const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
 				minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
 				minimap.centerOn(grid.pixelWidth / 2, grid.pixelHeight / 2);
+				minimap.ignore([
+					currentGame.graphics.territoryLines,
+				]);
 			}
 
 			// Open the Action Menu for the hex User clicked
@@ -1627,7 +1649,7 @@ yodasws.page('pageGame').setRoute({
 					offsetX: 0 - hex.x + center.x + (hex.x - offsetX) * tileScale,
 					offsetY: 0 - hex.y + center.y + (hex.y - offsetY) * tileScale,
 					graphics: graphics.setDepth(2),
-					lineShift: 0.95 * tileScale,
+					lineOffset: 0.95 * tileScale,
 				});
 				// TODO: Show number of laborers on tile
 				// TODO: Show tile improvement
