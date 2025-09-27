@@ -478,6 +478,7 @@ const currentGame = {
 			// Reset each player's units array to remove deleted units
 			player.units = player.units;
 		});
+		const scene = currentGame.scenes.getScene('mainGameScene');
 		grid.forEach((hex) => {
 			// Adjust each player's claim on territory
 			this.players.forEach((player) => {
@@ -504,7 +505,7 @@ const currentGame = {
 						food,
 						hex,
 						rounds: 0,
-						sprite: currentGame.scenes.getScene('mainGameScene').add.sprite(x, y, `resources.wheat`).setDepth(depths.resources),
+						sprite: scene.add.sprite(x, y, `resources.wheat`).setDepth(depths.resources),
 						start: hex,
 					});
 				}
@@ -584,6 +585,7 @@ const currentGame = {
 	endRound() {
 		console.log('Sam, endRound!');
 		const scene = currentGame.scenes.getScene('mainGameScene');
+		const delaysForEndRound = [];
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 
 		// Collect list of villages and cities
@@ -639,29 +641,35 @@ const currentGame = {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
 						nextHex.city.player.food += food;
-						scene.tweens.add({
-							targets: sprite,
-							x: nextHex.x,
-							y: nextHex.y,
-							...FoodSpriteOptions,
-							onComplete(tween) {
-								sprite.setActive(false);
-								sprite.destroy();
-								tween.destroy();
-							},
-						});
+						delaysForEndRound.push(new Promise((resolve) => {
+							scene.tweens.add({
+								targets: sprite,
+								x: nextHex.x,
+								y: nextHex.y,
+								...FoodSpriteOptions,
+								onComplete(tween) {
+									sprite.setActive(false);
+									sprite.destroy();
+									tween.destroy();
+									resolve();
+								},
+							});
+						}));
 						nextHex.city.player.money += food * 10;
 					} else {
 						FoodSprite.hex = nextHex;
-						scene.tweens.add({
-							targets: sprite,
-							x: nextHex.x,
-							y: nextHex.y,
-							...FoodSpriteOptions,
-							onComplete(tween) {
-								tween.destroy();
-							},
-						});
+						delaysForEndRound.push(new Promise((resolve) => {
+							scene.tweens.add({
+								targets: sprite,
+								x: nextHex.x,
+								y: nextHex.y,
+								...FoodSpriteOptions,
+								onComplete(tween) {
+									tween.destroy();
+									resolve();
+								},
+							});
+						}));
 					}
 				}
 			}
@@ -681,7 +689,10 @@ const currentGame = {
 			// TODO: Feed Laborers from Tile food reserves
 			hex.tile.food -= hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION;
 		});
-		this.startRound();
+
+		Promise.all(delaysForEndRound).then(() => {
+			this.startRound();
+		});
 	},
 	closeUnitActionMenu() {
 		this.domContainer.innerHTML = '';
@@ -916,7 +927,7 @@ const Unit = (() => {
 				const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 				if (isLegalMove(row, col, this)) {
 					const hex = grid.getHex({ row, col });
-					const text = currentGame.scenes.getScene('mainGameScene').add.text(
+					const text = scene.add.text(
 						hex.x - tileWidth / 2,
 						hex.y + tileWidth / 6,
 						move,
