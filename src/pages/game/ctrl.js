@@ -1562,10 +1562,7 @@ yodasws.page('pageGame').setRoute({
 		},
 		create() {
 			const graphics = currentGame.graphics.mainControls = this.add.graphics({ x: 0, y: 0 });
-			graphics.fillStyle(0x000000, 0.5);
-			graphics.fillRect(0, 0, config.width, 200);
-
-			let lineY = 10;
+			let lineY = 15;
 
 			// Round
 			{
@@ -1594,7 +1591,11 @@ yodasws.page('pageGame').setRoute({
 					strokeThickness: 5,
 					maxLines: 1,
 				}).setLetterSpacing(1);
+				lineY += currentGame.uiDisplays.money.displayHeight;
 			}
+
+			graphics.fillStyle(0x000000, 0.5);
+			graphics.fillRect(0, 0, config.width, lineY);
 
 			this.input.keyboard.on('keydown', (evt) => {
 				evt.preventDefault();
