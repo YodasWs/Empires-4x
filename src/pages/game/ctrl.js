@@ -472,6 +472,7 @@ const currentGame = {
 	intCurrentPlayer: null,
 	sprActiveUnit: null,
 	graphics: {},
+	uiDisplays: {},
 	startRound() {
 		this.players.forEach((player) => {
 			// Reset each player's units array to remove deleted units
@@ -525,7 +526,7 @@ const currentGame = {
 
 		// Start Round
 		this.turn++;
-		console.log('Sam, startRound', this.turn);
+		currentGame.uiDisplays.round.setText(`Round ${this.turn}`);
 		this.startTurn(0);
 	},
 	startTurn(intPlayer) {
@@ -1564,22 +1565,35 @@ yodasws.page('pageGame').setRoute({
 			graphics.fillStyle(0x000000, 0.5);
 			graphics.fillRect(0, 0, config.width, 200);
 
+			let lineY = 10;
+
+			// Round
+			{
+				currentGame.uiDisplays.round = this.add.text(14, lineY, `Round ${currentGame.turn}`, {
+					fontFamily: 'Trebuchet MS',
+					fontSize: '28px',
+					color: 'white',
+					stroke: 'black',
+					strokeThickness: 5,
+					maxLines: 1,
+				});
+				lineY += currentGame.uiDisplays.round.displayHeight - 10;
+			}
+
 			// Money
 			{
-				const img = this.add.image(0, 0, 'coins').setDepth(2);
+				const img = this.add.image(0, lineY, 'coins').setDepth(2);
 				img.setScale(32 / img.width);
 				img.x = 20 + img.displayWidth / 2;
-				img.y = 20 + img.displayHeight / 2;
-				this.displays = {
-					money: this.add.text(img.x + 30, img.y / 2, currentGame.players[0].money.toString(), {
-						fontFamily: 'Trebuchet MS',
-						fontSize: '28px',
-						color: 'gold',
-						stroke: 'black',
-						strokeThickness: 5,
-						maxLines: 1,
-					}).setLetterSpacing(1),
-				};
+				img.y = lineY += 20 + img.displayHeight / 2;
+				currentGame.uiDisplays.money = this.add.text(img.x + img.displayWidth / 2 + 6, img.y - img.displayHeight / 2 - 4, currentGame.players[0].money.toString(), {
+					fontFamily: 'Trebuchet MS',
+					fontSize: '28px',
+					color: 'gold',
+					stroke: 'black',
+					strokeThickness: 5,
+					maxLines: 1,
+				}).setLetterSpacing(1);
 			}
 
 			this.input.keyboard.on('keydown', (evt) => {
@@ -1624,8 +1638,8 @@ yodasws.page('pageGame').setRoute({
 			// buildMainControls();
 		},
 		update() {
-			if (this.displays.money.text !== currentGame.players[0].money.toString()) {
-				this.displays.money.setText(currentGame.players[0].money.toString());
+			if (currentGame.uiDisplays.money.text !== currentGame.players[0].money.toString()) {
+				currentGame.uiDisplays.money.setText(currentGame.players[0].money.toString());
 			}
 		},
 	}, true);
