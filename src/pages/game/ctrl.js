@@ -404,14 +404,18 @@ const Player = (() => {
 		activateUnit(intUnit = activeUnit) {
 			if (this.units.length === 0) {
 				this.checkEndTurn();
-				return;
+				return false;
 			}
 			const unit = this.units[intUnit];
 			if (!(unit instanceof Unit)) {
-				throw new TypeError(`Player does not have unit ${intUnit}`);
+				return false;
+			}
+			if (unit.deleted === true) {
+				return false;
 			}
 			unit.activate();
 			activeUnit = intUnit;
+			return true;
 		},
 		activateNext() {
 			// Find and activate next unit
@@ -419,8 +423,7 @@ const Player = (() => {
 				if (!(this.units[i] instanceof Unit)) {
 					continue;
 				}
-				if (this.units[i].moves > 0) {
-					this.activateUnit(i);
+				if (this.units[i].moves > 0 && this.activateUnit(i)) {
 					return true;
 				}
 			}
@@ -429,8 +432,7 @@ const Player = (() => {
 				if (!(this.units[i] instanceof Unit)) {
 					continue;
 				}
-				if (this.units[i].moves > 0) {
-					this.activateUnit(i);
+				if (this.units[i].moves > 0 && this.activateUnit(i)) {
 					return true;
 				}
 			}
@@ -707,7 +709,7 @@ function actionTileCoordinates(action, row, col) {
 
 function hideActionSprites() {
 	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.offscreen);
-	actionOutlines.graphics.destroy();
+	actionOutlines.graphics?.destroy();
 	while (actionOutlines.text.length > 0) {
 		actionOutlines.text.pop().destroy();
 	}
@@ -882,9 +884,6 @@ const Unit = (() => {
 				return;
 			}
 
-			actionOutlines.graphics = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.actionSprites - 1);
-			const graphics = actionOutlines.graphics;
-
 			// Set text and listeners on hexes to move unit
 			[
 				'L',
@@ -982,7 +981,7 @@ const Unit = (() => {
 				}
 				// Claim hex territory
 				thisHex.tile.claimTerritory(this.player, 10);
-				this.moves--;
+				this.deactivate(true);
 			} else {
 				const thisHex = grid.getHex({ row: this.row, col: this.col});
 				// Unit-specific actions
