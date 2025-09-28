@@ -1,45 +1,24 @@
 {
 	"improvements": {
-		"farm": [
-			{
-				"title": "subsistence farm",
-				"tile": "farm",
-				"housing": 1,
-				"terrains": {
-					"grass": {
-						"food": 2,
-						"turns": 1
-					},
-					"moor": {
-						"food": 1,
-						"turns": 1
-					},
-					"swamp": {
-						"food": 2,
-						"turns": 6
-					}
-				}
-			},
-			{
-				"title": "villa farm",
-				"tile": "farm",
-				"housing": 0,
-				"terrains": {
-					"grass": {
-						"food": 4,
-						"turns": 1
-					},
-					"moor": {
-						"food": 2,
-						"turns": 2
-					},
-					"swamp": {
-						"food": 3,
-						"turns": 10
-					}
+		"farm": {
+			"title": "subsistence farm",
+			"tile": "farm",
+			"housing": 1,
+			"terrains": {
+				"grass": {
+					"food": 2,
+					"turns": 1
+				},
+				"moor": {
+					"food": 1,
+					"turns": 1
+				},
+				"swamp": {
+					"food": 2,
+					"turns": 6
 				}
 			}
-		]
+		}
 	},
 	"Transporter": {
 		"moves": 12,

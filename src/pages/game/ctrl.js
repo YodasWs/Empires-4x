@@ -38,10 +38,8 @@ const Tile = (() => {
 		if (!Object.keys(json.world.improvements).includes(improvement)) return false;
 		// Improvement must be same as current, or new
 		if (builtImprovement.key !== '' && builtImprovement.key !== improvement) return false;
-		// Improvement must have next level
-		if (typeof json.world.improvements[improvement][builtImprovement.level] === 'undefined') return false;
 		// Improvement must be valid for terrain
-		if (!Object.keys(json.world.improvements[improvement][builtImprovement.level]?.terrains || {}).includes(hex.terrain.terrain)) return false;
+		if (!hex.terrain.terrain in json.world.improvements[improvement]?.terrains) return false;
 		// Cannot build improvement in city
 		if (hex.city instanceof City) return false;
 		return true;
@@ -58,7 +56,6 @@ const Tile = (() => {
 		let objImprovement = undefined;
 		let builtImprovement = {
 			key: '',
-			level: 0,
 		};
 
 		const laborers = new Set();
@@ -149,19 +146,17 @@ const Tile = (() => {
 						objImprovement = undefined;
 						builtImprovement = {
 							key: '',
-							level: 0,
 						};
 						return true;
 					}
 
 					if (isValidImprovement(hex, val, builtImprovement)) {
-						objImprovement = Object.assign({}, json.world.improvements[val][builtImprovement.level],
-							{
-								image: scene.add.image(hex.x, hex.y, `improvements.${val}.${builtImprovement.level}`).setDepth(depths.improvement),
-								key: val,
-							});
+						objImprovement = {
+							...json.world.improvements[val],
+							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
+							key: val,
+						};
 						builtImprovement.key = val;
-						builtImprovement.level++;
 						return true;
 					}
 					return false;
@@ -330,7 +325,7 @@ const Player = (() => {
 		Object.defineProperties(this, {
 			frame: {
 				enumerable: true,
-				get: () => index % 3,
+				get: () => (index + 1) % 3,
 			},
 			index: {
 				enumerable: true,
@@ -374,9 +369,9 @@ const Player = (() => {
 				get() {
 					switch (index % 3) {
 						case 0:
-							return 0xff0000;
+							return 0x32cd32;
 						case 1:
-							return 0x00ff00;
+							return 0xff0000;
 						case 2:
 							return 0x0000ff;
 						default:
@@ -640,7 +635,6 @@ const currentGame = {
 				if (Array.isArray(path) && path.length > 0) {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
-						nextHex.city.player.food += food;
 						delaysForEndRound.push(new Promise((resolve) => {
 							scene.tweens.add({
 								targets: sprite,
@@ -656,6 +650,7 @@ const currentGame = {
 							});
 						}));
 						nextHex.city.player.money += food * 10;
+						currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 					} else {
 						FoodSprite.hex = nextHex;
 						delaysForEndRound.push(new Promise((resolve) => {
@@ -691,6 +686,7 @@ const currentGame = {
 		});
 
 		Promise.all(delaysForEndRound).then(() => {
+			currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 			this.startRound();
 		});
 	},
@@ -1213,10 +1209,10 @@ const Actions = [
 		key: '',
 		text: 'Cancel',
 	},
-].reduce((obj, action) => Object.assign(obj, {
+].reduce((obj, action) => ({
+	...obj,
 	[action.key]: new Action(action),
 }), {});
-console.log('Sam, Actions:', Actions);
 
 function doAction(evt, hex = null) {
 	// Not the player's turn, leave
@@ -1391,12 +1387,6 @@ const config = {
 				if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
 					this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
 				}
-				if (Array.isArray(improvement)) improvement.forEach((level, i) => {
-					if (typeof level.tile === 'string' && level.tile.length > 0) {
-						console.log('Sam, loading image for improvement:', `improvements.${key}.${i}`, `img/improvements/${level.tile}.png`);
-						this.load.image(`improvements.${key}.${i}`, `img/improvements/${level.tile}.png`);
-					}
-				});
 			});
 			Object.entries(json.world.resources).forEach(([key, resource]) => {
 				if (typeof resource.tile === 'string' && resource.tile.length > 0) {
@@ -1502,7 +1492,7 @@ const config = {
 			this.input.keyboard.on('keydown', (evt) => {
 				// Ctrl+R, reload; Ctrl+1, change browser tab
 				if (evt.ctrlKey && [
-					'r', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+					'r', 'R', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 				].includes(evt.key)) {
 					return;
 				}
@@ -1532,8 +1522,6 @@ const config = {
 				doAction(evt);
 			}).enabled = false;
 
-			currentGame.startRound();
-
 			this.events.on('pause', () => {
 				console.log('Sam, mainGameScene paused');
 				currentGame.scenes.sleep('mainControls');
@@ -1548,23 +1536,31 @@ const config = {
 				currentGame.scenes.wake('mainControls');
 				currentGame.currentPlayer.activateUnit();
 			});
+			this.events.once('create', checkToStart);
 		},
 		update() {
 		},
 	},
 };
 
+function checkToStart() {
+	if (currentGame.scenes.isActive('mainGameScene') && currentGame.scenes.isActive('mainControls')) {
+		currentGame.startRound();
+	}
+}
+
 yodasws.page('pageGame').setRoute({
 	template: 'pages/game/game.html',
 	canonicalRoute: '/game/',
 	route: '/game/?',
 }).on('load', () => {
-	const game = new Phaser.Game(Object.assign({}, config, {
+	const game = new Phaser.Game({
+		...config,
 		parent: document.querySelector('main'),
 		dom: {
 			createContainer: true,
 		},
-	}));
+	});
 
 	// TODO: House main controls above the world map
 	game.scene.add('mainControls', {
@@ -1594,7 +1590,7 @@ yodasws.page('pageGame').setRoute({
 				img.setScale(32 / img.width);
 				img.x = 20 + img.displayWidth / 2;
 				img.y = lineY += 20 + img.displayHeight / 2;
-				currentGame.uiDisplays.money = this.add.text(img.x + img.displayWidth / 2 + 6, img.y - img.displayHeight / 2 - 4, currentGame.players[0].money.toString(), {
+				currentGame.uiDisplays.money = this.add.text(img.x + img.displayWidth / 2 + 6, img.y - img.displayHeight / 2 - 4, currentGame.players[0].money.toLocaleString('en-Us'), {
 					fontFamily: 'Trebuchet MS',
 					fontSize: '28px',
 					color: 'gold',
@@ -1609,6 +1605,14 @@ yodasws.page('pageGame').setRoute({
 			graphics.fillRect(0, 0, config.width, lineY);
 
 			this.input.keyboard.on('keydown', (evt) => {
+				// Ctrl+R, reload; Ctrl+1, change browser tab
+				if (evt.ctrlKey && [
+					'r', 'R', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+				].includes(evt.key)) {
+					return;
+				}
+				// Ctrl+Shift+I, open Chrome dev tools
+				if (evt.ctrlKey && evt.key === 'I') return;
 				evt.preventDefault();
 				switch (evt.key) {
 					case 'F1':
@@ -1648,11 +1652,9 @@ yodasws.page('pageGame').setRoute({
 				}
 			});
 			// buildMainControls();
+			this.events.once('create', checkToStart);
 		},
 		update() {
-			if (currentGame.uiDisplays.money.text !== currentGame.players[0].money.toString()) {
-				currentGame.uiDisplays.money.setText(currentGame.players[0].money.toString());
-			}
 		},
 	}, true);
 	game.scene.moveAbove('mainGameScene', 'mainControls');
