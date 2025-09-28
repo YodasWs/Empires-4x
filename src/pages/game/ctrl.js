@@ -126,11 +126,11 @@ const Tile = (() => {
 						return true;
 					}
 					if (Object.keys(json.world.improvements).includes(val)) {
-						road = Object.assign({}, json.world.roads[val],
-							{
-								image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.road),
-								key: val,
-							});
+						road = {
+							...json.world.roads[val],
+							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.road),
+							key: val,
+						};
 						return true;
 					}
 					return false;
@@ -547,13 +547,14 @@ const currentGame = {
 		offsetX = 0,
 		offsetY = 0,
 		fill = false,
+		lineWidth = 5,
 	} = {}) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
 			if (fill === false) {
-				graphics.lineStyle(5, hex.tile.player.color);
+				graphics.lineStyle(lineWidth, hex.tile.player.color);
 			} else {
 				graphics.fillStyle(hex.tile.player.color);
 			}
@@ -642,6 +643,8 @@ const currentGame = {
 								y: nextHex.y,
 								...FoodSpriteOptions,
 								onComplete(tween) {
+									nextHex.city.player.money += food * 10;
+									currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 									sprite.setActive(false);
 									sprite.destroy();
 									tween.destroy();
@@ -649,8 +652,6 @@ const currentGame = {
 								},
 							});
 						}));
-						nextHex.city.player.money += food * 10;
-						currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 					} else {
 						FoodSprite.hex = nextHex;
 						delaysForEndRound.push(new Promise((resolve) => {
@@ -1129,8 +1130,12 @@ const Actions = [
 	{
 		key: 'tile',
 		text: 'Information on space',
+		isValidOption({ hex }) {
+			return hex instanceof Honeycomb.Hex && hex.tile instanceof Tile;
+		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
+				currentGame.closeUnitActionMenu();
 				currentGame.scenes.start('tile-view', {
 					hex,
 				});
@@ -1145,6 +1150,7 @@ const Actions = [
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
+				currentGame.closeUnitActionMenu();
 				currentGame.scenes.start('city-view', {
 					hex,
 				});
@@ -1320,6 +1326,8 @@ function openUnitActionMenu(hex) {
 		possibleActions.push('w', 's');
 	}
 
+	possibleActions.push('tile');
+
 	// No actions, do nothing
 	if (possibleActions.length === 0) {
 		currentGame.closeUnitActionMenu();
@@ -1336,8 +1344,10 @@ function openUnitActionMenu(hex) {
 			}
 			break;
 		case 'city':
-			console.log('Sam, only action is city-view');
 			doAction('city', hex);
+			return;
+		case 'tile':
+			doAction('tile', hex);
 			return;
 	}
 
@@ -1682,8 +1692,9 @@ yodasws.page('pageGame').setRoute({
 			// Close button
 			graphics.fillStyle(0x000000, 1);
 			graphics.fillRect(config.width - 100, 0, 100, 100);
-			this.add.text(0, 0, '× ', {
-				fixedWidth: config.width,
+			this.add.text(config.width - 100, 0, '× ', {
+				fixedWidth: 100,
+				fixedHeight: 100,
 				font: '60pt Trebuchet MS',
 				align: 'right',
 				color: 'white',
@@ -1759,6 +1770,125 @@ yodasws.page('pageGame').setRoute({
 				game.scene.wake('mainGameScene');
 			}).on('shutdown', () => {
 				console.log('Sam, city-view shutdown');
+				game.domContainer.innerHTML = '';
+				game.scene.wake('mainGameScene');
+			});
+		},
+		update() {
+		},
+	});
+
+	game.scene.add('tile-view', {
+		preload() {
+		},
+		create({ hex }) {
+			if (!(hex instanceof Honeycomb.Hex) || !(hex.tile instanceof Tile)) {
+				game.scene.resume('mainGameScene');
+				return;
+			}
+
+			// Start building graphics scene
+			{
+				// Lay black background
+				const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
+				graphics.fillStyle(0x000000, 0.5);
+				graphics.fillRect(0, 0, config.width, config.height);
+			}
+			const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
+
+			// Close button
+			graphics.fillStyle(0x000000, 1);
+			graphics.fillRect(config.width - 100, 0, 100, 100);
+			this.add.text(config.width - 100, 0, '× ', {
+				fixedWidth: 100,
+				fixedHeight: 100,
+				font: '60pt Trebuchet MS',
+				align: 'right',
+				color: 'white',
+				stroke: 'black',
+				strokeThickness: 7,
+			}).setDepth(2).setInteractive().on('pointerdown', () => {
+				game.scene.stop('tile-view');
+			});
+
+			const sectionWidth = config.width / 3;
+
+			{
+				graphics.lineStyle(2, 0xffffff);
+				graphics.beginPath();
+				graphics.moveTo(sectionWidth, 0);
+				graphics.lineTo(sectionWidth, config.height);
+				graphics.strokePath();
+			}
+
+			{
+				graphics.lineStyle(2, 0xffffff);
+				graphics.beginPath();
+				graphics.moveTo(sectionWidth * 2, 0);
+				graphics.lineTo(sectionWidth * 2, config.height);
+				graphics.strokePath();
+			}
+
+			const tileScale = Math.min(config.height, sectionWidth) / tileWidth * 0.9;
+			const center = {
+				x: config.width / 2,
+				y: config.height / 2,
+			};
+
+			// Important constants for translating city tiles locations
+			const [offsetX, offsetY] = [hex.x, hex.y];
+
+			// Display terrain hex
+			{
+				const tileCenter = {
+					x: sectionWidth / 2,
+					y: config.height / 2,
+				};
+				const img = this.add.image(tileCenter.x, tileCenter.y, `tile.${hex.terrain.terrain}`).setDepth(1);
+				img.scaleX = tileScale;
+				img.scaleY = tileScale;
+				currentGame.markTerritory(hex, {
+					offsetX: 0 - hex.x + tileCenter.x + (hex.x - offsetX) * tileScale,
+					offsetY: 0 - hex.y + tileCenter.y + (hex.y - offsetY) * tileScale,
+					graphics: graphics.setDepth(2),
+					lineOffset: tileScale,
+					lineWidth: 20,
+				});
+				// TODO: Show number of laborers on tile
+				// TODO: Show tile improvement
+				// TODO: Show food production on tile
+				if (hex.tile.laborers.size > 0) {
+					const fixedWidth = tileWidth * tileScale;
+					this.add.text(
+						tileCenter.x - fixedWidth / 2,
+						tileCenter.y + fixedWidth / 4,
+						`Food: ${(hex.terrain.food || 0) + (hex.tile.improvement.food || 0)}`,
+						{
+							font: '14pt Trebuchet MS',
+							align: 'center',
+							color: 'white',
+							stroke: 'black',
+							strokeThickness: 7,
+							fixedWidth,
+						}
+					).setDepth(3);
+				}
+			}
+
+			// Set event listeners
+			this.input.keyboard.enabled = true;
+			this.input.keyboard.on('keydown', (evt) => {
+				if (evt.key === 'Escape') {
+					game.scene.stop('tile-view');
+				}
+			});
+
+			this.events.on('sleep', () => {
+				console.log('Sam, tile-view sleep');
+				game.domContainer.innerHTML = '';
+				game.scene.wake('mainGameScene');
+			}).on('shutdown', () => {
+				console.log('Sam, tile-view shutdown');
 				game.domContainer.innerHTML = '';
 				game.scene.wake('mainGameScene');
 			});
