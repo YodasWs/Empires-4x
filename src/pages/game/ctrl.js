@@ -319,9 +319,10 @@ const City = (() => {
 const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
-		let money = 100;
-		this.food = 0;
+		const name = json.world?.names[index];
+		let money = 0;
 		let units = [];
+
 		Object.defineProperties(this, {
 			frame: {
 				enumerable: true,
@@ -330,6 +331,10 @@ const Player = (() => {
 			index: {
 				enumerable: true,
 				get: () => index,
+			},
+			name: {
+				enumerable: true,
+				get: () => name,
 			},
 			units: {
 				enumerable: true,
@@ -456,11 +461,7 @@ const FoodSpriteOptions = {
 };
 
 const currentGame = {
-	players: [
-		new Player(0),
-		new Player(1),
-		new Player(2),
-	],
+	players: [],
 	turn: 0,
 	activeUnit: null,
 	currentPlayer: null,
@@ -533,7 +534,12 @@ const currentGame = {
 		if (!(this.currentPlayer instanceof Player)) {
 			throw new TypeError(`Player ${intPlayer} is not a Player Object`);
 		}
+
+		// Sam, TODO: Show message to User whose turn it is
+		currentGame.uiDisplays.player.setText(`${this.currentPlayer.name}'s Turn`);
+		currentGame.uiDisplays.player.setColor(intPlayer === 0 ? 'goldenrod' : 'lightgrey');
 		this.intCurrentPlayer = intPlayer;
+
 		// Reset each unit's movement points
 		this.currentPlayer.units.forEach((unit) => {
 			unit.moves = unit.base.movementPoints;
@@ -582,6 +588,9 @@ const currentGame = {
 		console.log('Sam, endRound!');
 		const scene = currentGame.scenes.getScene('mainGameScene');
 		const delaysForEndRound = [];
+		currentGame.uiDisplays.player.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
+			.setText('End of Round')
+			.setColor('lightgrey');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 
 		// Collect list of villages and cities
@@ -1564,6 +1573,11 @@ yodasws.page('pageGame').setRoute({
 	canonicalRoute: '/game/',
 	route: '/game/?',
 }).on('load', () => {
+	currentGame.players = [
+		new Player(0),
+		new Player(1),
+		new Player(2),
+	];
 	const game = new Phaser.Game({
 		...config,
 		parent: document.querySelector('main'),
@@ -1591,11 +1605,24 @@ yodasws.page('pageGame').setRoute({
 					strokeThickness: 5,
 					maxLines: 1,
 				});
-				lineY += currentGame.uiDisplays.round.displayHeight - 10;
+			}
+
+			// Current Turn Player's Name
+			{
+				currentGame.uiDisplays.player = this.add.text(14 + currentGame.uiDisplays.round.displayWidth + 10, lineY + 2, '', {
+					fontFamily: 'Trebuchet MS',
+					fontSize: '26px',
+					color: 'white',
+					stroke: 'black',
+					strokeThickness: 5,
+					maxLines: 1,
+				});
+				lineY += currentGame.uiDisplays.player.displayHeight + 5;
 			}
 
 			// Money
 			{
+				lineY -= 15;
 				const img = this.add.image(0, lineY, 'coins').setDepth(2);
 				img.setScale(32 / img.width);
 				img.x = 20 + img.displayWidth / 2;

@@ -20,6 +20,16 @@
 			}
 		}
 	},
+	"names": [
+		"Publius Helvius Pertinax",
+		"Gaius Flavius Agricola",
+		"Brigantes",
+		"Catuvellauni",
+		"Trinovantes",
+		"Dobunni",
+		"Cornovii",
+		"Atrebates"
+	],
 	"Transporter": {
 		"moves": 12,
 		"base": {
