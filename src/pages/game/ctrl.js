@@ -718,6 +718,7 @@ const currentGame = {
 						}));
 					}
 				}
+				// TODO: What if there's no path?!
 			}
 
 			// TODO: Limit lifespan of FoodSprite
@@ -833,7 +834,7 @@ function findPath(start, end, unit = ResourceTransporter) {
 			if (!isLegalMove(neighbor.row, neighbor.col, unit)) return;
 
 			// g_cost is movement cost from start
-			neighbor.g_cost = current.g_cost + unit.base.movementCosts[neighbor.terrain.terrain];
+			neighbor.g_cost = current.g_cost + movementCost(unit, neighbor, current);
 			// h_cost is simple distance to end
 			neighbor.h_cost = grid.distance(current, end);
 			// f_cost is sum of above two
@@ -862,6 +863,18 @@ function findPath(start, end, unit = ResourceTransporter) {
 	} while (pathHex?.parent instanceof Honeycomb.Hex);
 
 	return path;
+}
+
+function movementCost(unit, nextHex, thisHex = unit.hex) {
+	if (!(nextHex instanceof Honeycomb.Hex) || !(unit instanceof Unit)) {
+		return Infinity;
+	}
+	if (nextHex.terrain.isWater && !unit.base.moveOnWater) {
+		// Is there a unit override for this terrain movement?
+		return unit.base.movementCosts[nextHex.terrain.terrain] ?? Infinity;
+	}
+	// TODO: Include roads, terrain improvements, etc
+	return unit.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
 }
 
 const actionOutlines = {
@@ -947,12 +960,10 @@ const Unit = (() => {
 
 			// Continue on path
 			if (Array.isArray(this.path) && this.path.length > 0) {
-				// Only move along path if able
-				if (this.moves > 0) {
+				while (this.moves >= movementCost(this, this.path[0])) {
 					this.doAction('moveTo', this.path.shift());
-				} else {
-					this.deactivate(true);
 				}
+				this.deactivate(true);
 				return;
 			}
 
@@ -1126,6 +1137,7 @@ const Unit = (() => {
 			if (!isLegalMove(hex.row, hex.col, this)) return;
 			this.row = hex.row;
 			this.col = hex.col;
+			// TODO: Chain tweens to multiple hexes instead of straight to last hex
 			scene.tweens.add({
 				targets: this.sprite,
 				x: hex.x,
@@ -1137,8 +1149,8 @@ const Unit = (() => {
 					tween.destroy();
 				},
 			});
-			this.moves -= this.base.movementCosts[hex.terrain.terrain];
-			this.deactivate();
+			this.moves -= movementCost(this, hex);
+			if (this.moves <= 0) this.deactivate();
 		},
 	});
 	return Unit;
@@ -1293,17 +1305,17 @@ function doAction(evt, hex = null) {
 	}
 
 	// All that remains are Unit actions
-	currentGame.activeUnit.doAction(evt.key);
+	currentGame.activeUnit.doAction(evt.key ?? evt, hex);
 }
 
 function isLegalMove(row, col, unit = ResourceTransporter) {
 	// Grab Target Tile
-	const target = grid.getHex({ row, col });
-	if (!(target instanceof Honeycomb.Hex)) return false;
+	const targetHex = grid.getHex({ row, col });
+	if (!(targetHex instanceof Honeycomb.Hex)) return false;
 
 	if (unit instanceof Unit) {
 		// TODO: Check move into City
-		if (target.city instanceof City && target.city.player.index !== unit.player.index) {
+		if (targetHex.city instanceof City && targetHex.city.player.index !== unit.player.index) {
 			if (!unit.attack || !unit.attackCities) return false;
 		}
 
@@ -1317,10 +1329,9 @@ function isLegalMove(row, col, unit = ResourceTransporter) {
 	}
 
 	// Check movement into terrain
-	const movementCost = unit.base.movementCosts[target.terrain.terrain];
-	if (!Number.isFinite(movementCost)) return false;
-	if (movementCost <= unit.moves) return true;
-	return false;
+	const moves = movementCost(unit, targetHex);
+	if (!Number.isFinite(moves)) return false;
+	return moves <= unit.moves;
 }
 
 function openUnitActionMenu(hex) {
@@ -1899,6 +1910,7 @@ yodasws.page('pageGame').setRoute({
 			}
 
 			const tileScale = Math.min(config.height, sectionWidth) / tileWidth * 0.9;
+			const fixedWidth = tileWidth * tileScale;
 			const center = {
 				x: config.width / 2,
 				y: config.height / 2,
@@ -1914,8 +1926,7 @@ yodasws.page('pageGame').setRoute({
 					y: config.height / 2,
 				};
 				const img = this.add.image(tileCenter.x, tileCenter.y, `tile.${hex.terrain.terrain}`).setDepth(1);
-				img.scaleX = tileScale;
-				img.scaleY = tileScale;
+				img.setScale(tileScale);
 				currentGame.markTerritory(hex, {
 					offsetX: 0 - hex.x + tileCenter.x + (hex.x - offsetX) * tileScale,
 					offsetY: 0 - hex.y + tileCenter.y + (hex.y - offsetY) * tileScale,
@@ -1924,7 +1935,6 @@ yodasws.page('pageGame').setRoute({
 					lineWidth: 20,
 				});
 				if (hex.tile.laborers.size > 0) {
-					const fixedWidth = tileWidth * tileScale;
 					this.add.text(
 						tileCenter.x - fixedWidth / 2,
 						tileCenter.y + fixedWidth / 4,
@@ -1934,25 +1944,39 @@ yodasws.page('pageGame').setRoute({
 							align: 'center',
 							color: 'white',
 							stroke: 'black',
-							strokeThickness: 7,
+							strokeThickness: 5,
 							fixedWidth,
 						}
 					).setDepth(3);
 				}
+				this.add.text(
+					tileCenter.x - fixedWidth / 2,
+					tileCenter.y - fixedWidth / 2 - 20,
+					`${hex.terrain.name}`,
+					{
+						font: '24pt Trebuchet MS',
+						align: 'center',
+						color: 'white',
+						stroke: 'black',
+						strokeThickness: 5,
+						fixedWidth,
+					}
+				);
 			}
 
-			// TODO: Show number of laborers on tile
+			// Show number of laborers on tile
 			if (hex.tile.laborers.size > 0) {
 				const text = this.add.text(
 					sectionWidth * 2 + 10,
 					20,
-					`${hex.tile.player.name}: ${hex.tile.laborers.size} laborer${hex.tile.laborers.size !== 1 ? 's' : ''}`,
+					(hex.tile.player instanceof Player ? `${hex.tile.player.name}: ` : '')
+						+ `${hex.tile.laborers.size} laborer${hex.tile.laborers.size !== 1 ? 's' : ''}`,
 					{
 						font: '24pt Trebuchet MS',
 						align: 'left',
 						color: 'white',
 						stroke: 'black',
-						strokeThickness: 7,
+						strokeThickness: 5,
 						fixedWidth: sectionWidth - 20,
 					}
 				).setDepth(3);

@@ -33,6 +33,8 @@
 	"ResourceTransporter": {
 		"moves": 12,
 		"base": {
+			"moveOnWater": false,
+			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -50,32 +52,59 @@
 	},
 	"terrains": {
 		"desert": {
+			"name": "Desert",
+			"movementCost": 12,
 			"food": 0,
 			"tile": "desert"
 		},
 		"grass": {
+			"name": "Grassland",
+			"movementCost": 12,
 			"food": 1,
 			"tile": "grass"
 		},
 		"hill": {
+			"name": "Hill",
+			"movementCost": 12,
 			"food": 1,
 			"tile": "grass"
 		},
 		"lake": {
+			"name": "Lake",
+			"movementCost": 12,
 			"food": 1,
 			"isWater": true,
 			"tile": "lake"
 		},
+		"marsh": {
+			"name": "Marsh",
+			"movementCost": 12,
+			"food": 0,
+			"isWater": true,
+			"tile": "swamp"
+		},
+		"moor": {
+			"name": "Moor",
+			"movementCost": 12,
+			"food": 0,
+			"tile": "mountains"
+		},
 		"mountain": {
+			"name": "Mountain",
+			"movementCost": 12,
 			"food": 0,
 			"tile": "mountains"
 		},
 		"ocean": {
+			"name": "Ocean",
+			"movementCost": 12,
 			"food": 1,
 			"isWater": true,
 			"tile": "ocean"
 		},
 		"swamp": {
+			"name": "Swamp",
+			"movementCost": 12,
 			"food": 0,
 			"isWater": true,
 			"tile": "swamp"
@@ -84,6 +113,7 @@
 	"units": {
 		"builder": {
 			"defense": 0,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
@@ -96,6 +126,7 @@
 		},
 		"homesteader": {
 			"defense": 0,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
@@ -108,6 +139,7 @@
 		},
 		"miner": {
 			"defense": 0,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
@@ -120,6 +152,7 @@
 		},
 		"rancher": {
 			"defense": 0,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
@@ -132,6 +165,7 @@
 		},
 		"settler": {
 			"defense": 0,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
@@ -146,6 +180,7 @@
 			"attack": 1,
 			"attackCities": true,
 			"defense": 1,
+			"moveOnWater": false,
 			"movementPoints": 12,
 			"movementCosts": {
 				"desert": 12,
