@@ -20,7 +20,7 @@
 			}
 		}
 	},
-	"names": [
+	"FactionNames": [
 		"Publius Helvius Pertinax",
 		"Gaius Flavius Agricola",
 		"Brigantes",
@@ -30,7 +30,7 @@
 		"Cornovii",
 		"Atrebates"
 	],
-	"Transporter": {
+	"ResourceTransporter": {
 		"moves": 12,
 		"base": {
 			"movementCosts": {

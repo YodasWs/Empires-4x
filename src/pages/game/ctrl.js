@@ -196,42 +196,84 @@ const Tile = (() => {
 	return Tile;
 })();
 
-function Citizen({
-	city,
-	hex,
-	tile,
-}) {
-	if (city instanceof City) {
-		Object.defineProperty(this, 'city', {
-			enumerable: true,
-			get: () => city,
-		});
-	}
-	if (hex instanceof Honeycomb.Hex || tile?.hex instanceof Honeycomb.Hex) {
-		Object.defineProperty(this, 'hex', {
-			enumerable: true,
-			get: () => hex || tile?.hex,
-		});
-	}
-	if (tile instanceof Tile || hex?.tile instanceof Tile) {
-		Object.defineProperty(this, 'tile', {
-			enumerable: true,
-			get: () => tile || hex?.tile,
-		});
-	}
-	Object.defineProperties(this, {
-	});
+// Thanks to Microsoft Copilot for this name generator!
+function generateRomanBritishName() {
+	const praenomina = [
+		'Gaius', 'Lucius', 'Marcus', 'Quintus', 'Titus', 'Publius', 'Aulus', 'Sextus',
+	];
+
+	const celticNames = [
+		'Bran', 'Cai', 'Elen', 'Rhiannon', 'Taran', 'Mabon', 'Nia', 'Owain',
+	];
+
+	const cognomina = [
+		'Agricola', 'Felix', 'Silvanus', 'Varus', 'Florus', 'Crispus', 'Severus', 'Vitalis',
+	];
+
+	const epithets = [
+		'the Smith', 'of Londinium', 'the Younger', 'the Red', 'from Camulodunum', 'the Hunter',
+	];
+
+	const first = Math.random() < 0.5
+		? praenomina[Math.floor(Math.random() * praenomina.length)]
+		: celticNames[Math.floor(Math.random() * celticNames.length)];
+
+	const last = cognomina[Math.floor(Math.random() * cognomina.length)];
+	const epithet = Math.random() < 0.3
+		? epithets[Math.floor(Math.random() * epithets.length)]
+		: '';
+
+	return `${first} ${last} ${epithet}`.trim();
 }
-Object.assign(Citizen.prototype, {
-	FOOD_CONSUMPTION: 2,
-	assignTile(tile) {
-		if (!(tile instanceof Tile)) {
-			throw new TypeError('Citizen.assignTile expects to be passed object instance of Tile!');
+
+const Citizen = (() => {
+	function Citizen({
+		city,
+		hex,
+		tile,
+	}) {
+		const name = generateRomanBritishName();
+		if (city instanceof City) {
+			Object.defineProperty(this, 'city', {
+				enumerable: true,
+				get: () => city,
+			});
 		}
-		// TODO: Check if Tile has already been assigned and is at its capacity
-		this.tile = tile;
-	},
-});
+		if (hex instanceof Honeycomb.Hex || tile?.hex instanceof Honeycomb.Hex) {
+			Object.defineProperty(this, 'hex', {
+				enumerable: true,
+				get: () => hex || tile?.hex,
+			});
+		}
+		if (tile instanceof Tile || hex?.tile instanceof Tile) {
+			Object.defineProperty(this, 'tile', {
+				enumerable: true,
+				get: () => tile || hex?.tile,
+			});
+		}
+		Object.defineProperties(this, {
+			name: {
+				enumerable: true,
+				get: () => name,
+			},
+			sprite: {
+				enumerable: true,
+				get: () => 'laborers.farmer',
+			},
+		});
+	}
+	Object.assign(Citizen.prototype, {
+		FOOD_CONSUMPTION: 2,
+		assignTile(tile) {
+			if (!(tile instanceof Tile)) {
+				throw new TypeError('Citizen.assignTile expects to be passed object instance of Tile!');
+			}
+			// TODO: Check if Tile has already been assigned and is at its capacity
+			this.tile = tile;
+		},
+	});
+	return Citizen;
+})();
 
 const City = (() => {
 	let scene = null;
@@ -319,7 +361,7 @@ const City = (() => {
 const Player = (() => {
 	let activeUnit = null;
 	function Player(index) {
-		const name = json.world?.names[index];
+		const name = json.world?.FactionNames[index];
 		let money = 0;
 		let units = [];
 
@@ -406,7 +448,6 @@ const Player = (() => {
 			}));
 		},
 		checkEndTurn() {
-			console.log('Sam, checkEndTurn');
 			let isActiveUnit = this.activateNext();
 			if (!isActiveUnit) {
 				currentGame.endTurn();
@@ -512,7 +553,6 @@ const currentGame = {
 		grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				const city = hex.city;
-				console.log('Sam, startRound, city:', city);
 				grid.traverse(Honeycomb.spiral({
 					start: [ hex.q, hex.r ],
 					radius: 2,
@@ -1401,7 +1441,7 @@ const config = {
 				frameWidth: 200,
 			});
 			ResourceTransporter = {
-				...json.world.Transporter,
+				...json.world.ResourceTransporter,
 			};
 			Object.entries(json.world.improvements).forEach(([key, improvement]) => {
 				if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
@@ -1413,6 +1453,7 @@ const config = {
 					this.load.image(`resources.${key}`, `img/resources/${resource.tile}.png`);
 				}
 			});
+			this.load.image('laborers.farmer', 'img/laborers/farmer.png');
 			// Load images for player's action
 			this.load.image('activeUnit', 'img/activeUnit.png');
 			// Load Unit Images
@@ -1596,7 +1637,7 @@ yodasws.page('pageGame').setRoute({
 			const graphics = currentGame.graphics.mainControls = this.add.graphics({ x: 0, y: 0 });
 			let lineY = 15;
 
-			// Round
+			// Round and Current Turn Player's Name
 			{
 				currentGame.uiDisplays.round = this.add.text(14, lineY, `Round ${currentGame.turn}`, {
 					fontFamily: 'Trebuchet MS',
@@ -1606,10 +1647,6 @@ yodasws.page('pageGame').setRoute({
 					strokeThickness: 5,
 					maxLines: 1,
 				});
-			}
-
-			// Current Turn Player's Name
-			{
 				currentGame.uiDisplays.player = this.add.text(14 + currentGame.uiDisplays.round.displayWidth + 10, lineY + 2, '', {
 					fontFamily: 'Trebuchet MS',
 					fontSize: '26px',
@@ -1814,6 +1851,7 @@ yodasws.page('pageGame').setRoute({
 				game.scene.resume('mainGameScene');
 				return;
 			}
+			game.scene.pause('mainGameScene');
 
 			// Start building graphics scene
 			{
@@ -1904,6 +1942,31 @@ yodasws.page('pageGame').setRoute({
 			}
 
 			// TODO: Show number of laborers on tile
+			if (hex.tile.laborers.size > 0) {
+				const text = this.add.text(
+					sectionWidth * 2 + 10,
+					20,
+					`${hex.tile.player.name}: ${hex.tile.laborers.size} laborer${hex.tile.laborers.size !== 1 ? 's' : ''}`,
+					{
+						font: '24pt Trebuchet MS',
+						align: 'left',
+						color: 'white',
+						stroke: 'black',
+						strokeThickness: 7,
+						fixedWidth: sectionWidth - 20,
+					}
+				).setDepth(3);
+				let x = text.x;
+				let y = text.y + text.displayHeight + 10;
+				hex.tile.laborers.forEach((laborer) => {
+					const img = this.add.image(x, y, laborer.sprite).setDepth(3);
+					img.setY(img.y + img.displayHeight / 2);
+					img.setX(x + img.displayWidth / 2);
+					y += img.displayHeight + 10;
+				});
+				// sectionWidth
+			}
+
 			// TODO: Show tile improvement
 			// TODO: Show food production on tile
 
@@ -1962,6 +2025,5 @@ yodasws.page('pageGame').setRoute({
 		scenes: game.scene,
 		domContainer: game.domContainer,
 	});
-	console.log('Sam, scenes:', game.scene.scenes);
 	game.domContainer.classList.add('game');
 });

@@ -2,6 +2,18 @@
 
 Except where otherwise stated, all images here are Copyright © 2022 Samuel B Grundman, all rights reserved.
 
+## improvements
+
+See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/improvements/LICENSE.md).
+
+## laborers
+
+See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/laborers/LICENSE.md).
+
+## resources
+
+See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/resources/LICENSE.md).
+
 ## tiles
 
 See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/tiles/LICENSE.md).
@@ -9,7 +21,3 @@ See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img
 ## units
 
 See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/units/LICENSE.md).
-
-## farm.png
-
-agricultural PNG Designed By Logo from https://pngtree.com/freepng/agriculture-and-farming-with-a-tractor-with-wheat-logo-design_5101170.html?sol=downref&id=bef
