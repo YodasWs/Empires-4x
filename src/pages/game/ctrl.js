@@ -536,8 +536,9 @@ const currentGame = {
 		}
 
 		// Sam, TODO: Show message to User whose turn it is
-		currentGame.uiDisplays.player.setText(`${this.currentPlayer.name}'s Turn`);
-		currentGame.uiDisplays.player.setColor(intPlayer === 0 ? 'goldenrod' : 'lightgrey');
+		currentGame.uiDisplays.player.setText(`${this.currentPlayer.name}'s Turn`)
+			.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
+			.setColor(intPlayer === 0 ? 'goldenrod' : 'lightgrey');
 		this.intCurrentPlayer = intPlayer;
 
 		// Reset each unit's movement points
@@ -1824,22 +1825,25 @@ yodasws.page('pageGame').setRoute({
 			const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
 
 			// Close button
-			graphics.fillStyle(0x000000, 1);
-			graphics.fillRect(config.width - 100, 0, 100, 100);
-			this.add.text(config.width - 100, 0, '× ', {
-				fixedWidth: 100,
-				fixedHeight: 100,
-				font: '60pt Trebuchet MS',
-				align: 'right',
-				color: 'white',
-				stroke: 'black',
-				strokeThickness: 7,
-			}).setDepth(2).setInteractive().on('pointerdown', () => {
-				game.scene.stop('tile-view');
-			});
+			{
+				graphics.fillStyle(0x000000, 1);
+				graphics.fillRect(config.width - 100, 0, 100, 100);
+				this.add.text(config.width - 100, 0, '× ', {
+					fixedWidth: 100,
+					fixedHeight: 100,
+					font: '60pt Trebuchet MS',
+					align: 'right',
+					color: 'white',
+					stroke: 'black',
+					strokeThickness: 7,
+				}).setDepth(2).setInteractive().on('pointerdown', () => {
+					game.scene.stop('tile-view');
+				});
+			}
 
 			const sectionWidth = config.width / 3;
 
+			// Divide screen into three sections
 			{
 				graphics.lineStyle(2, 0xffffff);
 				graphics.beginPath();
@@ -1881,9 +1885,6 @@ yodasws.page('pageGame').setRoute({
 					lineOffset: tileScale,
 					lineWidth: 20,
 				});
-				// TODO: Show number of laborers on tile
-				// TODO: Show tile improvement
-				// TODO: Show food production on tile
 				if (hex.tile.laborers.size > 0) {
 					const fixedWidth = tileWidth * tileScale;
 					this.add.text(
@@ -1901,6 +1902,10 @@ yodasws.page('pageGame').setRoute({
 					).setDepth(3);
 				}
 			}
+
+			// TODO: Show number of laborers on tile
+			// TODO: Show tile improvement
+			// TODO: Show food production on tile
 
 			// Set event listeners
 			this.input.keyboard.enabled = true;
