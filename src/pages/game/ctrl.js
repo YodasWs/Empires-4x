@@ -1549,6 +1549,7 @@ const config = {
 			let isDragging = false;
 			let dragStart = { x: 0, y: 0 };
 			let camStart = { x: 0, y: 0 };
+			let dragThreshold = 4; // default (pixels)
 
 			this.input.on('pointerdown', (pointer) => {
 				// Record starting positions (screen coords and camera scroll)
@@ -1557,14 +1558,27 @@ const config = {
 				camStart.x = this.cameras.main.scrollX;
 				camStart.y = this.cameras.main.scrollY;
 				isDragging = false;
+				// Set drag threshold based on input device type. Touch/pens are less precise
+				// so use a larger threshold to avoid accidental drags.
+				switch (pointer.pointerType) {
+					case 'touch':
+						dragThreshold = 10;
+						break;
+					case 'pen':
+						dragThreshold = 8;
+						break;
+					case 'mouse':
+					default:
+						dragThreshold = 4;
+				}
 			});
 
 			this.input.on('pointermove', (pointer) => {
 				if (!pointer.isDown) return;
 				const dx = pointer.x - dragStart.x;
 				const dy = pointer.y - dragStart.y;
-				// Start dragging after small threshold so clicks are not interpreted as drags
-				if (!isDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+				// Start dragging after threshold so clicks are not interpreted as drags
+				if (!isDragging && (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold)) {
 					isDragging = true;
 				}
 				if (isDragging) {
