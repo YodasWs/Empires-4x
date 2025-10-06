@@ -48,6 +48,7 @@ Please feel free to work on any Open Issue. You can get started by following the
 1. **Fork** the repo to your account and clone to your computer.
 2. **Run** the project on your computer, as documented above.
 3. **Make changes** to the appropriate files. Currently all the game logic is in `src/pages/game/ctrl.js`.
+  It's best to not include the updates made to the JavaScript, CSS, and HTML files in `docs/` in your commits to avoid unnecessary merge conflicts.
 4. **Submit a Pull Request** in this project when it's ready for review.
 
 If you have any questions or get stuck at any point, just let me know in the comments on that issue.
