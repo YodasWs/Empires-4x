@@ -2,7 +2,7 @@
 
 I'm building a 4X game! You can [play now](https://yodasws.github.io/Empires-4x/#!/game/) in your browser.
 
-### The empire is not built by legions, but by cart.
+### The empire is built not by legions, but by cart.
 
 In Empires 4x, you are not a legionary or an emperor, but the vital hand behind the Roman machine. Manage Britain's untamed wilds, building a network of farms and ranches to feed the growing demands of the bustling city of Londinium. Conquer the challenges of diverse terrains—from the fertile Fens to the windswept Moorlands—by laying down roads and canals to link your empire of production. Every cart of grain, every bale of wool, fuels the heart of Roman Britain. The legions may win the battles, but you will win the peace.
 
