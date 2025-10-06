@@ -1545,12 +1545,43 @@ const config = {
 				]);
 			}
 
-			// Open the Action Menu for the hex User clicked
-			this.input.on('pointerdown', (evt) => {
-				openUnitActionMenu(grid.pointToHex({
-					x: evt.worldX,
-					y: evt.worldY,
-				}));
+			// Pointer handling: support drag-to-pan (drag) and click-to-open (click)
+			let isDragging = false;
+			let dragStart = { x: 0, y: 0 };
+			let camStart = { x: 0, y: 0 };
+
+			this.input.on('pointerdown', (pointer) => {
+				// Record starting positions (screen coords and camera scroll)
+				dragStart.x = pointer.x;
+				dragStart.y = pointer.y;
+				camStart.x = this.cameras.main.scrollX;
+				camStart.y = this.cameras.main.scrollY;
+				isDragging = false;
+			});
+
+			this.input.on('pointermove', (pointer) => {
+				if (!pointer.isDown) return;
+				const dx = pointer.x - dragStart.x;
+				const dy = pointer.y - dragStart.y;
+				// Start dragging after small threshold so clicks are not interpreted as drags
+				if (!isDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+					isDragging = true;
+				}
+				if (isDragging) {
+					// Adjust camera scroll. Movement must be scaled by camera zoom to map
+					// screen pixels to world pixels correctly.
+					const zoom = this.cameras.main.zoom || 1;
+					this.cameras.main.setScroll(camStart.x - dx / zoom, camStart.y - dy / zoom);
+				}
+			});
+
+			this.input.on('pointerup', (pointer) => {
+				if (!isDragging) {
+					// treat as click
+					openUnitActionMenu(grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
+				}
+				// reset drag state
+				isDragging = false;
 			});
 
 			// TODO: Build Starting Players and Units
