@@ -340,7 +340,8 @@ const options = {
 					if (Number.isNaN(Number.parseInt(i, 10))) {
 						requires += `json.${i} = `;
 					}
-					requires += `require('../src/${requiredFiles[i]}');\n`;
+					const reqPath = String(requiredFiles[i]).replace(/\\/g, '/');
+					requires += `require('../src/${reqPath}');\n`;
 				});
 				return requires;
 			},
