@@ -1666,6 +1666,44 @@ function checkToStart() {
 	}
 }
 
+// A scene function, for example in `create()`
+function displayImageInHTML(imageKey, htmlElementId) {
+	// Get the HTML <img> element by its ID
+	const imgElement = document.getElementById(htmlElementId);
+	/*
+	if (!(imgElement instanceof HTMLImageElement) && imgElement instanceof Element) {
+		imgElement = imgElement.querySelector('img') ?? (() => {
+			const img = document.createElement('img');
+			imgElement.append(img);
+			return img;
+		})();
+	}
+	/**/
+
+	// Get the Texture instance from the Texture Manager
+	const texture = this.textures.get(imageKey);
+
+	if (texture && imgElement) {
+		// Get the source image from the texture, which is an HTMLImageElement
+		const imageSource = texture.getSourceImage();
+
+		// Create a temporary canvas to convert the image to Base64
+		const canvas = document.createElement('canvas');
+		canvas.width = imageSource.width;
+		canvas.height = imageSource.height;
+		const context = canvas.getContext('2d');
+		context.drawImage(imageSource, 0, 0);
+
+		// Convert the canvas image to a data URI and set it as the src
+		// imgElement.src = canvas.toDataURL();
+		if (imgElement instanceof HTMLImageElement) {
+			imgElement.parentElement.append(canvas);
+		} else {
+			imgElement.append(canvas);
+		}
+	}
+}
+
 yodasws.page('pageGame').setRoute({
 	template: 'pages/game/game.html',
 	canonicalRoute: '/game/',
@@ -1907,7 +1945,12 @@ yodasws.page('pageGame').setRoute({
 				game.scene.resume('mainGameScene');
 				return;
 			}
+			console.log('Sam, tile-view created');
 			game.scene.pause('mainGameScene');
+
+			displayImageInHTML.bind(this)(`tile.${hex.terrain.terrain}`, 'terrain');
+			const dom = document.getElementById('tile-view');
+			dom.removeAttribute('hidden');
 
 			// Start building graphics scene
 			{
@@ -1916,128 +1959,6 @@ yodasws.page('pageGame').setRoute({
 				graphics.fillStyle(0x000000, 0.5);
 				graphics.fillRect(0, 0, config.width, config.height);
 			}
-			const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
-
-			// Close button
-			{
-				graphics.fillStyle(0x000000, 1);
-				graphics.fillRect(config.width - 100, 0, 100, 100);
-				this.add.text(config.width - 100, 0, '× ', {
-					fixedWidth: 100,
-					fixedHeight: 100,
-					font: '60pt Trebuchet MS',
-					align: 'right',
-					color: 'white',
-					stroke: 'black',
-					strokeThickness: 7,
-				}).setDepth(2).setInteractive().on('pointerdown', () => {
-					game.scene.stop('tile-view');
-				});
-			}
-
-			const sectionWidth = config.width / 3;
-
-			// Divide screen into three sections
-			{
-				graphics.lineStyle(2, 0xffffff);
-				graphics.beginPath();
-				graphics.moveTo(sectionWidth, 0);
-				graphics.lineTo(sectionWidth, config.height);
-				graphics.strokePath();
-			}
-
-			{
-				graphics.lineStyle(2, 0xffffff);
-				graphics.beginPath();
-				graphics.moveTo(sectionWidth * 2, 0);
-				graphics.lineTo(sectionWidth * 2, config.height);
-				graphics.strokePath();
-			}
-
-			const tileScale = Math.min(config.height, sectionWidth) / tileWidth * 0.9;
-			const fixedWidth = tileWidth * tileScale;
-			const center = {
-				x: config.width / 2,
-				y: config.height / 2,
-			};
-
-			// Important constants for translating city tiles locations
-			const [offsetX, offsetY] = [hex.x, hex.y];
-
-			// Display terrain hex
-			{
-				const tileCenter = {
-					x: sectionWidth / 2,
-					y: config.height / 2,
-				};
-				const img = this.add.image(tileCenter.x, tileCenter.y, `tile.${hex.terrain.terrain}`).setDepth(1);
-				img.setScale(tileScale);
-				currentGame.markTerritory(hex, {
-					offsetX: 0 - hex.x + tileCenter.x + (hex.x - offsetX) * tileScale,
-					offsetY: 0 - hex.y + tileCenter.y + (hex.y - offsetY) * tileScale,
-					graphics: graphics.setDepth(2),
-					lineOffset: tileScale,
-					lineWidth: 20,
-				});
-				if (hex.tile.laborers.size > 0) {
-					this.add.text(
-						tileCenter.x - fixedWidth / 2,
-						tileCenter.y + fixedWidth / 4,
-						`Food: ${(hex.terrain.food || 0) + (hex.tile.improvement.food || 0)}`,
-						{
-							font: '14pt Trebuchet MS',
-							align: 'center',
-							color: 'white',
-							stroke: 'black',
-							strokeThickness: 5,
-							fixedWidth,
-						}
-					).setDepth(3);
-				}
-				this.add.text(
-					tileCenter.x - fixedWidth / 2,
-					tileCenter.y - fixedWidth / 2 - 20,
-					`${hex.terrain.name}`,
-					{
-						font: '24pt Trebuchet MS',
-						align: 'center',
-						color: 'white',
-						stroke: 'black',
-						strokeThickness: 5,
-						fixedWidth,
-					}
-				);
-			}
-
-			// Show number of laborers on tile
-			if (hex.tile.laborers.size > 0) {
-				const text = this.add.text(
-					sectionWidth * 2 + 10,
-					20,
-					(hex.tile.player instanceof Player ? `${hex.tile.player.name}: ` : '')
-						+ `${hex.tile.laborers.size} laborer${hex.tile.laborers.size !== 1 ? 's' : ''}`,
-					{
-						font: '24pt Trebuchet MS',
-						align: 'left',
-						color: 'white',
-						stroke: 'black',
-						strokeThickness: 5,
-						fixedWidth: sectionWidth - 20,
-					}
-				).setDepth(3);
-				let x = text.x;
-				let y = text.y + text.displayHeight + 10;
-				hex.tile.laborers.forEach((laborer) => {
-					const img = this.add.image(x, y, laborer.sprite).setDepth(3);
-					img.setY(img.y + img.displayHeight / 2);
-					img.setX(x + img.displayWidth / 2);
-					y += img.displayHeight + 10;
-				});
-				// sectionWidth
-			}
-
-			// TODO: Show tile improvement
-			// TODO: Show food production on tile
 
 			// Set event listeners
 			this.input.keyboard.enabled = true;
@@ -2048,10 +1969,14 @@ yodasws.page('pageGame').setRoute({
 			});
 
 			this.events.on('sleep', () => {
+				dom.setAttribute('hidden', true);
+				dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 				console.log('Sam, tile-view sleep');
 				game.domContainer.innerHTML = '';
 				game.scene.wake('mainGameScene');
 			}).on('shutdown', () => {
+				dom.setAttribute('hidden', true);
+				dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 				console.log('Sam, tile-view shutdown');
 				game.domContainer.innerHTML = '';
 				game.scene.wake('mainGameScene');

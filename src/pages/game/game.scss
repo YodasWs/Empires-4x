@@ -51,4 +51,24 @@
 			}
 		}
 	}
+
+	#tile-view {
+		display: flex;
+		flex-flow: row;
+		align-items: center;
+		height: 100%;
+		width: 100%;
+
+		&[hidden] {
+			display: none;
+		}
+
+		&:not([hidden]) ~ canvas {
+			z-index: -1;
+		}
+
+		@media (orientation: portrait) {
+			flex-flow: column;
+		}
+	}
 }
