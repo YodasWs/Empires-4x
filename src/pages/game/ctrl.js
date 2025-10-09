@@ -1394,7 +1394,7 @@ function openUnitActionMenu(hex) {
 	// If units on this hex, add option to activate each unit
 	if (unitsOnHex.length > 0) {
 		unitsOnHex.forEach(unit => {
-			// Dont show option to activate currently active unit
+			// Don't show option to activate currently active unit
 			if (unit === currentGame.activeUnit) return;
 
 			// Only show units from current player or if no active unit
