@@ -1485,7 +1485,7 @@ function openUnitActionMenu(hex) {
 	]).forEach((actionItem) => {
 		const button = document.createElement('button');
 		// Handle both string actions and object actions (for activateUnit)
-        if (typeof actionItem === 'object' && actionItem.action) {
+        if (actionItem?.action) {
             const action = Actions[actionItem.action];
             button.innerHTML = action.text(actionItem);
             button.addEventListener('click', () => {
