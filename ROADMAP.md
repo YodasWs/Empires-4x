@@ -21,7 +21,7 @@ This milestone is focused on building the absolute minimum viable product (MVP) 
   [Issue #22](https://github.com/YodasWs/Empires-4x/issues/22)
 
 ## 🔜 Next: Minimum Viable Product (v0.2)
-After the core loop is solid, we can add other UI/UX elemnts necessary for a Minimum Viable Product:
+After the core loop is solid, we can add other UI/UX elements necessary for a Minimum Viable Product:
 - Title Screen
 - Main Menu
 - Settings Screen
