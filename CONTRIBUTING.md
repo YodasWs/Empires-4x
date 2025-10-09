@@ -8,6 +8,8 @@ This document outlines how you can contribute and what to expect.
 
 This project was started as a fun, open-source game. My goal is to build a fun and engaging game with the community.
 
+- [Our Roadmap](https://github.com/YodasWs/Empires-4x/blob/master/ROADMAP.md)
+
 **Please be aware that if the game becomes successful, there is a possibility that it may transition to a commercial, closed-source project.** This is to help fund its continued development and to compensate for the significant investment of time required to bring it to a high-quality finished state.
 
 ### Contributor License Agreement (CLA)
