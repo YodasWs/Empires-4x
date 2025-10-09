@@ -11,6 +11,7 @@ In Empires 4x, you are not a legionary or an emperor, but the vital hand behind 
 - [Roadmap](https://github.com/YodasWs/Empires-4x/blob/master/ROADMAP.md)
 - [Kanban Board](https://github.com/users/YodasWs/projects/3/)
 - [Discussions](https://github.com/YodasWs/Empires-4x/discussions)
+- [Project Wiki/Documentation](https://github.com/YodasWs/Empires-4x/wiki)
 
 ## Contributing
 
