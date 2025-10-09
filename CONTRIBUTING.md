@@ -63,6 +63,12 @@ This project has a [Wiki](https://github.com/YodasWs/Empires-4x/wiki). Please fe
 
 Documentation added on the parts of the game and how to play the game will need to be incorporated into the game's code as the Player's Help resources.
 
+## Social Media
+
+Please share links to the project and screenshots!
+
+If you're a copywriter or social media manager, comtact me about how we can work together to publicize and promote the project and dev updates.
+
 ## What if the game becomes commercial?
 
 If we decide to go commercial, we will clearly communicate our plans and timeline to the community. While we cannot guarantee payment for past contributions, we will explore ways to recognize and reward our early contributors who helped make the project a success.
