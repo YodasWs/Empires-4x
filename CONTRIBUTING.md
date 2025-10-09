@@ -22,7 +22,7 @@ To ensure that I can legally transition the project for commercial purposes in t
 
 We welcome contributions of all kinds!
 
-*   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/Empires-4x/issues) for areas where help is needed.
+*   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/Empires-4x/issues) or [Kanban board](https://github.com/users/YodasWs/projects/3/) for areas where help is needed.
 *   **Ideas and Feedback:** Share your thoughts on gameplay, features, and design in the [Discussions section](https://github.com/YodasWs/Empires-4x/discussions).
 *   **UX/UI Design and Art:** If you have design or artistic skills, we'd love your help creating a better user experience and graphics.
 
@@ -59,7 +59,7 @@ To claim an issue, you may add a comment to the issue saying you'd like to work 
 
 ## Documentation
 
-This repo has a Wiki. Please feel help expand the information there as we develop the game.
+This project has a [Wiki](https://github.com/YodasWs/Empires-4x/wiki). Please feel free to help expand the information there as we develop the game.
 
 Documentation added on the parts of the game and how to play the game will need to be incorporated into the game's code as the Player's Help resources.
 
