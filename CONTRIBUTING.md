@@ -49,17 +49,23 @@ If you have any feature requests or ideas for the game, please open a new Discus
 ## Open Issues
 
 Please feel free to work on any Open Issue. You can get started by following the standard workflow:
-1. **Fork** the repo to your account and clone to your computer.
-2. **Run** the project on your computer, as documented above.
-3. **Make changes** to the appropriate files. Currently all the game logic is in `src/pages/game/ctrl.js`.
+1. **Comment** on the Issue to notify me and other potential contributers that you're working on the issue, to avoid unnecessary duplicate work.
+2. **Fork** the repo to your account and clone to your computer.
+3. **Run** the project on your computer, as documented above.
+4. **Make changes** to the appropriate files. Currently all the game logic is in `src/pages/game/ctrl.js`.
   It's best to not include the updates made to the JavaScript, CSS, and HTML files in `docs/` in your commits to avoid unnecessary merge conflicts.
-4. **Submit a Pull Request** in this project when it's ready for review.
+5. **Submit a Pull Request** in this project with your updates and be sure to mark it Ready for Review when you're done.
 
-If you have any questions or get stuck at any point, just let me know in the comments on that issue.
+If you have any questions or get stuck at any point, just let me know in the comments on that Issue or in your Pull Request.
 
 ### Claiming and Assigning Issues.
 
-To claim an issue, you may add a comment to the issue saying you'd like to work on it. Once your pull request has been opened, we will assign the issue to you and start reviewing for code quality.
+To claim an issue, you may add a comment to the Issue saying you'd like to work on it. Once your Pull Request has been opened, I will assign the Issue to you. I'll likely start reviewing for code quality right away, but please be sure it's marked Ready for Review when you are finished so I can merge it and test it out.
+
+Please be considerate not to block work for others if you're unable or unwilling to complete a task.
+If I assign an Issue to you, but you don't open a Pull Request within a week, I'll assume you won't be completing the work and I'll free up the assignment for someone else to pick up. If you are still working on it but it's not ready for a Pull Request, please add a comment in the Issue to keep us updated.
+
+If you start work on an Issue but get stuck on completing it or find you don't have time to finish it, please open a Draft Pull Request and let us know in a comment there on in the Issue and I or another contributor may be able to pick up where you left off.
 
 ## Documentation
 
