@@ -51,7 +51,10 @@ const Tile = (() => {
 		if (scene === null) {
 			scene = currentGame.scenes.getScene('mainGameScene');
 		}
-		const claims = new Map();
+		const claims = {
+			faction: new Map(),
+			nation: new Map(),
+		};
 
 		let objImprovement = undefined;
 		let builtImprovement = {
@@ -59,21 +62,28 @@ const Tile = (() => {
 		};
 
 		const laborers = new Set();
-		let player = undefined;
+		let faction = undefined;
+		let nation = undefined;
 		let road = undefined;
 
 		this.food = 0;
 		Object.defineProperties(this, {
 			claims: {
 				enumerable: true,
-				get: () => (lookupPlayer, claimIncrement) => {
+				get: () => (factionOrNation, claimIncrement) => {
 					// Get numerical value of Player's claim
-					if (lookupPlayer instanceof Player) {
-						if (Number.isInteger(claimIncrement)) {
+					if (factionOrNation instanceof Faction) {
+						if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
 							// But first, increment claim value
-							claims.set(lookupPlayer, (claims.get(lookupPlayer) || 0) + claimIncrement);
+							claims.faction.set(factionOrNation, (claims.faction.get(factionOrNation) || 0) + claimIncrement);
 						}
-						return claims.get(lookupPlayer) || 0;
+						return claims.faction.get(factionOrNation) || 0;
+					} else if (factionOrNation instanceof Nation) {
+						if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
+							// But first, increment claim value
+							claims.nation.set(factionOrNation, (claims.nation.get(factionOrNation) || 0) + claimIncrement);
+						}
+						return claims.nation.get(factionOrNation) || 0;
 					}
 					return claims;
 				},
@@ -81,21 +91,38 @@ const Tile = (() => {
 			hex: {
 				get: () => hex,
 			},
-			// TODO: Cache player
-			player: {
+			// TODO: Cache Faction
+			faction: {
 				enumerable: true,
 				get: () => {
 					const topClaimant = {
-						player: null,
+						faction: null,
 						claim: 0,
 					};
-					claims.forEach((val, claimPlayer) => {
+					claims.faction.forEach((val, claimPlayer) => {
 						if (topClaimant.claim < val) {
-							topClaimant.player = claimPlayer;
+							topClaimant.faction = claimPlayer;
 							topClaimant.claim = val;
 						}
 					});
-					return topClaimant.player;
+					return topClaimant.faction;
+				},
+			},
+			// TODO: Cache Nation
+			nation: {
+				enumerable: true,
+				get: () => {
+					const topClaimant = {
+						nation: null,
+						claim: 0,
+					};
+					claims.nation.forEach((val, claimPlayer) => {
+						if (topClaimant.claim < val) {
+							topClaimant.nation = claimPlayer;
+							topClaimant.claim = val;
+						}
+					});
+					return topClaimant.nation;
 				},
 			},
 			improvement: {
@@ -170,15 +197,17 @@ const Tile = (() => {
 		});
 	}
 	Object.assign(Tile.prototype, {
-		claimTerritory(player, claimIncrement = 0) {
+		claimTerritory(factionOrNation, claimIncrement = 0) {
 			if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
 				let prevPlayer = undefined;
-				if (this.player instanceof Player) {
-					prevPlayer = this.player.index;
+				if (factionOrNation instanceof Nation && this.nation instanceof Nation) {
+					prevPlayer = this.nation.index;
+				} else if (factionOrNation instanceof Faction && this.faction instanceof Faction) {
+					prevPlayer = this.faction.index;
 				}
-				this.claims(player, claimIncrement);
-				// Only update scene if player owner has changed
-				if (this.player instanceof Player && this.player.index !== prevPlayer) {
+				this.claims(factionOrNation, claimIncrement);
+				// Only update scene if nation owner has changed
+				if (factionOrNation instanceof Faction && this.faction?.index !== prevPlayer) {
 					currentGame.markTerritory(this.hex, {
 						graphics: currentGame.graphics.territoryFills,
 						lineOffset: 1,
@@ -281,16 +310,20 @@ const City = (() => {
 		col,
 		row,
 		level = 1,
-		player,
+		nation,
 	} = {}) {
 		if (scene === null) {
 			scene = currentGame.scenes.getScene('mainGameScene');
 		}
+		if (!(nation instanceof Nation)) {
+			throw new TypeError('City expects to be assigned a Nation!');
+		}
+
 		// Tie to hex
 		const thisHex = grid.getHex({ row, col });
 		thisHex.tile.setImprovement('destroy');
 
-		const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', player.frame).setDepth(depths.cities).setScale(0.8);
+		const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', nation.frame).setDepth(depths.cities).setScale(0.8);
 		thisHex.city = this;
 		const laborers = new Set();
 
@@ -299,7 +332,7 @@ const City = (() => {
 			start: [ thisHex.q, thisHex.r ],
 			radius: 1,
 		})).forEach((hex) => {
-			hex.tile.claimTerritory(player, 100);
+			hex.tile.claimTerritory(nation, 100);
 		});
 
 		// Claim water territory
@@ -308,7 +341,7 @@ const City = (() => {
 			radius: 2,
 		})).forEach((hex) => {
 			if (hex.terrain.isWater) {
-				hex.tile.claimTerritory(player, 50);
+				hex.tile.claimTerritory(nation, 50);
 			}
 		});
 
@@ -336,9 +369,9 @@ const City = (() => {
 					return true;
 				},
 			},
-			player: {
+			nation: {
 				enumerable: true,
-				get: () => player,
+				get: () => nation,
 			},
 			sprite: {
 				get: () => sprite,
@@ -358,21 +391,45 @@ const City = (() => {
 	return City;
 })();
 
-const Player = (() => {
+// Each Human/AI Player controls a Faction
+const Faction = (() => {
 	let activeUnit = null;
-	function Player(index) {
+	function Faction({
+		index,
+	}) {
+		const color = (() => {
+			switch (index % 3) {
+				case 0:
+					return 0x32cd32;
+				case 1:
+					return 0xff0000;
+				case 2:
+					return 0x0000ff;
+				default:
+					return 0xaaaaaa;
+			}
+		})();
 		const name = json.world?.FactionNames[index];
 		let money = 0;
 		let units = [];
-
 		Object.defineProperties(this, {
-			frame: {
+			color: {
 				enumerable: true,
-				get: () => (index + 1) % 3,
+				get: () => color,
 			},
 			index: {
 				enumerable: true,
 				get: () => index,
+			},
+			money: {
+				enumerable: true,
+				get: () => money,
+				set(val) {
+					if (!Number.isFinite(val) || val < 0) {
+						throw new TypeError('Faction.money expects to be assigned a positive number!');
+					}
+					money = val;
+				},
 			},
 			name: {
 				enumerable: true,
@@ -383,7 +440,7 @@ const Player = (() => {
 				get: () => units,
 				set: (val) => {
 					if (!Array.isArray(val)) {
-						throw new TypeError('Player.units expects to be assigned an Array!');
+						throw new TypeError('Faction.units expects to be assigned an Array!');
 					}
 					units = val.filter(unit => unit instanceof Unit && unit.deleted === false);
 				},
@@ -411,40 +468,15 @@ const Player = (() => {
 					return false;
 				},
 			},
-			color: {
-				enumerable: true,
-				get() {
-					switch (index % 3) {
-						case 0:
-							return 0x32cd32;
-						case 1:
-							return 0xff0000;
-						case 2:
-							return 0x0000ff;
-						default:
-							return 0xaaaaaa;
-					}
-				},
-			},
-			money: {
-				enumerable: true,
-				get: () => money,
-				set(val) {
-					if (!Number.isFinite(val) || val < 0) {
-						throw new TypeError('Player.money expects to be assigned a positive number!');
-					}
-					money = val;
-				},
-			},
 		});
 	}
-	Object.assign(Player.prototype, {
+	Object.assign(Faction.prototype, {
 		addUnit(unitType, row, col, scene) {
 			this.units.push(new Unit(unitType, {
 				row,
 				col,
 				scene,
-				player: this,
+				faction: this,
 			}));
 		},
 		checkEndTurn() {
@@ -491,7 +523,48 @@ const Player = (() => {
 			return false;
 		},
 	});
-	return Player;
+	return Faction;
+})();
+
+const Nation = (() => {
+	function Nation({
+		index,
+	}) {
+		const color = (() => {
+			switch (index % 3) {
+				case 0:
+					return 0x32cd32;
+				case 1:
+					return 0xff0000;
+				case 2:
+					return 0x0000ff;
+				default:
+					return 0xaaaaaa;
+			}
+		})();
+		const name = json.world?.NationNames[index];
+		Object.defineProperties(this, {
+			color: {
+				enumerable: true,
+				get: () => color,
+			},
+			frame: {
+				enumerable: true,
+				get: () => (index + 1) % 3,
+			},
+			index: {
+				enumerable: true,
+				get: () => index,
+			},
+			name: {
+				enumerable: true,
+				get: () => name,
+			},
+		});
+	}
+	Object.assign(Nation.prototype, {
+	});
+	return Nation;
 })();
 
 let FoodSprites = [];
@@ -517,9 +590,18 @@ const currentGame = {
 		});
 		const scene = currentGame.scenes.getScene('mainGameScene');
 		grid.forEach((hex) => {
-			// Adjust each player's claim on territory
+			// Adjust each Nations' and Factions' claims on Territory
+			this.nations.forEach((nation) => {
+				if (hex.tile.nation === nation) {
+					// Strengthen top claimant's claim
+					hex.tile.claimTerritory(nation, 1);
+				} else if (hex.tile.claims(nation) > 0) {
+					// Weaken foreign claimant's claim
+					hex.tile.claimTerritory(nation, -1);
+				}
+			});
 			this.players.forEach((player) => {
-				if (hex.tile.player === player) {
+				if (hex.tile.faction === player) {
 					// Strengthen top claimant's claim
 					hex.tile.claimTerritory(player, 1);
 				} else if (hex.tile.claims(player) > 0) {
@@ -571,12 +653,12 @@ const currentGame = {
 			throw new TypeError(`Unknown player ${intPlayer}`);
 		}
 		this.currentPlayer = this.players[intPlayer];
-		if (!(this.currentPlayer instanceof Player)) {
-			throw new TypeError(`Player ${intPlayer} is not a Player Object`);
+		if (!(this.currentPlayer instanceof Faction)) {
+			throw new TypeError(`Player ${intPlayer} is not a Faction Object`);
 		}
 
 		// Sam, TODO: Show message to User whose turn it is
-		currentGame.uiDisplays.player.setText(`${this.currentPlayer.name}'s Turn`)
+		currentGame.uiDisplays.faction.setText(`${this.currentPlayer.name}'s Turn`)
 			.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
 			.setColor(intPlayer === 0 ? 'goldenrod' : 'lightgrey');
 		this.intCurrentPlayer = intPlayer;
@@ -599,11 +681,11 @@ const currentGame = {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
-			if (!(hex.tile instanceof Tile) || !(hex.tile.player instanceof Player)) return;
+			if (!(hex.tile instanceof Tile) || !(hex.tile.faction instanceof Faction)) return;
 			if (fill === false) {
-				graphics.lineStyle(lineWidth, hex.tile.player.color);
+				graphics.lineStyle(lineWidth, hex.tile.faction.color);
 			} else {
-				graphics.fillStyle(hex.tile.player.color);
+				graphics.fillStyle(hex.tile.faction.color);
 			}
 			graphics.beginPath();
 			// Draw points closer to center of hex
@@ -629,7 +711,7 @@ const currentGame = {
 		console.log('Sam, endRound!');
 		const scene = currentGame.scenes.getScene('mainGameScene');
 		const delaysForEndRound = [];
-		currentGame.uiDisplays.player.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
+		currentGame.uiDisplays.faction.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
 			.setText('End of Round')
 			.setColor('lightgrey');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
@@ -901,7 +983,7 @@ const Unit = (() => {
 	function Unit(unitType, {
 		row,
 		col,
-		player,
+		faction,
 	}) {
 		// Check unitType exists
 		const base = json.world.units[unitType];
@@ -934,9 +1016,9 @@ const Unit = (() => {
 				enumerable: true,
 				get: () => grid.getHex({ row: this.row, col: this.col }),
 			},
-			player: {
+			faction: {
 				enumerable: true,
-				get: () => player,
+				get: () => faction,
 			},
 			scene: {
 				enumerable: true,
@@ -984,7 +1066,7 @@ const Unit = (() => {
 			}
 
 			// Not the human player's unit, do nothing (for now)
-			if (this.player.index !== 0) {
+			if (this.faction.index !== 0) {
 				this.deactivate(true);
 				return;
 			}
@@ -1080,13 +1162,13 @@ const Unit = (() => {
 				this.moveTo(grid.getHex({ row, col }));
 			} else if (action === 'c') {
 				const thisHex = grid.getHex({ row: this.row, col: this.col});
-				if (!Actions['c'].isValidOption({ hex: thisHex, player: this.player })) {
+				if (!Actions['c'].isValidOption({ hex: thisHex, faction: this.faction })) {
 					// TODO: Show message to Player that territory already belongs to them!
 					console.warn('Sam, you own this already');
 					return;
 				}
 				// Claim hex territory
-				thisHex.tile.claimTerritory(this.player, 10);
+				thisHex.tile.claimTerritory(this.faction, 10);
 				this.deactivate(true);
 			} else {
 				const thisHex = grid.getHex({ row: this.row, col: this.col});
@@ -1094,18 +1176,19 @@ const Unit = (() => {
 				switch (this.unitType) {
 					case 'settler':
 						switch (action) {
-								// Build city
+								// TODO: Build Village
 							case 'b':
+								break;
 								if (!Actions['b'].isValidOption({ hex: thisHex })) {
 									// TODO: Warn player
 									console.warn('Cannot place city adjacent to another city');
 									return;
 								}
-								// Build city
+								// TODO: Switch to Village
 								const city = new City({
 									col: this.col,
 									row: this.row,
-									player: this.player,
+									// faction: this.faction,
 									scene: this.scene,
 								});
 								this.destroy();
@@ -1143,7 +1226,7 @@ const Unit = (() => {
 				}
 			}
 			if (this.moves > 0) {
-				this.player.activateUnit();
+				this.faction.activateUnit();
 			} else {
 				this.deactivate();
 			}
@@ -1248,7 +1331,7 @@ const Actions = [
 		isValidOption({ unit }) {
 			return unit instanceof Unit && !unit.deleted;
 		},
-		doAction({ unit, player }) {
+		doAction({ unit, faction }) {
 			if (this.isValidOption({ unit })) {
 				currentGame.closeUnitActionMenu();
 				
@@ -1258,9 +1341,9 @@ const Actions = [
 				}
 				
 				// Find the unit's index in its player's units array
-				const unitIndex = unit.player.units.indexOf(unit);
+				const unitIndex = unit.faction.units.indexOf(unit);
 				if (unitIndex >= 0) {
-					unit.player.activateUnit(unitIndex);
+					unit.faction.activateUnit(unitIndex);
 				}
 			}
 		},
@@ -1291,8 +1374,8 @@ const Actions = [
 	{
 		key: 'c', // claim territory
 		text: '<u>C</u>laim territory',
-		isValidOption: ({ hex, player }) => {
-			return hex.tile.player !== player;
+		isValidOption: ({ hex, faction }) => {
+			return hex.tile.faction !== faction;
 		},
 	},
 	{
@@ -1399,7 +1482,7 @@ function openUnitActionMenu(hex) {
 			if (unit === currentGame.activeUnit) return;
 
 			// Only show units from current player or if no active unit
-			if (unit.player === currentGame.currentPlayer || !currentGame.activeUnit) {
+			if (unit.faction === currentGame.currentPlayer || !currentGame.activeUnit) {
 				possibleActions.push({
 					action: 'activateUnit',
 					unit: unit,
@@ -1431,7 +1514,7 @@ function openUnitActionMenu(hex) {
 					break;
 			}
 			// Check if territory is under our control
-			if (Actions['c'].isValidOption({ hex, player: currentGame.activeUnit.player })) {
+			if (Actions['c'].isValidOption({ hex, faction: currentGame.activeUnit.faction })) {
 				possibleActions.push('c');
 			}
 		} else if (isLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
@@ -1584,7 +1667,7 @@ const config = {
 						...hex.city,
 						col: hex.col,
 						row: hex.row,
-						player: currentGame.players[hex.city.player],
+						nation: currentGame.nations[hex.city.nation],
 					});
 				}
 				// Build Improvement
@@ -1784,10 +1867,21 @@ yodasws.page('pageGame').setRoute({
 	canonicalRoute: '/game/',
 	route: '/game/?',
 }).on('load', () => {
+	currentGame.nations = [
+		new Nation({
+			index: 0,
+		}),
+	];
 	currentGame.players = [
-		new Player(0),
-		new Player(1),
-		new Player(2),
+		new Faction({
+			index: 0,
+		}),
+		new Faction({
+			index: 1,
+		}),
+		new Faction({
+			index: 2,
+		}),
 	];
 	const game = new Phaser.Game({
 		...config,
@@ -1816,7 +1910,7 @@ yodasws.page('pageGame').setRoute({
 					strokeThickness: 5,
 					maxLines: 1,
 				});
-				currentGame.uiDisplays.player = this.add.text(14 + currentGame.uiDisplays.round.displayWidth + 10, lineY + 2, '', {
+				currentGame.uiDisplays.faction = this.add.text(14 + currentGame.uiDisplays.round.displayWidth + 10, lineY + 2, '', {
 					fontFamily: 'Trebuchet MS',
 					fontSize: '26px',
 					color: 'white',
@@ -1824,7 +1918,7 @@ yodasws.page('pageGame').setRoute({
 					strokeThickness: 5,
 					maxLines: 1,
 				});
-				lineY += currentGame.uiDisplays.player.displayHeight + 5;
+				lineY += currentGame.uiDisplays.faction.displayHeight + 5;
 			}
 
 			// Money
@@ -1867,6 +1961,7 @@ yodasws.page('pageGame').setRoute({
 						currentGame.graphics.gfxClaims.destroy();
 						break;
 					case 'F3': {
+						break;
 						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines - 1);
 						// Show territorial claims
 						grid.forEach((hex) => {

@@ -30,6 +30,9 @@
 		"Cornovii",
 		"Atrebates"
 	],
+	"NationNames": [
+		"Roman Empire"
+	],
 	"ResourceTransporter": {
 		"moves": 12,
 		"base": {
@@ -300,10 +303,9 @@
 				"terrain": "desert"
 			},
 			{
-				"terrain": "hill",
+				"terrain": "grass",
 				"city": {
-					"player": 0,
-					"level": 2
+					"nation": 0
 				}
 			},
 			{
@@ -319,11 +321,7 @@
 				"terrain": "grass"
 			},
 			{
-				"terrain": "grass",
-				"city": {
-					"player": 2,
-					"level": 2
-				}
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass"
@@ -382,11 +380,7 @@
 				"terrain": "grass"
 			},
 			{
-				"terrain": "grass",
-				"city": {
-					"player": 1,
-					"level": 2
-				}
+				"terrain": "grass"
 			},
 			{
 				"terrain": "grass"
