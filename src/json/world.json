@@ -48,7 +48,7 @@
 			}
 		}
 	},
-	"resources": {
+	"goods": {
 		"wheat": {
 			"tile": "wheat"
 		}

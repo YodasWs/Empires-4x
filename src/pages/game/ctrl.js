@@ -24,7 +24,7 @@ const depths = {
 	road: 6,
 	cities: 10,
 	inactiveUnits: 11,
-	resources: 20,
+	goods: 20,
 	actionSprites: 98,
 	activeUnit: 100,
 };
@@ -62,8 +62,6 @@ const Tile = (() => {
 		};
 
 		const laborers = new Set();
-		let faction = undefined;
-		let nation = undefined;
 		let road = undefined;
 
 		this.food = 0;
@@ -164,7 +162,7 @@ const Tile = (() => {
 				},
 			},
 			setImprovement: {
-				get: () => (val) => {
+				get: () => (val, faction = null) => {
 					// Destroy all improvements on Tile
 					if (val === 'destroy') {
 						if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
@@ -178,6 +176,9 @@ const Tile = (() => {
 					}
 
 					if (isValidImprovement(hex, val, builtImprovement)) {
+						if (faction instanceof Faction) {
+							this.claimTerritory(faction, 10);
+						}
 						objImprovement = {
 							...json.world.improvements[val],
 							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
@@ -567,6 +568,81 @@ const Nation = (() => {
 	return Nation;
 })();
 
+const Goods = (() => {
+	function Goods({
+		num = 1,
+		type,
+		hex,
+	} = {}) {
+		if (!(hex instanceof Honeycomb.Hex)) {
+			throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
+		}
+		let rounds = 0;
+		const {
+			spriteRef,
+		} = (() => {
+			switch (type) {
+				case 'food':
+					return {
+						spriteRef: 'goods.wheat',
+					};
+					break;
+				default:
+					throw new TypeError(`Unknown Goods type '${type}'`);
+			}
+		})();
+		const faction = hex.tile.faction;
+		const scene = currentGame.scenes.getScene('mainGameScene');
+		const sprite = scene.add.sprite(hex.x, hex.y, spriteRef).setDepth(depths.goods);
+		const start = hex;
+		Object.defineProperties(this, {
+			faction: {
+				enumerable: true,
+				get: () => faction,
+			},
+			hex: {
+				enumerable: true,
+				get: () => hex,
+				set(val) {
+					if (!(val instanceof Honeycomb.Hex)) {
+						throw new TypeError('Goods.hex expects to be assigned a Honeycomb.Hex!');
+					}
+					hex = val;
+				},
+			},
+			num: {
+				enumerable: true,
+				get: () => num,
+			},
+			rounds: {
+				enumerable: true,
+				get: () => rounds,
+				set(val) {
+					if (!Number.isFinite(val) || val < 0) {
+						throw new TypeError('Goods.rounds expects to be assigned a positive number!');
+					}
+					rounds = val;
+				},
+			},
+			sprite: {
+				enumerable: true,
+				get: () => sprite,
+			},
+			start: {
+				enumerable: true,
+				get: () => start,
+			},
+			type: {
+				enumerable: true,
+				get: () => type,
+			},
+		});
+	}
+	Object.assign(Goods.prototype, {
+	});
+	return Goods;
+})();
+
 let FoodSprites = [];
 const FoodSpriteOptions = {
 	ease: 'Linear',
@@ -619,14 +695,11 @@ const currentGame = {
 				food += hex.tile.improvement.food || 0;
 				if (food > 0) {
 					// TODO: Add some particle effect to show food being generated and not stacked
-					const { x, y } = hex;
-					FoodSprites.push({
-						food,
+					FoodSprites.push(new Goods({
+						type: 'food',
+						num: food,
 						hex,
-						rounds: 0,
-						sprite: scene.add.sprite(x, y, `resources.wheat`).setDepth(depths.resources),
-						start: hex,
-					});
+					}));
 				}
 			}
 		});
@@ -725,13 +798,16 @@ const currentGame = {
 		});
 
 		// Remove any FoodSprites that have no food or have been destroyed
-		FoodSprites = FoodSprites.filter(({ food, sprite }) => {
-			return food > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
+		FoodSprites = FoodSprites.filter(({ num, sprite }) => {
+			return num > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
 		});
 
 		// Move Food towards nearest City
 		FoodSprites.forEach((FoodSprite, i) => {
-			let { hex, food, sprite } = FoodSprite;
+			let { faction, hex, num: food, sprite, type } = FoodSprite;
+			if (type !== 'food') {
+				return;
+			}
 			if (food <= 0) {
 				sprite.setActive(false);
 				sprite.destroy();
@@ -742,7 +818,7 @@ const currentGame = {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
 				const neededFood = Math.max(0, hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food);
 				const takeFood = Math.min(neededFood, food);
-				FoodSprite.food = food -= takeFood;
+				FoodSprite.num = food -= takeFood;
 				hex.tile.food += takeFood;
 
 				if (food <= 0) {
@@ -775,7 +851,7 @@ const currentGame = {
 								y: nextHex.y,
 								...FoodSpriteOptions,
 								onComplete(tween) {
-									nextHex.city.player.money += food * 10;
+									faction.money += food * 10;
 									currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 									sprite.setActive(false);
 									sprite.destroy();
@@ -804,7 +880,7 @@ const currentGame = {
 			}
 
 			// TODO: Limit lifespan of FoodSprite
-			if (++FoodSprite.rounds > 5) {
+			if (type === 'food' && ++FoodSprite.rounds > 5) {
 				sprite.setActive(false);
 				sprite.destroy();
 			}
@@ -876,7 +952,7 @@ function hideActionSprites() {
 	}
 }
 
-// The basic resource transporter unit, used to move resources to the nearest City
+// The basic resource transporter unit, used to move Goods to the nearest City
 let ResourceTransporter = null;
 
 // Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
@@ -963,7 +1039,10 @@ function getUnitsOnHex(hex) {
 }
 
 function movementCost(unit, nextHex, thisHex = unit.hex) {
-	if (!(nextHex instanceof Honeycomb.Hex) || !(unit instanceof Unit)) {
+	if (!(nextHex instanceof Honeycomb.Hex)) {
+		return Infinity;
+	}
+	if (unit !== ResourceTransporter && !(unit instanceof Unit)) {
 		return Infinity;
 	}
 	if (nextHex.terrain.isWater && !unit.base.moveOnWater) {
@@ -1199,7 +1278,7 @@ const Unit = (() => {
 						switch (action) {
 								// Build farm
 							case 'f':
-								if (thisHex.tile.setImprovement('farm')) {
+								if (thisHex.tile.setImprovement('farm', this.faction)) {
 									thisHex.tile.laborers = new Citizen({ hex: thisHex });
 									this.destroy();
 								} else {
@@ -1307,7 +1386,7 @@ const Actions = [
 		key: 'city',
 		text: 'View city',
 		isValidOption({ hex }) {
-			return hex.tile?.player === currentGame.currentPlayer && hex.city instanceof City;
+			return hex.tile?.faction === currentGame.currentPlayer && hex.city instanceof City;
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
@@ -1617,9 +1696,9 @@ const config = {
 					this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
 				}
 			});
-			Object.entries(json.world.resources).forEach(([key, resource]) => {
+			Object.entries(json.world.goods).forEach(([key, resource]) => {
 				if (typeof resource.tile === 'string' && resource.tile.length > 0) {
-					this.load.image(`resources.${key}`, `img/resources/${resource.tile}.png`);
+					this.load.image(`goods.${key}`, `img/resources/${resource.tile}.png`);
 				}
 			});
 			this.load.image('laborers.farmer', 'img/laborers/farmer.png');
