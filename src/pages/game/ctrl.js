@@ -865,6 +865,21 @@ function findPath(start, end, unit = ResourceTransporter) {
 	return path;
 }
 
+// Searches all players units to find any units on the specified hex
+function getUnitsOnHex(hex) {
+    if (!(hex instanceof Honeycomb.Hex)) return [];
+    
+    const units = [];
+    currentGame.players.forEach(player => {
+        player.units.forEach(unit => {
+            if (unit.hex.row === hex.row && unit.hex.col === hex.col && !unit.deleted) {
+                units.push(unit);
+            }
+        });
+    });
+    return units;
+}
+
 function movementCost(unit, nextHex, thisHex = unit.hex) {
 	if (!(nextHex instanceof Honeycomb.Hex) || !(unit instanceof Unit)) {
 		return Infinity;
@@ -939,6 +954,7 @@ const Unit = (() => {
 	}
 	Object.assign(Unit.prototype, {
 		activate() {
+			hideActionSprites();
 			const thisHex = grid.getHex({ row: this.row, col: this.col });
 			currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
 
@@ -1220,6 +1236,36 @@ const Actions = [
 		},
 	},
 	{
+		// Allow switching between units
+		key: 'activateUnit',
+		text: ({ unit }) => {
+			if (unit instanceof Unit) {
+				const moveText = unit.moves > 0 ? `(${unit.moves} moves left)` : '(no moves)';
+				return `Activate ${unit.unitType} ${moveText}`;
+			}
+			return 'Activate unit';
+		},
+		isValidOption({ unit }) {
+			return unit instanceof Unit && !unit.deleted;
+		},
+		doAction({ unit, player }) {
+			if (this.isValidOption({ unit })) {
+				currentGame.closeUnitActionMenu();
+				
+				// Deactivate current unit without ending moves
+				if (currentGame.activeUnit instanceof Unit) {
+					currentGame.activeUnit.deactivate(false);
+				}
+				
+				// Find the unit's index in its player's units array
+				const unitIndex = unit.player.units.indexOf(unit);
+				if (unitIndex >= 0) {
+					unit.player.activateUnit(unitIndex);
+				}
+			}
+		},
+	},
+	{
 		key: 'b', // build city
 		text: '<u>B</u>uild city',
 		isValidOption({ hex }) {
@@ -1343,6 +1389,25 @@ function openUnitActionMenu(hex) {
 	// List possible actions on the hex to build menu
 	const possibleActions = [];
 
+	// Check for units on this hex
+	const unitsOnHex = getUnitsOnHex(hex);
+
+	// If units on this hex, add option to activate each unit
+	if (unitsOnHex.length > 0) {
+		unitsOnHex.forEach(unit => {
+			// Don't show option to activate currently active unit
+			if (unit === currentGame.activeUnit) return;
+
+			// Only show units from current player or if no active unit
+			if (unit.player === currentGame.currentPlayer || !currentGame.activeUnit) {
+				possibleActions.push({
+					action: 'activateUnit',
+					unit: unit,
+				});
+			}
+		});
+	}
+
 	if (currentGame.activeUnit instanceof Unit) {
 		console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
 		if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
@@ -1395,8 +1460,8 @@ function openUnitActionMenu(hex) {
 		return;
 	}
 
-	// If only one action, do it
-	if (possibleActions.length === 1) switch (possibleActions[0]) {
+	// If only one action, do it (but not for activateUnit - always show menu)
+	if (possibleActions.length === 1 && typeof possibleActions[0] === 'object') switch (possibleActions[0].action) {
 		case 'moveTo':
 			// Automatically move to adjacent hex
 			if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
@@ -1418,12 +1483,22 @@ function openUnitActionMenu(hex) {
 	div.classList.add('menu');
 	possibleActions.concat([
 		'',
-	]).forEach((action) => {
+	]).forEach((actionItem) => {
 		const button = document.createElement('button');
-		button.innerHTML = Actions[action].text({ hex });
-		button.addEventListener('click', () => {
-			doAction(action, hex);
-		});
+		// Handle both string actions and object actions (for activateUnit)
+        if (actionItem?.action) {
+            const action = Actions[actionItem.action];
+            button.innerHTML = action.text(actionItem);
+            button.addEventListener('click', () => {
+                action.doAction(actionItem);
+            });
+        } else {
+            const action = actionItem;
+            button.innerHTML = Actions[action].text({ hex });
+            button.addEventListener('click', () => {
+                doAction(action, hex);
+            });
+        }
 		button.style.pointerEvents = 'auto';
 		div.appendChild(button);
 	});
