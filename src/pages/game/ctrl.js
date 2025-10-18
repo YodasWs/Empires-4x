@@ -176,14 +176,15 @@ const Tile = (() => {
 					}
 
 					if (isValidImprovement(hex, val, builtImprovement)) {
-						if (faction instanceof Faction) {
-							this.claimTerritory(faction, 10);
-						}
 						objImprovement = {
 							...json.world.improvements[val],
 							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
 							key: val,
 						};
+						if (faction instanceof Faction) {
+							this.claimTerritory(faction, 10);
+							objImprovement.faction = faction;
+						}
 						builtImprovement.key = val;
 						return true;
 					}
