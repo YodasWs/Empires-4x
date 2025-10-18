@@ -954,6 +954,7 @@ const Unit = (() => {
 	}
 	Object.assign(Unit.prototype, {
 		activate() {
+			hideActionSprites();
 			const thisHex = grid.getHex({ row: this.row, col: this.col });
 			currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
 
