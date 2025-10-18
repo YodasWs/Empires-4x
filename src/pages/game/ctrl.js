@@ -436,6 +436,10 @@ const Faction = (() => {
 				enumerable: true,
 				get: () => name,
 			},
+			nation: {
+				enumerable: true,
+				get: () => currentGame.nations[0],
+			},
 			units: {
 				enumerable: true,
 				get: () => units,
@@ -1523,7 +1527,7 @@ function isLegalMove(row, col, unit = ResourceTransporter) {
 
 	if (unit instanceof Unit) {
 		// TODO: Check move into City
-		if (targetHex.city instanceof City && targetHex.city.player.index !== unit.player.index) {
+		if (targetHex.city instanceof City && targetHex.city.nation !== unit.faction.nation) {
 			if (!unit.attack || !unit.attackCities) return false;
 		}
 
