@@ -2181,6 +2181,7 @@ yodasws.page('pageGame').setRoute({
 			}
 			console.log('Sam, tile-view created');
 			game.scene.pause('mainGameScene');
+			const dom = document.getElementById('tile-view');
 
 			// Display Terrain Information
 			displayImageInHTML({
@@ -2188,6 +2189,14 @@ yodasws.page('pageGame').setRoute({
 				htmlElementId: 'terrain',
 				scene: this,
 			});
+			const elTerrain = document.getElementById('terrain');
+			if (elTerrain instanceof Element) {
+				const div = document.createElement('div');
+				div.classList.add('name');
+				div.innerHTML = hex.terrain.name;
+				elTerrain.appendChild(div);
+			}
+			console.log('Sam, terrain:', hex.terrain);
 
 			// Display Improvement Information
 			if (hex.tile.improvement?.image instanceof Phaser.GameObjects.Image) {
@@ -2196,10 +2205,17 @@ yodasws.page('pageGame').setRoute({
 					htmlElementId: 'improvements',
 					scene: this,
 				});
+				const elImprovement = document.getElementById('improvements');
+				if (elImprovement instanceof Element) {
+					const div = document.createElement('div');
+					div.classList.add('name');
+					div.innerHTML = hex.tile.improvement.title;
+					elImprovement.appendChild(div);
+				}
+				console.log('Sam, improvement:', hex.tile.improvement);
 			}
 
 			// Show Tile View
-			const dom = document.getElementById('tile-view');
 			dom.removeAttribute('hidden');
 
 			// Set event listeners

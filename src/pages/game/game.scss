@@ -72,5 +72,19 @@
 		@media (orientation: portrait) {
 			flex-flow: column;
 		}
+
+		> * {
+			display: flex;
+			flex-flow: column;
+			align-items: center;
+
+			.name {
+				text-transform: capitalize;
+				background: black;
+				color: white;
+				padding: 2px 5px;
+				border-radius: 0.5em;
+			}
+		}
 	}
 }
