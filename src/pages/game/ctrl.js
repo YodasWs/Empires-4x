@@ -2182,11 +2182,23 @@ yodasws.page('pageGame').setRoute({
 			console.log('Sam, tile-view created');
 			game.scene.pause('mainGameScene');
 
+			// Display Terrain Information
 			displayImageInHTML({
 				imageKey: `tile.${hex.terrain.terrain}`,
 				htmlElementId: 'terrain',
 				scene: this,
 			});
+
+			// Display Improvement Information
+			if (hex.tile.improvement?.image instanceof Phaser.GameObjects.Image) {
+				displayImageInHTML({
+					imageKey: `improvements.${hex.tile.improvement.key}`,
+					htmlElementId: 'improvements',
+					scene: this,
+				});
+			}
+
+			// Show Tile View
 			const dom = document.getElementById('tile-view');
 			dom.removeAttribute('hidden');
 

@@ -173,7 +173,7 @@ const options = {
 ],
 'no-empty-rulesets': 0,
 'no-extends': 0,
-'no-ids': 1,
+'no-ids': 0,
 'no-important': 1,
 'no-invalid-hex': 1,
 'no-mergeable-selectors': 1,
