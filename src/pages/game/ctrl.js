@@ -1909,40 +1909,20 @@ function checkToStart() {
 }
 
 // A scene function, for example in `create()`
-function displayImageInHTML(imageKey, htmlElementId) {
+function displayImageInHTML({
+	htmlElementId,
+	imageKey,
+	scene = currentGame.scenes.getScene('mainGameScene'),
+} = {}) {
 	// Get the HTML <img> element by its ID
 	const imgElement = document.getElementById(htmlElementId);
-	/*
-	if (!(imgElement instanceof HTMLImageElement) && imgElement instanceof Element) {
-		imgElement = imgElement.querySelector('img') ?? (() => {
-			const img = document.createElement('img');
-			imgElement.append(img);
-			return img;
-		})();
-	}
-	/**/
 
 	// Get the Texture instance from the Texture Manager
-	const texture = this.textures.get(imageKey);
+	const texture = scene.textures.get(imageKey);
 
-	if (texture && imgElement) {
+	if (texture instanceof Phaser.Textures.Texture && imgElement instanceof Element) {
 		// Get the source image from the texture, which is an HTMLImageElement
-		const imageSource = texture.getSourceImage();
-
-		// Create a temporary canvas to convert the image to Base64
-		const canvas = document.createElement('canvas');
-		canvas.width = imageSource.width;
-		canvas.height = imageSource.height;
-		const context = canvas.getContext('2d');
-		context.drawImage(imageSource, 0, 0);
-
-		// Convert the canvas image to a data URI and set it as the src
-		// imgElement.src = canvas.toDataURL();
-		if (imgElement instanceof HTMLImageElement) {
-			imgElement.parentElement.append(canvas);
-		} else {
-			imgElement.append(canvas);
-		}
+		imgElement.append(texture.getSourceImage());
 	}
 }
 
@@ -2202,7 +2182,11 @@ yodasws.page('pageGame').setRoute({
 			console.log('Sam, tile-view created');
 			game.scene.pause('mainGameScene');
 
-			displayImageInHTML.bind(this)(`tile.${hex.terrain.terrain}`, 'terrain');
+			displayImageInHTML({
+				imageKey: `tile.${hex.terrain.terrain}`,
+				htmlElementId: 'terrain',
+				scene: this,
+			});
 			const dom = document.getElementById('tile-view');
 			dom.removeAttribute('hidden');
 
