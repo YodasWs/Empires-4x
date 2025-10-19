@@ -2206,14 +2206,6 @@ yodasws.page('pageGame').setRoute({
 			const dom = document.getElementById('tile-view');
 			dom.removeAttribute('hidden');
 
-			// Start building graphics scene
-			{
-				// Lay black background
-				const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
-				graphics.fillStyle(0x000000, 0.5);
-				graphics.fillRect(0, 0, config.width, config.height);
-			}
-
 			// Set event listeners
 			this.input.keyboard.enabled = true;
 			this.input.keyboard.on('keydown', (evt) => {

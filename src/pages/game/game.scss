@@ -56,8 +56,10 @@
 		display: flex;
 		flex-flow: row;
 		align-items: center;
+		justify-content: space-around;
 		height: 100%;
 		width: 100%;
+		background: rgba(0, 0, 0, 0.5);
 
 		&[hidden] {
 			display: none;
