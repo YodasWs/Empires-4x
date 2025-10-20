@@ -582,23 +582,13 @@ const Goods = (() => {
 		if (!(hex instanceof Honeycomb.Hex)) {
 			throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
 		}
+		if ((json.world.goods[type] ?? true) === true) {
+			throw new TypeError(`Unknown Goods type '${type}'`);
+		}
 		let rounds = 0;
-		const {
-			spriteRef,
-		} = (() => {
-			switch (type) {
-				case 'food':
-					return {
-						spriteRef: 'goods.wheat',
-					};
-					break;
-				default:
-					throw new TypeError(`Unknown Goods type '${type}'`);
-			}
-		})();
 		const faction = hex.tile.faction;
 		const scene = currentGame.scenes.getScene('mainGameScene');
-		const sprite = scene.add.sprite(hex.x, hex.y, spriteRef).setDepth(depths.goods);
+		const sprite = scene.add.sprite(hex.x, hex.y,  `goods.${type}`).setDepth(depths.goods);
 		const start = hex;
 		Object.defineProperties(this, {
 			faction: {
@@ -2200,13 +2190,47 @@ yodasws.page('pageGame').setRoute({
 
 			// Display Improvement Information
 			if (hex.tile.improvement?.image instanceof Phaser.GameObjects.Image) {
-				displayImageInHTML({
-					imageKey: `improvements.${hex.tile.improvement.key}`,
-					htmlElementId: 'improvements',
-					scene: this,
-				});
 				const elImprovement = document.getElementById('improvements');
 				if (elImprovement instanceof Element) {
+					// Create new Phaser canvas
+					const canvas = (() => {
+						if (this.textures.exists('tile-view-improvement')) {
+							return this.textures.get('tile-view-improvement');
+						}
+						return this.textures.createCanvas('tile-view-improvement', tileWidth, tileWidth);
+					})();
+					const elCanvas = canvas.getCanvas();
+					const graphics = canvas.getContext();
+					// Render a white hexagon to the canvas
+					const blandHex = Honeycomb.defineHex({
+						dimensions: tileWidth / 2,
+						orientation: Honeycomb.Orientation.FLAT,
+						origin: 'topLeft',
+					});
+					const oneGrid = new Honeycomb.Grid(blandHex, Honeycomb.rectangle({ width: 1, height: 1 }));
+					const tileHex = oneGrid.getHex({ row: 0, col: 0 });
+
+					graphics.fillStyle = 'white';
+					graphics.beginPath();
+					const [firstCorner, ...otherCorners] = tileHex.corners.map(point => ({ x: point.x, y: point.y - tileHex.y + 100 }));
+					graphics.moveTo(firstCorner.x, firstCorner.y);
+					otherCorners.forEach(({x, y}) => {
+						graphics.lineTo(x, y);
+					});
+					graphics.closePath();
+					graphics.fill();
+
+					// Render improvement image to the canvas
+					const img = this.textures.get(`improvements.${hex.tile.improvement.key}`).getSourceImage();
+					const x = canvas.width / 2 - img.width / 2;
+					const y = canvas.height / 2 - img.height / 2;
+					canvas.drawFrame(`improvements.${hex.tile.improvement.key}`, null, x, y);
+
+					// Place canvas into HTML
+					canvas.refresh();
+					elImprovement.appendChild(elCanvas);
+
+					// Add improvement name
 					const div = document.createElement('div');
 					div.classList.add('name');
 					div.innerHTML = hex.tile.improvement.title;
