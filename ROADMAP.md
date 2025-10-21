@@ -21,7 +21,15 @@ This milestone is focused on building the absolute minimum viable product (MVP) 
   - [x] [Some basic UI needs](https://github.com/YodasWs/Empires-4x/issues/22)
   - [ ] [Tile information screen](https://github.com/YodasWs/Empires-4x/issues/20)
 
-## 🔜 Next: Minimum Viable Product (v0.2)
+## 🔧 Improve Scalability and Maintainability (v0.2)
+To prepare for easier, faster expansion with fewer bugs and more contributions, we will be undertaking a significant refactoring effort aimed at improving the project's long-term health and development velocity. Our primary goals for this initiative are:
+- **Embrace Functional Programming:** Transitioning more of the core game logic to a functional programming style to reduce side effects and improve code predictability.
+- **Increase Modularity:** Moving game classes and logic into separate, distinct modules. This will make the codebase easier to reason about, test, and extend.
+- **Adopt Test-Driven Development (TDD):** Implementing a TDD workflow for all new features and bug fixes. This will ensure greater code quality and provide an automated safety net for future development.
+
+This foundational work will enable faster, more confident development of new features in the future.
+
+## 🔜 Soon: Minimum Viable Product (v0.3)
 After the core loop is solid, we can add other UI/UX elements necessary for a Minimum Viable Product:
 - [ ] [Action buttons](https://github.com/YodasWs/Empires-4x/issues/27) on screen.
 - [ ] [Side panel](https://github.com/YodasWs/Empires-4x/issues/30) listing units on the selected tile.
@@ -30,7 +38,7 @@ After the core loop is solid, we can add other UI/UX elements necessary for a Mi
 - [ ] [Settings Screen](https://github.com/YodasWs/Empires-4x/issues/43)
 - [ ] [Map Overlays](https://github.com/YodasWs/Empires-4x/issues/39)
 
-## 🆕 Then: Expanding the World (v0.3)
+## 🆕 Then: Expanding the World (v0.4)
 Once we have the main core down and the basics of a great, useful UI, we can start adding more content and expanding the game world!
 - Ranches
 - Mines
@@ -39,5 +47,5 @@ Once we have the main core down and the basics of a great, useful UI, we can sta
 - Soldiers
 - AI Opponents
 
-## 🌟 Later: (v0.4+)
+## 🌟 Later: (v0.5+)
 Start working on unified graphics design and sounds.
