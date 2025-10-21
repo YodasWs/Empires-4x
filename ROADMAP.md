@@ -10,7 +10,7 @@ This milestone is focused on building the absolute minimum viable product (MVP) 
   - [x] Let the Player use Workers to build Farms.
   - [x] Farms produce Food at the start of each round.
     [Issue #4](https://github.com/YodasWs/Empires-4x/issues/4)
-  - [ ] Food has to move to the City to give the Player money.
+  - [x] Food has to move to the City to give the Player money.
     [Issue #11](https://github.com/YodasWs/Empires-4x/issues/11)
   - [ ] Let the Player change Laborer assignments.
     [Issue #19](https://github.com/YodasWs/Empires-4x/issues/19)
