@@ -6,9 +6,14 @@ I'm building a 4X game! You can [play now](https://yodasws.github.io/Empires-4x/
 
 In Empires 4x, you are not a legionary or an emperor, but the vital hand behind the Roman machine. Manage Britain's untamed wilds, building a network of farms and ranches to feed the growing demands of the bustling city of Londinium. Conquer the challenges of diverse terrains—from the fertile Fens to the windswept Moorlands—by laying down roads and canals to link your empire of production. Every cart of grain, every bale of wool, fuels the heart of Roman Britain. The legions may win the battles, but you will win the peace.
 
-## Project
+## Project Roadmap
 
-- [Roadmap](https://github.com/YodasWs/Empires-4x/blob/master/ROADMAP.md)
+ℹ️ [Roadmap](https://github.com/YodasWs/Empires-4x/blob/master/ROADMAP.md)
+
+We are currently working on solidifying the Core Game Loop, improving and expanding the UI, and refactoring the code to make future expansion and contribution easier!
+
+## Project Links
+
 - [Kanban Board](https://github.com/users/YodasWs/projects/3/)
 - [Discussions](https://github.com/YodasWs/Empires-4x/discussions)
 - [Project Wiki/Documentation](https://github.com/YodasWs/Empires-4x/wiki)
