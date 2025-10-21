@@ -17,21 +17,27 @@ This milestone is focused on building the absolute minimum viable product (MVP) 
   - [ ] Let the Player hire more Workers and Laborers.
     [Issue #18](https://github.com/YodasWs/Empires-4x/issues/18)
 - **UI Elements**: Add the most essential user interface elements, like letting the Player move the Units and perform actions and see territory claims on each Tile.
-  [Issue #6](https://github.com/YodasWs/Empires-4x/issues/6)
-  [Issue #22](https://github.com/YodasWs/Empires-4x/issues/22)
+  - [ ] [Notify Player of start of turn](https://github.com/YodasWs/Empires-4x/issues/6)
+  - [x] [Some basic UI needs](https://github.com/YodasWs/Empires-4x/issues/22)
+  - [ ] [Tile information screen](https://github.com/YodasWs/Empires-4x/issues/20)
 
 ## 🔜 Next: Minimum Viable Product (v0.2)
 After the core loop is solid, we can add other UI/UX elements necessary for a Minimum Viable Product:
-- Title Screen
-- Main Menu
-- Settings Screen
-- Improved and expanded game UI
+- [ ] [Action buttons](https://github.com/YodasWs/Empires-4x/issues/27) on screen.
+- [ ] [Side panel](https://github.com/YodasWs/Empires-4x/issues/30) listing units on the selected tile.
+- [ ] [Title Screen](https://github.com/YodasWs/Empires-4x/issues/3)
+- [ ] [Main Menu](https://github.com/YodasWs/Empires-4x/issues/2)
+- [ ] [Settings Screen](https://github.com/YodasWs/Empires-4x/issues/43)
+- [ ] [Map Overlays](https://github.com/YodasWs/Empires-4x/issues/39)
 
 ## 🆕 Then: Expanding the World (v0.3)
- we'll start adding more content and expanding the game world.
+Once we have the main core down and the basics of a great, useful UI, we can start adding more content and expanding the game world!
 - Ranches
 - Mines
 - Marshes
+- Marauders
+- Soldiers
+- AI Opponents
 
 ## 🌟 Later: (v0.4+)
 Start working on unified graphics design and sounds.
