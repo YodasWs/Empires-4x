@@ -550,7 +550,7 @@ const Goods = (() => {
 		let rounds = 0;
 		const faction = hex.tile.faction;
 		const scene = currentGame.scenes.getScene('mainGameScene');
-		const sprite = scene.add.sprite(hex.x, hex.y,  `goods.${type}`).setDepth(depths.goods);
+		const sprite = scene.add.sprite(hex.x, hex.y, `goods.${type}`).setDepth(depths.goods);
 		const start = hex;
 		Object.defineProperties(this, {
 			faction: {
@@ -982,17 +982,17 @@ function findPath(start, end, unit = ResourceTransporter) {
 
 // Searches all players units to find any units on the specified hex
 function getUnitsOnHex(hex) {
-    if (!(hex instanceof Honeycomb.Hex)) return [];
-    
-    const units = [];
-    currentGame.players.forEach(player => {
-        player.units.forEach(unit => {
-            if (unit.hex.row === hex.row && unit.hex.col === hex.col && !unit.deleted) {
-                units.push(unit);
-            }
-        });
-    });
-    return units;
+	if (!(hex instanceof Honeycomb.Hex)) return [];
+
+	const units = [];
+	currentGame.players.forEach(player => {
+		player.units.forEach(unit => {
+			if (unit.hex.row === hex.row && unit.hex.col === hex.col && !unit.deleted) {
+				units.push(unit);
+			}
+		});
+	});
+	return units;
 }
 
 function movementCost(unit, nextHex, thisHex = unit.hex) {
@@ -1370,12 +1370,12 @@ const Actions = [
 		doAction({ unit, faction }) {
 			if (this.isValidOption({ unit })) {
 				currentGame.closeUnitActionMenu();
-				
+
 				// Deactivate current unit without ending moves
 				if (currentGame.activeUnit instanceof Unit) {
 					currentGame.activeUnit.deactivate(false);
 				}
-				
+
 				// Find the unit's index in its player's units array
 				const unitIndex = unit.faction.units.indexOf(unit);
 				if (unitIndex >= 0) {
@@ -1605,19 +1605,19 @@ function openUnitActionMenu(hex) {
 	]).forEach((actionItem) => {
 		const button = document.createElement('button');
 		// Handle both string actions and object actions (for activateUnit)
-        if (actionItem?.action) {
-            const action = Actions[actionItem.action];
-            button.innerHTML = action.text(actionItem);
-            button.addEventListener('click', () => {
-                action.doAction(actionItem);
-            });
-        } else {
-            const action = actionItem;
-            button.innerHTML = Actions[action].text({ hex });
-            button.addEventListener('click', () => {
-                doAction(action, hex);
-            });
-        }
+		if (actionItem?.action) {
+			const action = Actions[actionItem.action];
+			button.innerHTML = action.text(actionItem);
+			button.addEventListener('click', () => {
+				action.doAction(actionItem);
+			});
+		} else {
+			const action = actionItem;
+			button.innerHTML = Actions[action].text({ hex });
+			button.addEventListener('click', () => {
+				doAction(action, hex);
+			});
+		}
 		button.style.pointerEvents = 'auto';
 		div.appendChild(button);
 	});

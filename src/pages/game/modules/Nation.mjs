@@ -1,3 +1,5 @@
+import World from './../../../json/world.mjs';
+
 function Nation({
 	index,
 }) {
@@ -13,7 +15,7 @@ function Nation({
 				return 0xaaaaaa;
 		}
 	})();
-	const name = json.world?.NationNames[index];
+	const name = World.NationNames[index];
 	Object.defineProperties(this, {
 		color: {
 			enumerable: true,
