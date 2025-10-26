@@ -13,6 +13,12 @@
 		"url": "https://github.com/YodasWs/Empires-4x/issues"
 	},
 	"homepage": "https://github.com/YodasWs/Empires-4x#readme",
+	"scripts": {
+		"build": "gulp compile",
+		"dev": "gulp",
+		"lint": "gulp lint",
+		"start": "gulp serve"
+	},
 	"devDependencies": {
 		"@babel/core": "^7.20.2",
 		"@babel/preset-env": "^7.20.2",

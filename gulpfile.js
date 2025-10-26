@@ -508,7 +508,8 @@ export function lintSass() {
 
 export function lintJs() {
 	return gulp.src([
-		'src/**/*.js',
+		'src/**/*.{js,mjs}',
+		'!src/json/**/*.mjs',
 		'!**/*.min.js',
 		'!**/min.js',
 	])

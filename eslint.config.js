@@ -32,4 +32,3 @@ module.exports = defineConfig([
 		},
 	},
 ]);
-module.exports.ignores = ['src/json/*.mjs'];
