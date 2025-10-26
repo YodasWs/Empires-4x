@@ -537,12 +537,23 @@ gulp.task('transfer-files', gulp.parallel(
 	'transfer:res',
 ));
 
+gulp.task('test:js', gulp.series(
+	plugins.cli([
+		'node --test',
+	]),
+));
+
+gulp.task('test', gulp.parallel(
+	'test:js',
+));
+
 gulp.task('bundle:js', gulp.series(
 	'build:js',
 	'webpack:js',
 ));
 
 gulp.task('compile:js', gulp.series(
+	'test:js',
 	'bundle:js',
 	'minify:js',
 ));
