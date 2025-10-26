@@ -1,13 +1,12 @@
 import * as Honeycomb from 'honeycomb-grid';
 
 import Nation from './modules/Nation.mjs';
+import * as GameConfig from './modules/Config.mjs';
 
-const tileWidth = 200;
-const unitWidth = 80;
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
 class gameHex extends Honeycomb.defineHex({
-	dimensions: tileWidth / 2,
+	dimensions: GameConfig.tileWidth / 2,
 	orientation: Honeycomb.Orientation.FLAT,
 	origin: 'topLeft',
 }) {
@@ -1036,7 +1035,7 @@ const Unit = (() => {
 		const sprite = scene.add.sprite(x, y, `unit.${unitType}`)
 			.setTint(0x383838)
 			.setDepth(depths.inactiveUnits);
-		sprite.setScale(unitWidth / sprite.width);
+		sprite.setScale(GameConfig.unitWidth / sprite.width);
 
 		// Define properties
 		this.col = col;
@@ -1120,11 +1119,11 @@ const Unit = (() => {
 				if (isLegalMove(row, col, this)) {
 					const hex = grid.getHex({ row, col });
 					const text = scene.add.text(
-						hex.x - tileWidth / 2,
-						hex.y + tileWidth / 6,
+						hex.x - GameConfig.tileWidth / 2,
+						hex.y + GameConfig.tileWidth / 6,
 						move,
 						{
-							fixedWidth: tileWidth,
+							fixedWidth: GameConfig.tileWidth,
 							font: '25pt Trebuchet MS',
 							align: 'center',
 							color: 'khaki',
@@ -1212,7 +1211,7 @@ const Unit = (() => {
 				switch (this.unitType) {
 					case 'settler':
 						switch (action) {
-								// TODO: Build Village
+							// TODO: Build Village
 							case 'b':
 								break;
 								if (!Actions['b'].isValidOption({ hex: thisHex })) {
@@ -1233,7 +1232,7 @@ const Unit = (() => {
 						break;
 					case 'homesteader':
 						switch (action) {
-								// Build farm
+							// Build farm
 							case 'f':
 								if (thisHex.tile.setImprovement('farm', this.faction)) {
 									thisHex.tile.laborers = new Citizen({ hex: thisHex });
@@ -1247,7 +1246,7 @@ const Unit = (() => {
 						break;
 					case 'builder':
 						switch (action) {
-								// Clear Improvement or Overlay
+							// Clear Improvement or Overlay
 							case 'C':
 								if (!Actions['C'].isValidOption({ hex: thisHex })) {
 									return;
@@ -1689,8 +1688,8 @@ const config = {
 						new Phaser.Geom.Polygon(grid.getHex({ row: 0, col: 0}).corners),
 						Phaser.Geom.Polygon.Contains
 					),
-					text: this.add.text(hex.x - tileWidth / 2, hex.y + tileWidth / 3.6, hex.row + '×' + hex.col, {
-						fixedWidth: tileWidth,
+					text: this.add.text(hex.x - GameConfig.tileWidth / 2, hex.y + GameConfig.tileWidth / 3.6, hex.row + '×' + hex.col, {
+						fixedWidth: GameConfig.tileWidth,
 						font: '12pt Trebuchet MS',
 						align: 'center',
 						color: 'white',
@@ -2053,7 +2052,7 @@ yodasws.page('pageGame').setRoute({
 			const [offsetX, offsetY] = [data.hex.x, data.hex.y];
 			// TODO: Need to either make sure tiles fit in screen or that user can pan camera
 
-			const tileScale = Math.min(config.height, config.width) / 7 / tileWidth;
+			const tileScale = Math.min(config.height, config.width) / 7 / GameConfig.tileWidth;
 			const center = {
 				x: config.width / 2,
 				y: config.height / 3,
@@ -2084,7 +2083,7 @@ yodasws.page('pageGame').setRoute({
 				// TODO: Allow User to click tile to assign laborers
 				// TODO: Show food production on tile
 				if (hex.tile.laborers.size > 0) {
-					const fixedWidth = tileWidth * tileScale;
+					const fixedWidth = GameConfig.tileWidth * tileScale;
 					this.add.text(
 						tileCenter.x - fixedWidth / 2,
 						tileCenter.y + fixedWidth / 4,
@@ -2159,13 +2158,13 @@ yodasws.page('pageGame').setRoute({
 						if (this.textures.exists('tile-view-improvement')) {
 							return this.textures.get('tile-view-improvement');
 						}
-						return this.textures.createCanvas('tile-view-improvement', tileWidth, tileWidth);
+						return this.textures.createCanvas('tile-view-improvement', GameConfig.tileWidth, GameConfig.tileWidth);
 					})();
 					const elCanvas = canvas.getCanvas();
 					const graphics = canvas.getContext();
 					// Render a white hexagon to the canvas
 					const blandHex = Honeycomb.defineHex({
-						dimensions: tileWidth / 2,
+						dimensions: GameConfig.tileWidth / 2,
 						orientation: Honeycomb.Orientation.FLAT,
 						origin: 'topLeft',
 					});

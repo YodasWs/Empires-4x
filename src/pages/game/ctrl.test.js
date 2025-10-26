@@ -1,9 +1,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+
 assert.false = (val) => assert.equal(val, false);
 assert.true = (val) => assert.equal(val, true);
 
+import * as GameConfig from './modules/Config.mjs';
 import Nation from './modules/Nation.mjs';
+
+describe('Game Configuration', () => {
+	it('should have correct tile and unit sizes', () => {
+		assert.equal(GameConfig.tileWidth, 200);
+		assert.equal(GameConfig.unitWidth, 80);
+	});
+});
 
 describe('Tile class', () => {
 });
