@@ -1,7 +1,13 @@
 import * as Honeycomb from 'honeycomb-grid';
-
-import Nation from './modules/Nation.mjs';
 import * as GameConfig from './modules/Config.mjs';
+
+import City from './modules/City.mjs';
+import Faction from './modules/Faction.mjs';
+import Goods from './modules/Goods.mjs';
+import Laborer from './modules/Laborer.mjs';
+import Nation from './modules/Nation.mjs';
+import Tile from './modules/Tile.mjs';
+import Unit from './modules/Unit.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
@@ -16,218 +22,6 @@ class gameHex extends Honeycomb.defineHex({
 }
 
 const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
-
-const depths = {
-	offscreen: 0,
-	map: 1,
-	territoryFills: 2,
-	territoryLines: 2,
-	improvement: 5,
-	road: 6,
-	cities: 10,
-	inactiveUnits: 11,
-	goods: 20,
-	actionSprites: 98,
-	activeUnit: 100,
-};
-
-const Tile = (() => {
-	let scene = null;
-	function isValidImprovement(hex, improvement, builtImprovement) {
-		if (!(hex instanceof Honeycomb.Hex)) return false;
-		if (typeof improvement !== 'string' || improvement === '') return false;
-		// Improvement must exist
-		if (!Object.keys(json.world.improvements).includes(improvement)) return false;
-		// Improvement must be same as current, or new
-		if (builtImprovement.key !== '' && builtImprovement.key !== improvement) return false;
-		// Improvement must be valid for terrain
-		if (!hex.terrain.terrain in json.world.improvements[improvement]?.terrains) return false;
-		// Cannot build improvement in city
-		if (hex.city instanceof City) return false;
-		return true;
-	}
-
-	function Tile({
-		hex,
-	}) {
-		if (scene === null) {
-			scene = currentGame.scenes.getScene('mainGameScene');
-		}
-		const claims = {
-			faction: new Map(),
-			nation: new Map(),
-		};
-
-		let objImprovement = undefined;
-		let builtImprovement = {
-			key: '',
-		};
-
-		const laborers = new Set();
-		let road = undefined;
-
-		this.food = 0;
-		Object.defineProperties(this, {
-			claims: {
-				enumerable: true,
-				get: () => (factionOrNation, claimIncrement) => {
-					// Get numerical value of Player's claim
-					if (factionOrNation instanceof Faction) {
-						if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
-							// But first, increment claim value
-							claims.faction.set(factionOrNation, (claims.faction.get(factionOrNation) || 0) + claimIncrement);
-						}
-						return claims.faction.get(factionOrNation) || 0;
-					} else if (factionOrNation instanceof Nation) {
-						if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
-							// But first, increment claim value
-							claims.nation.set(factionOrNation, (claims.nation.get(factionOrNation) || 0) + claimIncrement);
-						}
-						return claims.nation.get(factionOrNation) || 0;
-					}
-					return claims;
-				},
-			},
-			hex: {
-				get: () => hex,
-			},
-			// TODO: Cache Faction
-			faction: {
-				enumerable: true,
-				get: () => {
-					const topClaimant = {
-						faction: null,
-						claim: 0,
-					};
-					claims.faction.forEach((val, claimPlayer) => {
-						if (topClaimant.claim < val) {
-							topClaimant.faction = claimPlayer;
-							topClaimant.claim = val;
-						}
-					});
-					return topClaimant.faction;
-				},
-			},
-			// TODO: Cache Nation
-			nation: {
-				enumerable: true,
-				get: () => {
-					const topClaimant = {
-						nation: null,
-						claim: 0,
-					};
-					claims.nation.forEach((val, claimPlayer) => {
-						if (topClaimant.claim < val) {
-							topClaimant.nation = claimPlayer;
-							topClaimant.claim = val;
-						}
-					});
-					return topClaimant.nation;
-				},
-			},
-			improvement: {
-				enumerable: true,
-				get: () => objImprovement || {},
-			},
-			laborers: {
-				enumerable: true,
-				get: () => laborers,
-				set(val) {
-					if (!(val instanceof Citizen)) {
-						throw new TypeError('Tile.laborers expects to be assigned object instance of Citizen!');
-					}
-					laborers.add(val);
-					return true;
-				},
-			},
-			road: {
-				enumerable: true,
-				get: () => road || {},
-				set(val) {
-					// Destroy all roads on Tile
-					if (val === 'destroy') {
-						if (road?.image instanceof Phaser.GameObjects.Image) {
-							road.image.destroy();
-						}
-						road = undefined;
-						return true;
-					}
-					if (Object.keys(json.world.improvements).includes(val)) {
-						road = {
-							...json.world.roads[val],
-							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.road),
-							key: val,
-						};
-						return true;
-					}
-					return false;
-				},
-			},
-			setImprovement: {
-				get: () => (val, faction = null) => {
-					// Destroy all improvements on Tile
-					if (val === 'destroy') {
-						if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
-							objImprovement.image.destroy();
-						}
-						objImprovement = undefined;
-						builtImprovement = {
-							key: '',
-						};
-						return true;
-					}
-
-					if (isValidImprovement(hex, val, builtImprovement)) {
-						objImprovement = {
-							...json.world.improvements[val],
-							image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(depths.improvement),
-							key: val,
-						};
-						if (faction instanceof Faction) {
-							this.claimTerritory(faction, 10);
-							objImprovement.faction = faction;
-						}
-						builtImprovement.key = val;
-						return true;
-					}
-					return false;
-				},
-			},
-			isValidImprovement: {
-				get() {
-					return (improvement) => isValidImprovement(hex, improvement, builtImprovement);
-				},
-			},
-		});
-	}
-	Object.assign(Tile.prototype, {
-		claimTerritory(factionOrNation, claimIncrement = 0) {
-			if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
-				let prevPlayer = undefined;
-				if (factionOrNation instanceof Nation && this.nation instanceof Nation) {
-					prevPlayer = this.nation.index;
-				} else if (factionOrNation instanceof Faction && this.faction instanceof Faction) {
-					prevPlayer = this.faction.index;
-				}
-				this.claims(factionOrNation, claimIncrement);
-				// Only update scene if nation owner has changed
-				if (factionOrNation instanceof Faction && this.faction?.index !== prevPlayer) {
-					currentGame.markTerritory(this.hex, {
-						graphics: currentGame.graphics.territoryFills,
-						lineOffset: 1,
-						fill: true,
-					});
-					currentGame.markTerritory(this.hex, {
-						graphics: currentGame.graphics.territoryLines,
-						lineOffset: 0.97,
-						fill: false,
-					});
-				}
-			}
-		},
-	});
-	return Tile;
-})();
 
 // Thanks to Microsoft Copilot for this name generator!
 function generateRomanBritishName() {
@@ -258,346 +52,6 @@ function generateRomanBritishName() {
 
 	return `${first} ${last} ${epithet}`.trim();
 }
-
-const Citizen = (() => {
-	function Citizen({
-		city,
-		hex,
-		tile,
-	}) {
-		const name = generateRomanBritishName();
-		if (city instanceof City) {
-			Object.defineProperty(this, 'city', {
-				enumerable: true,
-				get: () => city,
-			});
-		}
-		if (hex instanceof Honeycomb.Hex || tile?.hex instanceof Honeycomb.Hex) {
-			Object.defineProperty(this, 'hex', {
-				enumerable: true,
-				get: () => hex || tile?.hex,
-			});
-		}
-		if (tile instanceof Tile || hex?.tile instanceof Tile) {
-			Object.defineProperty(this, 'tile', {
-				enumerable: true,
-				get: () => tile || hex?.tile,
-			});
-		}
-		Object.defineProperties(this, {
-			name: {
-				enumerable: true,
-				get: () => name,
-			},
-			sprite: {
-				enumerable: true,
-				get: () => 'laborers.farmer',
-			},
-		});
-	}
-	Object.assign(Citizen.prototype, {
-		FOOD_CONSUMPTION: 2,
-		assignTile(tile) {
-			if (!(tile instanceof Tile)) {
-				throw new TypeError('Citizen.assignTile expects to be passed object instance of Tile!');
-			}
-			// TODO: Check if Tile has already been assigned and is at its capacity
-			this.tile = tile;
-		},
-	});
-	return Citizen;
-})();
-
-const City = (() => {
-	let scene = null;
-	function City({
-		col,
-		row,
-		level = 1,
-		nation,
-	} = {}) {
-		if (scene === null) {
-			scene = currentGame.scenes.getScene('mainGameScene');
-		}
-		if (!(nation instanceof Nation)) {
-			throw new TypeError('City expects to be assigned a Nation!');
-		}
-
-		// Tie to hex
-		const thisHex = grid.getHex({ row, col });
-		thisHex.tile.setImprovement('destroy');
-
-		const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', nation.frame).setDepth(depths.cities).setScale(0.8);
-		thisHex.city = this;
-		const laborers = new Set();
-
-		// Claim this tile and adjacent tiles
-		grid.traverse(Honeycomb.spiral({
-			start: [ thisHex.q, thisHex.r ],
-			radius: 1,
-		})).forEach((hex) => {
-			hex.tile.claimTerritory(nation, 100);
-		});
-
-		// Claim water territory
-		grid.traverse(Honeycomb.ring({
-			center: [ thisHex.q, thisHex.r ],
-			radius: 2,
-		})).forEach((hex) => {
-			if (hex.terrain.isWater) {
-				hex.tile.claimTerritory(nation, 50);
-			}
-		});
-
-		// Properties
-		this.housing = (() => {
-			switch (level) {
-				case 1: return 3;
-				case 2: return 6;
-			}
-			return 0;
-		})();
-		Object.defineProperties(this, {
-			hex: {
-				enumerable: true,
-				get: () => thisHex,
-			},
-			laborers: {
-				enumerable: true,
-				get: () => laborers,
-				set(val) {
-					if (!(val instanceof Citizen)) {
-						throw new TypeError('City.laborers expects to be assigned object instance of Citizen!');
-					}
-					laborers.add(val);
-					return true;
-				},
-			},
-			nation: {
-				enumerable: true,
-				get: () => nation,
-			},
-			sprite: {
-				get: () => sprite,
-			},
-			level: {
-				enumerable: true,
-				get: () => level,
-			},
-			housing: {
-				enumerable: true,
-				get: () => this.housing,
-			},
-		});
-	}
-	Object.assign(City.prototype, {
-	});
-	return City;
-})();
-
-// Each Human/AI Player controls a Faction
-const Faction = (() => {
-	let activeUnit = null;
-	function Faction({
-		index,
-	}) {
-		const color = (() => {
-			switch (index % 3) {
-				case 0:
-					return 0x32cd32;
-				case 1:
-					return 0xff0000;
-				case 2:
-					return 0x0000ff;
-				default:
-					return 0xaaaaaa;
-			}
-		})();
-		const name = json.world?.FactionNames[index];
-		let money = 0;
-		let units = [];
-		Object.defineProperties(this, {
-			color: {
-				enumerable: true,
-				get: () => color,
-			},
-			index: {
-				enumerable: true,
-				get: () => index,
-			},
-			money: {
-				enumerable: true,
-				get: () => money,
-				set(val) {
-					if (!Number.isFinite(val) || val < 0) {
-						throw new TypeError('Faction.money expects to be assigned a positive number!');
-					}
-					money = val;
-				},
-			},
-			name: {
-				enumerable: true,
-				get: () => name,
-			},
-			nation: {
-				enumerable: true,
-				get: () => currentGame.nations[0],
-			},
-			units: {
-				enumerable: true,
-				get: () => units,
-				set: (val) => {
-					if (!Array.isArray(val)) {
-						throw new TypeError('Faction.units expects to be assigned an Array!');
-					}
-					units = val.filter(unit => unit instanceof Unit && unit.deleted === false);
-				},
-			},
-			activeUnit: {
-				enumerable: true,
-				get() {
-					if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
-						return units[activeUnit];
-					}
-					return undefined;
-				},
-				set(val) {
-					if (Number.isInteger(val) && val >= 0) {
-						if (val >= units.length) {
-							activeUnit = val % units.length;
-							return true;
-						}
-						activeUnit = val;
-						return true;
-					}
-					if (val === null) {
-						activeUnit = null;
-					}
-					return false;
-				},
-			},
-		});
-	}
-	Object.assign(Faction.prototype, {
-		addUnit(unitType, row, col, scene) {
-			this.units.push(new Unit(unitType, {
-				row,
-				col,
-				scene,
-				faction: this,
-			}));
-		},
-		checkEndTurn() {
-			let isActiveUnit = this.activateNext();
-			if (!isActiveUnit) {
-				currentGame.endTurn();
-			}
-		},
-		activateUnit(intUnit = activeUnit) {
-			if (this.units.length === 0) {
-				this.checkEndTurn();
-				return false;
-			}
-			const unit = this.units[intUnit];
-			if (!(unit instanceof Unit)) {
-				return false;
-			}
-			if (unit.deleted === true) {
-				return false;
-			}
-			unit.activate();
-			activeUnit = intUnit;
-			return true;
-		},
-		activateNext() {
-			// Find and activate next unit
-			for (let i = activeUnit + 1; i < this.units.length; i++) {
-				if (!(this.units[i] instanceof Unit)) {
-					continue;
-				}
-				if (this.units[i].moves > 0 && this.activateUnit(i)) {
-					return true;
-				}
-			}
-			// Check for unmoved unit we skipped
-			for (let i = 0; i <= activeUnit; i++) {
-				if (!(this.units[i] instanceof Unit)) {
-					continue;
-				}
-				if (this.units[i].moves > 0 && this.activateUnit(i)) {
-					return true;
-				}
-			}
-			return false;
-		},
-	});
-	return Faction;
-})();
-
-const Goods = (() => {
-	function Goods({
-		num = 1,
-		type,
-		hex,
-	} = {}) {
-		if (!(hex instanceof Honeycomb.Hex)) {
-			throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
-		}
-		if ((json.world.goods[type] ?? true) === true) {
-			throw new TypeError(`Unknown Goods type '${type}'`);
-		}
-		let rounds = 0;
-		const faction = hex.tile.faction;
-		const scene = currentGame.scenes.getScene('mainGameScene');
-		const sprite = scene.add.sprite(hex.x, hex.y, `goods.${type}`).setDepth(depths.goods);
-		const start = hex;
-		Object.defineProperties(this, {
-			faction: {
-				enumerable: true,
-				get: () => faction,
-			},
-			hex: {
-				enumerable: true,
-				get: () => hex,
-				set(val) {
-					if (!(val instanceof Honeycomb.Hex)) {
-						throw new TypeError('Goods.hex expects to be assigned a Honeycomb.Hex!');
-					}
-					hex = val;
-				},
-			},
-			num: {
-				enumerable: true,
-				get: () => num,
-			},
-			rounds: {
-				enumerable: true,
-				get: () => rounds,
-				set(val) {
-					if (!Number.isFinite(val) || val < 0) {
-						throw new TypeError('Goods.rounds expects to be assigned a positive number!');
-					}
-					rounds = val;
-				},
-			},
-			sprite: {
-				enumerable: true,
-				get: () => sprite,
-			},
-			start: {
-				enumerable: true,
-				get: () => start,
-			},
-			type: {
-				enumerable: true,
-				get: () => type,
-			},
-		});
-	}
-	Object.assign(Goods.prototype, {
-	});
-	return Goods;
-})();
 
 let FoodSprites = [];
 const FoodSpriteOptions = {
@@ -718,7 +172,7 @@ const currentGame = {
 			}
 			graphics.beginPath();
 			// Draw points closer to center of hex
-			const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, lineOffset));
+			const [firstCorner, ...otherCorners] = hex.corners.map(point => GameConfig.lineShift(point, hex, lineOffset));
 			graphics.moveTo(firstCorner.x + offsetX, firstCorner.y + offsetY);
 			otherCorners.forEach(({x, y}) => {
 				graphics.lineTo(x + offsetX, y + offsetY);
@@ -771,8 +225,8 @@ const currentGame = {
 			}
 
 			// Leave Food on tile for Laborers
-			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
-				const neededFood = Math.max(0, hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION - hex.tile.food);
+			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
+				const neededFood = Math.max(0, hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION - hex.tile.food);
 				const takeFood = Math.min(neededFood, food);
 				FoodSprite.num = food -= takeFood;
 				hex.tile.food += takeFood;
@@ -843,12 +297,12 @@ const currentGame = {
 		});
 
 		grid.forEach((hex) => {
-			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION) {
-				// TODO: Citizen Starves!
+			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
+				// TODO: Laborer Starves!
 			}
 
 			// TODO: Feed Laborers from Tile food reserves
-			hex.tile.food -= hex.tile.laborers.size * Citizen.FOOD_CONSUMPTION;
+			hex.tile.food -= hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION;
 		});
 
 		Promise.all(delaysForEndRound).then(() => {
@@ -860,53 +314,6 @@ const currentGame = {
 		this.domContainer.innerHTML = '';
 	},
 };
-
-// Helper to find a point along a line between two points
-function lineShift(point1, point2, t = 0.9) {
-	const m = (point1.y - point2.y) / (point1.x - point2.x)
-	const b = point1.y - m * point1.x
-	const x = (point1.x - point2.x) * t + point2.x;
-	return {
-		x,
-		y: m * x + b,
-	};
-}
-
-function actionTileCoordinates(action, row, col) {
-	switch (action) {
-		case 'u':
-			if (col % 2 == 0) row--;
-			col--;
-			break;
-		case 'i':
-			row--;
-			break;
-		case 'o':
-			if (col % 2 == 0) row--;
-			col++;
-			break;
-		case 'j':
-			if (col % 2 == 1) row++;
-			col--;
-			break;
-		case 'k':
-			row++;
-			break;
-		case 'l':
-			if (col % 2 == 1) row++;
-			col++;
-			break;
-	}
-	return [row, col];
-}
-
-function hideActionSprites() {
-	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(depths.offscreen);
-	actionOutlines.graphics?.destroy();
-	while (actionOutlines.text.length > 0) {
-		actionOutlines.text.pop().destroy();
-	}
-}
 
 // The basic resource transporter unit, used to move Goods to the nearest City
 let ResourceTransporter = null;
@@ -1008,287 +415,6 @@ function movementCost(unit, nextHex, thisHex = unit.hex) {
 	// TODO: Include roads, terrain improvements, etc
 	return unit.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
 }
-
-const actionOutlines = {
-	text: [],
-};
-const Unit = (() => {
-	let scene = null;
-
-	function Unit(unitType, {
-		row,
-		col,
-		faction,
-	}) {
-		// Check unitType exists
-		const base = json.world.units[unitType];
-		if (typeof base !== 'object' || base === null) {
-			throw new TypeError(`Unknown unit '${unitType}'`);
-		}
-
-		if (scene === null) {
-			scene = currentGame.scenes.getScene('mainGameScene');
-		}
-
-		// Add sprite
-		const { x, y } = grid.getHex({ row, col });
-		const sprite = scene.add.sprite(x, y, `unit.${unitType}`)
-			.setTint(0x383838)
-			.setDepth(depths.inactiveUnits);
-		sprite.setScale(GameConfig.unitWidth / sprite.width);
-
-		// Define properties
-		this.col = col;
-		this.row = row;
-		this.path = [];
-		this.deleted = false;
-		Object.defineProperties(this, {
-			base: {
-				enumerable: true,
-				get: () => base,
-			},
-			hex: {
-				enumerable: true,
-				get: () => grid.getHex({ row: this.row, col: this.col }),
-			},
-			faction: {
-				enumerable: true,
-				get: () => faction,
-			},
-			scene: {
-				enumerable: true,
-				get: () => scene,
-			},
-			sprite: {
-				enumerable: true,
-				get: () => sprite,
-			},
-			unitType: {
-				enumerable: true,
-				get: () => unitType,
-			},
-		});
-	}
-	Object.assign(Unit.prototype, {
-		activate() {
-			hideActionSprites();
-			const thisHex = grid.getHex({ row: this.row, col: this.col });
-			currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(depths.activeUnit - 1);
-
-			// Pan camera to active unit
-			// TODO: Add setting to skip this if automated movement
-			// TODO: Add setting to skip if not human player's unit
-			const startPos = lineShift(this.scene.cameras.main.getScroll(thisHex.x, thisHex.y), {
-				x: this.scene.cameras.main.scrollX,
-				y: this.scene.cameras.main.scrollY,
-			}, 0.2);
-			setTimeout(() => {
-				this.scene.cameras.main.setScroll(startPos.x, startPos.y);
-				setTimeout(() => {
-					const pos = this.scene.cameras.main.getScroll(thisHex.x, thisHex.y);
-					this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
-				}, 0);
-			}, 0);
-			this.sprite.setTint(0xffffff).setDepth(depths.activeUnit);
-
-			// Continue on path
-			if (Array.isArray(this.path) && this.path.length > 0) {
-				while (this.moves >= movementCost(this, this.path[0])) {
-					this.doAction('moveTo', this.path.shift());
-				}
-				this.deactivate(true);
-				return;
-			}
-
-			// Not the human player's unit, do nothing (for now)
-			if (this.faction.index !== 0) {
-				this.deactivate(true);
-				return;
-			}
-
-			// Set text and listeners on hexes to move unit
-			[
-				'L',
-				'K',
-				'J',
-				'U',
-				'I',
-				'O',
-			].forEach((move) => {
-				const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-				if (isLegalMove(row, col, this)) {
-					const hex = grid.getHex({ row, col });
-					const text = scene.add.text(
-						hex.x - GameConfig.tileWidth / 2,
-						hex.y + GameConfig.tileWidth / 6,
-						move,
-						{
-							fixedWidth: GameConfig.tileWidth,
-							font: '25pt Trebuchet MS',
-							align: 'center',
-							color: 'khaki',
-							stroke: 'black',
-							strokeThickness: 7,
-						}
-					).setOrigin(0).setDepth(depths.actionSprites);
-					actionOutlines.text.push(text);
-					this.scene.cameras.getCamera('mini').ignore(text);
-				}
-			});
-
-			currentGame.activeUnit = this;
-			this.scene.input.keyboard.enabled = true;
-		},
-		deactivate(endMoves = false) {
-			if (endMoves === true) {
-				this.moves = 0;
-			}
-			hideActionSprites();
-			this.sprite.setTint(0x383838).setDepth(depths.inactiveUnits);
-			currentGame.activeUnit = null;
-			this.scene.input.keyboard.enabled = false;
-			currentGame.currentPlayer.checkEndTurn();
-		},
-		destroy() {
-			this.deactivate(true);
-			this.sprite.setActive(false);
-			this.sprite.destroy();
-			this.deleted = true;
-		},
-		doAction(action, hex = null) {
-			currentGame.closeUnitActionMenu();
-			// Wait, to do action later in turn
-			if (action === 'w' || action === 'Tab') {
-				// TODO: If Tab on unit action menu, do a11y instead of deactivate unit
-				this.deactivate();
-				return;
-			}
-			// Stay here this turn
-			if (action === 's') {
-				this.deactivate(true);
-				return;
-			}
-			// Move unit
-			if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
-				if (grid.distance(this.hex, hex) === 1) {
-					// Neighbor, move there
-					this.moveTo(hex);
-				} else {
-					// Find path
-					const path = findPath(this.hex, hex, this);
-					if (!Array.isArray(path) || path.length === 0) {
-						// TODO: Warn User no path was found
-						console.warn('Sam, no path found!');
-						return;
-					}
-					if (Array.isArray(path)) {
-						this.path = path;
-					}
-				}
-			} else if ([
-				'u',
-				'i',
-				'o',
-				'j',
-				'k',
-				'l',
-			].includes(action)) {
-				const [row, col] = actionTileCoordinates(action, this.row, this.col);
-				this.moveTo(grid.getHex({ row, col }));
-			} else if (action === 'c') {
-				const thisHex = grid.getHex({ row: this.row, col: this.col});
-				if (!Actions['c'].isValidOption({ hex: thisHex, faction: this.faction })) {
-					// TODO: Show message to Player that territory already belongs to them!
-					console.warn('Sam, you own this already');
-					return;
-				}
-				// Claim hex territory
-				thisHex.tile.claimTerritory(this.faction, 10);
-				this.deactivate(true);
-			} else {
-				const thisHex = grid.getHex({ row: this.row, col: this.col});
-				// Unit-specific actions
-				switch (this.unitType) {
-					case 'settler':
-						switch (action) {
-							// TODO: Build Village
-							case 'b':
-								break;
-								if (!Actions['b'].isValidOption({ hex: thisHex })) {
-									// TODO: Warn player
-									console.warn('Cannot place city adjacent to another city');
-									return;
-								}
-								// TODO: Switch to Village
-								const city = new City({
-									col: this.col,
-									row: this.row,
-									// faction: this.faction,
-									scene: this.scene,
-								});
-								this.destroy();
-								return;
-						}
-						break;
-					case 'homesteader':
-						switch (action) {
-							// Build farm
-							case 'f':
-								if (thisHex.tile.setImprovement('farm', this.faction)) {
-									thisHex.tile.laborers = new Citizen({ hex: thisHex });
-									this.destroy();
-								} else {
-									// TODO: Warn player
-									console.warn('Could not build farm here');
-								}
-								return;
-						}
-						break;
-					case 'builder':
-						switch (action) {
-							// Clear Improvement or Overlay
-							case 'C':
-								if (!Actions['C'].isValidOption({ hex: thisHex })) {
-									return;
-								}
-								if (thisHex.tile.improvement.key === 'farm') {
-									thisHex.tile.setImprovement('destroy');
-									this.deactivate(true);
-									return;
-								}
-						}
-						break;
-				}
-			}
-			if (this.moves > 0) {
-				this.faction.activateUnit();
-			} else {
-				this.deactivate();
-			}
-		},
-		moveTo(hex) {
-			if (!(hex instanceof Honeycomb.Hex)) return;
-			if (!isLegalMove(hex.row, hex.col, this)) return;
-			this.row = hex.row;
-			this.col = hex.col;
-			// TODO: Chain tweens to multiple hexes instead of straight to last hex
-			scene.tweens.add({
-				targets: this.sprite,
-				x: hex.x,
-				y: hex.y,
-				ease: 'Quad.inOut',
-				duration: 800,
-				yoyo: false,
-				onComplete(tween) {
-					tween.destroy();
-				},
-			});
-			this.moves -= movementCost(this, hex);
-			if (this.moves <= 0) this.deactivate();
-		},
-	});
-	return Unit;
-})();
 
 function Action(def) {
 	Object.keys(def).forEach((key) => {
@@ -1669,8 +795,8 @@ const config = {
 			// Add graphics objects
 			currentGame.graphics = {
 				...currentGame.graphics,
-				territoryFills: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryFills),
-				territoryLines: this.add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines),
+				territoryFills: this.add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryFills),
+				territoryLines: this.add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryLines),
 			};
 
 			// Build World from Honeycomb Grid
@@ -1684,7 +810,7 @@ const config = {
 						...json.world.terrains[tile.terrain],
 						terrain: tile.terrain,
 					},
-					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(depths.map).setInteractive(
+					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(GameConfig.depths.map).setInteractive(
 						new Phaser.Geom.Polygon(grid.getHex({ row: 0, col: 0}).corners),
 						Phaser.Geom.Polygon.Contains
 					),
@@ -1977,7 +1103,7 @@ yodasws.page('pageGame').setRoute({
 						break;
 					case 'F3': {
 						break;
-						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(depths.territoryLines - 1);
+						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryLines - 1);
 						// Show territorial claims
 						grid.forEach((hex) => {
 							if (!(hex.tile instanceof Tile)) return;
@@ -1988,7 +1114,7 @@ yodasws.page('pageGame').setRoute({
 								graphics.beginPath();
 								// TODO: Draw as a dashed line
 								// Draw points closer to center of hex
-								const [firstCorner, ...otherCorners] = hex.corners.map(point => lineShift(point, hex, 0.9));
+								const [firstCorner, ...otherCorners] = hex.corners.map(point => GameConfig.lineShift(point, hex, 0.9));
 								graphics.moveTo(firstCorner.x, firstCorner.y);
 								otherCorners.forEach(({x, y}) => {
 									graphics.lineTo(x, y);
