@@ -8,50 +8,9 @@ import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
 import Unit from './modules/Unit.mjs';
+import { FindPath, Grid } from './modules/Hex.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
-
-class gameHex extends Honeycomb.defineHex({
-	dimensions: GameConfig.tileWidth / 2,
-	orientation: Honeycomb.Orientation.FLAT,
-	origin: 'topLeft',
-}) {
-	f_cost
-	h_cost
-	g_cost
-}
-
-const grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
-
-// Thanks to Microsoft Copilot for this name generator!
-function generateRomanBritishName() {
-	const praenomina = [
-		'Gaius', 'Lucius', 'Marcus', 'Quintus', 'Titus', 'Publius', 'Aulus', 'Sextus',
-	];
-
-	const celticNames = [
-		'Bran', 'Cai', 'Elen', 'Rhiannon', 'Taran', 'Mabon', 'Nia', 'Owain',
-	];
-
-	const cognomina = [
-		'Agricola', 'Felix', 'Silvanus', 'Varus', 'Florus', 'Crispus', 'Severus', 'Vitalis',
-	];
-
-	const epithets = [
-		'the Smith', 'of Londinium', 'the Younger', 'the Red', 'from Camulodunum', 'the Hunter',
-	];
-
-	const first = Math.random() < 0.5
-		? praenomina[Math.floor(Math.random() * praenomina.length)]
-		: celticNames[Math.floor(Math.random() * celticNames.length)];
-
-	const last = cognomina[Math.floor(Math.random() * cognomina.length)];
-	const epithet = Math.random() < 0.3
-		? epithets[Math.floor(Math.random() * epithets.length)]
-		: '';
-
-	return `${first} ${last} ${epithet}`.trim();
-}
 
 let FoodSprites = [];
 const FoodSpriteOptions = {
@@ -75,7 +34,7 @@ const currentGame = {
 			player.units = player.units;
 		});
 		const scene = currentGame.scenes.getScene('mainGameScene');
-		grid.forEach((hex) => {
+		Grid.forEach((hex) => {
 			// Adjust each Nations' and Factions' claims on Territory
 			this.nations.forEach((nation) => {
 				if (hex.tile.nation === nation) {
@@ -115,10 +74,10 @@ const currentGame = {
 		});
 
 		// Check Cities
-		grid.forEach((hex) => {
+		Grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				const city = hex.city;
-				grid.traverse(Honeycomb.spiral({
+				Grid.traverse(Honeycomb.spiral({
 					start: [ hex.q, hex.r ],
 					radius: 2,
 				})).forEach((hex) => {
@@ -163,7 +122,7 @@ const currentGame = {
 	} = {}) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
-		(thisHex instanceof Honeycomb.Hex ? [thisHex] : grid).forEach((hex) => {
+		(thisHex instanceof Honeycomb.Hex ? [thisHex] : Grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.faction instanceof Faction)) return;
 			if (fill === false) {
 				graphics.lineStyle(lineWidth, hex.tile.faction.color);
@@ -201,7 +160,7 @@ const currentGame = {
 
 		// Collect list of villages and cities
 		const cities = [];
-		grid.forEach((hex) => {
+		Grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				cities.push(hex);
 			}
@@ -242,7 +201,7 @@ const currentGame = {
 			let closestHex = null;
 			let closestDistance = Infinity;
 			cities.forEach((cityHex) => {
-				const dist = grid.distance(hex, cityHex);
+				const dist = Grid.distance(hex, cityHex);
 				if (dist < closestDistance) {
 					closestHex = cityHex;
 					closestDistance = dist;
@@ -250,7 +209,7 @@ const currentGame = {
 			});
 
 			if (closestHex instanceof Honeycomb.Hex && closestHex.city instanceof City) {
-				const path = findPath(hex, closestHex);
+				const path = FindPath(hex, closestHex);
 				if (Array.isArray(path) && path.length > 0) {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
@@ -296,7 +255,7 @@ const currentGame = {
 			}
 		});
 
-		grid.forEach((hex) => {
+		Grid.forEach((hex) => {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
 				// TODO: Laborer Starves!
 			}
@@ -317,74 +276,6 @@ const currentGame = {
 
 // The basic resource transporter unit, used to move Goods to the nearest City
 let ResourceTransporter = null;
-
-// Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
-function findPath(start, end, unit = ResourceTransporter) {
-	let openHexes = [];
-	let closedHexes = [];
-	let explored = 0;
-	let foundPath = false;
-
-	// Initialize path
-	start.parent = undefined;
-	openHexes.push(start);
-	start.g_cost = 0;
-
-	while (openHexes.length > 0) {
-		// Sort array by f_cost, then by h_cost for hexes with equal f_cost
-		const current = openHexes.sort((a, b) => a.f_cost - b.f_cost || a.h_cost - b.h_cost)[0];
-
-		// Check if finished
-		if (current === end) {
-			foundPath = true;
-			break;
-		}
-
-		openHexes = openHexes.filter((hex) => current !== hex);
-		closedHexes.push(current);
-
-		// Check the neighbors
-		grid.traverse(Honeycomb.ring({
-			center: [ current.q, current.r ],
-			radius: 1,
-		})).forEach((neighbor) => {
-			// If checked path already
-			if (closedHexes.includes(neighbor)) return;
-
-			// If Unit cannot move here, do not include in path
-			if (!isLegalMove(neighbor.row, neighbor.col, unit)) return;
-
-			// g_cost is movement cost from start
-			neighbor.g_cost = current.g_cost + movementCost(unit, neighbor, current);
-			// h_cost is simple distance to end
-			neighbor.h_cost = grid.distance(current, end);
-			// f_cost is sum of above two
-			neighbor.f_cost = neighbor.g_cost + neighbor.h_cost;
-
-			if (!openHexes.includes(neighbor)) {
-				neighbor.parent = current;
-				explored++;
-				openHexes.push(neighbor);
-			}
-		});
-	}
-
-	if (!foundPath) {
-		return;
-	}
-
-	// TODO: Return the hexes from end.parent back
-	const path = [end];
-	let pathHex = end;
-	do {
-		pathHex = pathHex.parent;
-		if (pathHex !== start) {
-			path.unshift(pathHex);
-		}
-	} while (pathHex?.parent instanceof Honeycomb.Hex);
-
-	return path;
-}
 
 // Searches all players units to find any units on the specified hex
 function getUnitsOnHex(hex) {
@@ -518,7 +409,7 @@ const Actions = [
 				return false;
 			}
 			// Make sure there is no city on this tile or an adjacent tile
-			if (grid.traverse(Honeycomb.spiral({
+			if (Grid.traverse(Honeycomb.spiral({
 				start: [ hex.q, hex.r ],
 				radius: 1,
 			})).filter((hex) => {
@@ -600,7 +491,7 @@ function doAction(evt, hex = null) {
 
 function isLegalMove(row, col, unit = ResourceTransporter) {
 	// Grab Target Tile
-	const targetHex = grid.getHex({ row, col });
+	const targetHex = Grid.getHex({ row, col });
 	if (!(targetHex instanceof Honeycomb.Hex)) return false;
 
 	if (unit instanceof Unit) {
@@ -708,7 +599,7 @@ function openUnitActionMenu(hex) {
 	if (possibleActions.length === 1 && typeof possibleActions[0] === 'object') switch (possibleActions[0].action) {
 		case 'moveTo':
 			// Automatically move to adjacent hex
-			if (grid.distance(currentGame.activeUnit.hex, hex) === 1) {
+			if (Grid.distance(currentGame.activeUnit.hex, hex) === 1) {
 				currentGame.activeUnit.doAction('moveTo', hex);
 				return;
 			}
@@ -800,7 +691,7 @@ const config = {
 			};
 
 			// Build World from Honeycomb Grid
-			grid.forEach((hex) => {
+			Grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
 					tile: new Tile({
@@ -811,7 +702,7 @@ const config = {
 						terrain: tile.terrain,
 					},
 					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(GameConfig.depths.map).setInteractive(
-						new Phaser.Geom.Polygon(grid.getHex({ row: 0, col: 0}).corners),
+						new Phaser.Geom.Polygon(Grid.getHex({ row: 0, col: 0}).corners),
 						Phaser.Geom.Polygon.Contains
 					),
 					text: this.add.text(hex.x - GameConfig.tileWidth / 2, hex.y + GameConfig.tileWidth / 3.6, hex.row + '×' + hex.col, {
@@ -842,8 +733,8 @@ const config = {
 
 			{
 				// TODO: Calculate the zoom and size to show the whole map
-				const w = grid.pixelWidth;
-				const h = grid.pixelHeight;
+				const w = Grid.pixelWidth;
+				const h = Grid.pixelHeight;
 				const padLeft = window.visualViewport.width / scale / 2;
 				const padTop = window.visualViewport.height / scale / 2;
 				this.cameras.main.setBounds(
@@ -858,7 +749,7 @@ const config = {
 
 				const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
 				minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
-				minimap.centerOn(grid.pixelWidth / 2, grid.pixelHeight / 2);
+				minimap.centerOn(Grid.pixelWidth / 2, Grid.pixelHeight / 2);
 				minimap.ignore([
 					currentGame.graphics.territoryLines,
 				]);
@@ -911,7 +802,7 @@ const config = {
 			this.input.on('pointerup', (pointer) => {
 				if (!isDragging) {
 					// Treat as click
-					openUnitActionMenu(grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
+					openUnitActionMenu(Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
 				}
 				// Reset drag state
 				isDragging = false;
@@ -1105,7 +996,7 @@ yodasws.page('pageGame').setRoute({
 						break;
 						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryLines - 1);
 						// Show territorial claims
-						grid.forEach((hex) => {
+						Grid.forEach((hex) => {
 							if (!(hex.tile instanceof Tile)) return;
 							if (!(hex.tile.claims() instanceof Map)) return;
 							hex.tile.claims().forEach((intClaim, player) => {
@@ -1185,7 +1076,7 @@ yodasws.page('pageGame').setRoute({
 			};
 
 			// Grab and render city hexes
-			grid.traverse(Honeycomb.spiral({
+			Grid.traverse(Honeycomb.spiral({
 				start: [ data.hex.q, data.hex.r ],
 				radius: 2,
 			})).forEach((hex) => {

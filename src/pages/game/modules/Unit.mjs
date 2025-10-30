@@ -1,4 +1,6 @@
 import * as GameConfig from './Config.mjs';
+import { FindPath, grid } from './modules/Hex.mjs';
+
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 const actionOutlines = {
 	text: [],
@@ -6,7 +8,6 @@ const actionOutlines = {
 
 const globals = {
 	currentGame: null,
-	grid: null,
 	scene: null,
 };
 
@@ -51,10 +52,8 @@ function Unit(unitType, {
 	col,
 	faction,
 	currentGame: cg = null,
-	grid: grd = null,
 }) {
 	globals.currentGame = globals.currentGame ?? cg;
-	globals.grid = globals.grid ?? grd;
 	// Check unitType exists
 	const base = json.world.units[unitType];
 	if (typeof base !== 'object' || base === null) {
@@ -66,7 +65,7 @@ function Unit(unitType, {
 	}
 
 	// Add sprite
-	const { x, y } = globals.grid.getHex({ row, col });
+	const { x, y } = grid.getHex({ row, col });
 	const sprite = globals.scene.add.sprite(x, y, `unit.${unitType}`)
 		.setTint(0x383838)
 		.setDepth(GameConfig.depths.inactiveUnits);
@@ -84,7 +83,7 @@ function Unit(unitType, {
 		},
 		hex: {
 			enumerable: true,
-			get: () => globals.grid.getHex({ row: this.row, col: this.col }),
+			get: () => grid.getHex({ row: this.row, col: this.col }),
 		},
 		faction: {
 			enumerable: true,
@@ -107,7 +106,7 @@ function Unit(unitType, {
 Object.assign(Unit.prototype, {
 	activate() {
 		hideActionSprites();
-		const thisHex = globals.grid.getHex({ row: this.row, col: this.col });
+		const thisHex = grid.getHex({ row: this.row, col: this.col });
 		globals.currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
 
 		// Pan camera to active unit
@@ -152,7 +151,7 @@ Object.assign(Unit.prototype, {
 		].forEach((move) => {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (isLegalMove(row, col, this)) {
-				const hex = globals.grid.getHex({ row, col });
+				const hex = grid.getHex({ row, col });
 				const text = globals.scene.add.text(
 					hex.x - GameConfig.tileWidth / 2,
 					hex.y + GameConfig.tileWidth / 6,
@@ -205,12 +204,12 @@ Object.assign(Unit.prototype, {
 		}
 		// Move unit
 		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
-			if (globals.grid.distance(this.hex, hex) === 1) {
+			if (grid.distance(this.hex, hex) === 1) {
 				// Neighbor, move there
 				this.moveTo(hex);
 			} else {
 				// Find path
-				const path = findPath(this.hex, hex, this);
+				const path = FindPath(this.hex, hex, this);
 				if (!Array.isArray(path) || path.length === 0) {
 					// TODO: Warn User no path was found
 					console.warn('Sam, no path found!');
@@ -229,9 +228,9 @@ Object.assign(Unit.prototype, {
 			'l',
 		].includes(action)) {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			this.moveTo(globals.grid.getHex({ row, col }));
+			this.moveTo(grid.getHex({ row, col }));
 		} else if (action === 'c') {
-			const thisHex = globals.grid.getHex({ row: this.row, col: this.col});
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			if (!Actions['c'].isValidOption({ hex: thisHex, faction: this.faction })) {
 				// TODO: Show message to Player that territory already belongs to them!
 				console.warn('Sam, you own this already');
@@ -241,7 +240,7 @@ Object.assign(Unit.prototype, {
 			thisHex.tile.claimTerritory(this.faction, 10);
 			this.deactivate(true);
 		} else {
-			const thisHex = globals.grid.getHex({ row: this.row, col: this.col});
+			const thisHex = grid.getHex({ row: this.row, col: this.col});
 			// Unit-specific actions
 			switch (this.unitType) {
 				case 'settler':

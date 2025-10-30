@@ -1,3 +1,4 @@
+import { Grid } from './modules/Hex.mjs';
 let scene = null;
 function City({
 	col,
@@ -13,7 +14,7 @@ function City({
 	}
 
 	// Tie to hex
-	const thisHex = grid.getHex({ row, col });
+	const thisHex = Grid.getHex({ row, col });
 	thisHex.tile.setImprovement('destroy');
 
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', nation.frame).setDepth(GameConfig.depths.cities).setScale(0.8);
@@ -21,7 +22,7 @@ function City({
 	const laborers = new Set();
 
 	// Claim this tile and adjacent tiles
-	grid.traverse(Honeycomb.spiral({
+	Grid.traverse(Honeycomb.spiral({
 		start: [ thisHex.q, thisHex.r ],
 		radius: 1,
 	})).forEach((hex) => {
@@ -29,7 +30,7 @@ function City({
 	});
 
 	// Claim water territory
-	grid.traverse(Honeycomb.ring({
+	Grid.traverse(Honeycomb.ring({
 		center: [ thisHex.q, thisHex.r ],
 		radius: 2,
 	})).forEach((hex) => {
