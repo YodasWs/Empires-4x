@@ -1,4 +1,4 @@
-import { Grid } from './modules/Hex.mjs';
+import { Grid } from './Hex.mjs';
 let scene = null;
 function City({
 	col,
