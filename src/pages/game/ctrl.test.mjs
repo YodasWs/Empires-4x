@@ -1,11 +1,22 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+// Expand assert with convenience methods
 assert.false = (val) => assert.equal(val, false);
 assert.true = (val) => assert.equal(val, true);
 
+import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './modules/Config.mjs';
+
+import City from './modules/City.mjs';
+import Faction from './modules/Faction.mjs';
+import Goods from './modules/Goods.mjs';
+import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
+import Tile from './modules/Tile.mjs';
+import Unit from './modules/Unit.mjs';
+import { FindPath, Grid } from './modules/Hex.mjs';
+import { currentGame } from './modules/Game.mjs';
 
 describe('Game Configuration', () => {
 	it('should have correct tile and unit sizes', () => {
