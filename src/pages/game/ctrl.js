@@ -7,7 +7,7 @@ import Goods from './modules/Goods.mjs';
 import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
-import Unit from './modules/Unit.mjs';
+import { default as Unit, init as initUnitModule } from './modules/Unit.mjs';
 import { FindPath, Grid } from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
@@ -399,6 +399,7 @@ const config = {
 	scene: {
 		key: 'mainGameScene',
 		preload() {
+			initUnitModule();
 			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
 				this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);

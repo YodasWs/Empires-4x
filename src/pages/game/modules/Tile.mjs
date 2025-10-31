@@ -1,6 +1,11 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
+import City from './City.mjs';
+import Faction from './Faction.mjs';
+import Nation from './Nation.mjs';
+import { currentGame } from './Game.mjs';
+
 let scene = null;
 function isValidImprovement(hex, improvement, builtImprovement) {
 	if (!(hex instanceof Honeycomb.Hex)) return false;

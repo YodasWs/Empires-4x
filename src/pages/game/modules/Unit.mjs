@@ -1,6 +1,8 @@
 import * as Honeycomb from 'honeycomb-grid';
+import City from './City.mjs';
 import * as GameConfig from './Config.mjs';
 import { FindPath, Grid } from './Hex.mjs';
+import { currentGame } from './Game.mjs';
 
 const offscreen = globalThis.window === undefined ? -10000
 	: Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
@@ -8,13 +10,14 @@ const actionOutlines = {
 	text: [],
 };
 
-const globals = {
-	currentGame: null,
-	scene: null,
-};
+let MainGameScene;
+
+export function init() {
+	MainGameScene = currentGame.scenes.getScene('mainGameScene');
+}
 
 function hideActionSprites() {
-	globals.currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
+	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
 	actionOutlines.graphics?.destroy();
 	while (actionOutlines.text.length > 0) {
 		actionOutlines.text.pop().destroy();
@@ -53,22 +56,16 @@ function Unit(unitType, {
 	row,
 	col,
 	faction,
-	currentGame: cg = null,
 }) {
-	globals.currentGame = globals.currentGame ?? cg;
 	// Check unitType exists
 	const base = json.world.units[unitType];
 	if (typeof base !== 'object' || base === null) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
 
-	if (globals.scene === null) {
-		globals.scene = globals.currentGame.scenes.getScene('mainGameScene');
-	}
-
 	// Add sprite
 	const { x, y } = Grid.getHex({ row, col });
-	const sprite = globals.scene.add.sprite(x, y, `unit.${unitType}`)
+	const sprite = MainGameScene.add.sprite(x, y, `unit.${unitType}`)
 		.setTint(0x383838)
 		.setDepth(GameConfig.depths.inactiveUnits);
 	sprite.setScale(GameConfig.unitWidth / sprite.width);
@@ -93,7 +90,7 @@ function Unit(unitType, {
 		},
 		scene: {
 			enumerable: true,
-			get: () => globals.scene,
+			get: () => MainGameScene,
 		},
 		sprite: {
 			enumerable: true,
@@ -109,7 +106,7 @@ Object.assign(Unit.prototype, {
 	activate() {
 		hideActionSprites();
 		const thisHex = Grid.getHex({ row: this.row, col: this.col });
-		globals.currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
+		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
 
 		// Pan camera to active unit
 		// TODO: Add setting to skip this if automated movement
@@ -154,7 +151,7 @@ Object.assign(Unit.prototype, {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (isLegalMove(row, col, this)) {
 				const hex = Grid.getHex({ row, col });
-				const text = globals.scene.add.text(
+				const text = MainGameScene.add.text(
 					hex.x - GameConfig.tileWidth / 2,
 					hex.y + GameConfig.tileWidth / 6,
 					move,
@@ -172,7 +169,7 @@ Object.assign(Unit.prototype, {
 			}
 		});
 
-		globals.currentGame.activeUnit = this;
+		currentGame.activeUnit = this;
 		this.scene.input.keyboard.enabled = true;
 	},
 	deactivate(endMoves = false) {
@@ -181,9 +178,9 @@ Object.assign(Unit.prototype, {
 		}
 		hideActionSprites();
 		this.sprite.setTint(0x383838).setDepth(GameConfig.depths.inactiveUnits);
-		globals.currentGame.activeUnit = null;
+		currentGame.activeUnit = null;
 		this.scene.input.keyboard.enabled = false;
-		globals.currentGame.currentPlayer.checkEndTurn();
+		currentGame.currentPlayer.checkEndTurn();
 	},
 	destroy() {
 		this.deactivate(true);
@@ -192,7 +189,7 @@ Object.assign(Unit.prototype, {
 		this.deleted = true;
 	},
 	doAction(action, hex = null) {
-		globals.currentGame.closeUnitActionMenu();
+		currentGame.closeUnitActionMenu();
 		// Wait, to do action later in turn
 		if (action === 'w' || action === 'Tab') {
 			// TODO: If Tab on unit action menu, do a11y instead of deactivate unit
@@ -308,7 +305,7 @@ Object.assign(Unit.prototype, {
 		this.row = hex.row;
 		this.col = hex.col;
 		// TODO: Chain tweens to multiple hexes instead of straight to last hex
-		globals.scene.tweens.add({
+		MainGameScene.tweens.add({
 			targets: this.sprite,
 			x: hex.x,
 			y: hex.y,

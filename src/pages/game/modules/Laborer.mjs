@@ -1,5 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 
+import City from './City.mjs';
+
 // Thanks to Microsoft Copilot for this name generator!
 function generateRomanBritishName() {
 	const praenomina = [
