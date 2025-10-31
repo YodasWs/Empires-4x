@@ -1,3 +1,5 @@
+import * as Honeycomb from 'honeycomb-grid';
+
 // Thanks to Microsoft Copilot for this name generator!
 function generateRomanBritishName() {
 	const praenomina = [

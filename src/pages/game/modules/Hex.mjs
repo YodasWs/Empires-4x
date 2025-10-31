@@ -1,3 +1,6 @@
+import * as Honeycomb from 'honeycomb-grid';
+import * as GameConfig from './Config.mjs';
+
 class gameHex extends Honeycomb.defineHex({
 	dimensions: GameConfig.tileWidth / 2,
 	orientation: Honeycomb.Orientation.FLAT,

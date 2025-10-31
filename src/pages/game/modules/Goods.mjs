@@ -1,3 +1,6 @@
+import * as Honeycomb from 'honeycomb-grid';
+import * as GameConfig from './Config.mjs';
+
 function Goods({
 	num = 1,
 	type,

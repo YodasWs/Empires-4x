@@ -1,7 +1,9 @@
+import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 import { FindPath, Grid } from './Hex.mjs';
 
-const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
+const offscreen = globalThis.window === undefined ? -10000
+	: Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 const actionOutlines = {
 	text: [],
 };
