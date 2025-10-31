@@ -1,7 +1,8 @@
 import * as Honeycomb from 'honeycomb-grid';
-import City from './City.mjs';
 import * as GameConfig from './Config.mjs';
-import { FindPath, Grid } from './Hex.mjs';
+
+import City from './City.mjs';
+import { FindPath, Grid, IsLegalMove, MovementCost } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
 
 const offscreen = globalThis.window === undefined ? -10000
@@ -126,7 +127,7 @@ Object.assign(Unit.prototype, {
 
 		// Continue on path
 		if (Array.isArray(this.path) && this.path.length > 0) {
-			while (this.moves >= movementCost(this, this.path[0])) {
+			while (this.moves >= MovementCost(this, this.path[0])) {
 				this.doAction('moveTo', this.path.shift());
 			}
 			this.deactivate(true);
@@ -149,7 +150,7 @@ Object.assign(Unit.prototype, {
 			'O',
 		].forEach((move) => {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-			if (isLegalMove(row, col, this)) {
+			if (IsLegalMove(row, col, this)) {
 				const hex = Grid.getHex({ row, col });
 				const text = MainGameScene.add.text(
 					hex.x - GameConfig.tileWidth / 2,
@@ -301,7 +302,7 @@ Object.assign(Unit.prototype, {
 	},
 	moveTo(hex) {
 		if (!(hex instanceof Honeycomb.Hex)) return;
-		if (!isLegalMove(hex.row, hex.col, this)) return;
+		if (!IsLegalMove(hex.row, hex.col, this)) return;
 		this.row = hex.row;
 		this.col = hex.col;
 		// TODO: Chain tweens to multiple hexes instead of straight to last hex
@@ -316,7 +317,7 @@ Object.assign(Unit.prototype, {
 				tween.destroy();
 			},
 		});
-		this.moves -= movementCost(this, hex);
+		this.moves -= MovementCost(this, hex);
 		if (this.moves <= 0) this.deactivate();
 	},
 });

@@ -8,7 +8,7 @@ import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
 import { default as Unit, init as initUnitModule } from './modules/Unit.mjs';
-import { FindPath, Grid } from './modules/Hex.mjs';
+import { FindPath, Grid, IsLegalMove, MovementCost } from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
@@ -19,9 +19,6 @@ const FoodSpriteOptions = {
 	duration: 1000,
 	yoyo: false,
 };
-
-// The basic resource transporter unit, used to move Goods to the nearest City
-let ResourceTransporter = null;
 
 // Searches all players units to find any units on the specified hex
 function getUnitsOnHex(hex) {
@@ -36,21 +33,6 @@ function getUnitsOnHex(hex) {
 		});
 	});
 	return units;
-}
-
-function movementCost(unit, nextHex, thisHex = unit.hex) {
-	if (!(nextHex instanceof Honeycomb.Hex)) {
-		return Infinity;
-	}
-	if (unit !== ResourceTransporter && !(unit instanceof Unit)) {
-		return Infinity;
-	}
-	if (nextHex.terrain.isWater && !unit.base.moveOnWater) {
-		// Is there a unit override for this terrain movement?
-		return unit.base.movementCosts[nextHex.terrain.terrain] ?? Infinity;
-	}
-	// TODO: Include roads, terrain improvements, etc
-	return unit.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
 }
 
 function Action(def) {
@@ -83,7 +65,7 @@ const Actions = [
 		key: 'moveTo',
 		text: ({ hex }) => hex instanceof Honeycomb.Hex ? `Move to ${hex.row}×${hex.col}` : 'Move here',
 		isValidOption({ hex, unit }) {
-			return isLegalMove(hex.row, hex.col, unit);
+			return IsLegalMove(hex.row, hex.col, unit);
 		},
 	},
 	{
@@ -235,32 +217,6 @@ function doAction(evt, hex = null) {
 	currentGame.activeUnit.doAction(evt.key ?? evt, hex);
 }
 
-function isLegalMove(row, col, unit = ResourceTransporter) {
-	// Grab Target Tile
-	const targetHex = Grid.getHex({ row, col });
-	if (!(targetHex instanceof Honeycomb.Hex)) return false;
-
-	if (unit instanceof Unit) {
-		// TODO: Check move into City
-		if (targetHex.city instanceof City && targetHex.city.nation !== unit.faction.nation) {
-			if (!unit.attack || !unit.attackCities) return false;
-		}
-
-		// TODO: Check for battle
-		// const tileUnits = grabUnitsOnTile(row, col);
-		let tileUnits;
-		if (false) {
-			if (!unit.attack) return false;
-			if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
-		}
-	}
-
-	// Check movement into terrain
-	const moves = movementCost(unit, targetHex);
-	if (!Number.isFinite(moves)) return false;
-	return moves <= unit.moves;
-}
-
 function openUnitActionMenu(hex) {
 	if (!(hex instanceof Honeycomb.Hex) || !(hex.tile instanceof Tile)) {
 		// Not valid hex, exit
@@ -315,7 +271,7 @@ function openUnitActionMenu(hex) {
 			if (Actions['c'].isValidOption({ hex, faction: currentGame.activeUnit.faction })) {
 				possibleActions.push('c');
 			}
-		} else if (isLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
+		} else if (IsLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
 			// Offer to move unit here
 			possibleActions.push('moveTo');
 		}
@@ -408,9 +364,6 @@ const config = {
 				frameHeight: 200,
 				frameWidth: 200,
 			});
-			ResourceTransporter = {
-				...json.world.ResourceTransporter,
-			};
 			Object.entries(json.world.improvements).forEach(([key, improvement]) => {
 				if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
 					this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);

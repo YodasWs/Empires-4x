@@ -1,5 +1,10 @@
+import World from './../../../json/world.mjs';
+
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
+
+import City from './City.mjs';
+import Unit from './Unit.mjs';
 
 class gameHex extends Honeycomb.defineHex({
 	dimensions: GameConfig.tileWidth / 2,
@@ -10,6 +15,9 @@ class gameHex extends Honeycomb.defineHex({
 	h_cost
 	g_cost
 }
+
+// The basic resource transporter unit, used to move Goods to the nearest City
+const ResourceTransporter = World.ResourceTransporter;
 
 export const Grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
 
@@ -47,10 +55,10 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 			if (closedHexes.includes(neighbor)) return;
 
 			// If Unit cannot move here, do not include in path
-			if (!isLegalMove(neighbor.row, neighbor.col, unit)) return;
+			if (!IsLegalMove(neighbor.row, neighbor.col, unit)) return;
 
 			// g_cost is movement cost from start
-			neighbor.g_cost = current.g_cost + movementCost(unit, neighbor, current);
+			neighbor.g_cost = current.g_cost + MovementCost(unit, neighbor, current);
 			// h_cost is simple distance to end
 			neighbor.h_cost = Grid.distance(current, end);
 			// f_cost is sum of above two
@@ -79,4 +87,45 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 	} while (pathHex?.parent instanceof Honeycomb.Hex);
 
 	return path;
+}
+
+export function IsLegalMove(row, col, unit = ResourceTransporter) {
+	// Grab Target Tile
+	const targetHex = Grid.getHex({ row, col });
+	if (!(targetHex instanceof Honeycomb.Hex)) return false;
+
+	if (unit instanceof Unit) {
+		// TODO: Check move into City
+		if (targetHex.city instanceof City && targetHex.city.nation !== unit.faction.nation) {
+			if (!unit.attack || !unit.attackCities) return false;
+		}
+
+		// TODO: Check for battle
+		// const tileUnits = grabUnitsOnTile(row, col);
+		let tileUnits;
+		if (false) {
+			if (!unit.attack) return false;
+			if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
+		}
+	}
+
+	// Check movement into terrain
+	const moves = MovementCost(unit, targetHex);
+	if (!Number.isFinite(moves)) return false;
+	return moves <= unit.moves;
+}
+
+export function MovementCost(unit, nextHex, thisHex = unit.hex) {
+	if (!(nextHex instanceof Honeycomb.Hex)) {
+		return Infinity;
+	}
+	if (unit !== ResourceTransporter && !(unit instanceof Unit)) {
+		return Infinity;
+	}
+	if (nextHex.terrain.isWater && !unit.base.moveOnWater) {
+		// Is there a unit override for this terrain movement?
+		return unit.base.movementCosts[nextHex.terrain.terrain] ?? Infinity;
+	}
+	// TODO: Include roads, terrain improvements, etc
+	return unit.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
 }

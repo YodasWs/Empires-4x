@@ -1,4 +1,5 @@
 import * as Honeycomb from 'honeycomb-grid';
+
 import City from './City.mjs';
 import Faction from './Faction.mjs';
 import { Grid } from './Hex.mjs';
