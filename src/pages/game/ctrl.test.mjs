@@ -15,7 +15,7 @@ import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
 import Unit from './modules/Unit.mjs';
-import { FindPath, Grid } from './modules/Hex.mjs';
+import { Grid } from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
 describe('Game Configuration', () => {

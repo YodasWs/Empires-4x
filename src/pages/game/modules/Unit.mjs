@@ -1,7 +1,9 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
+import { Actions } from './Actions.mjs';
 import City from './City.mjs';
+import Laborer from './Laborer.mjs';
 import { FindPath, Grid, IsLegalMove, MovementCost } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -269,7 +271,7 @@ Object.assign(Unit.prototype, {
 						// Build farm
 						case 'f':
 							if (thisHex.tile.setImprovement('farm', this.faction)) {
-								thisHex.tile.laborers = new Citizen({ hex: thisHex });
+								thisHex.tile.laborers = new Laborer({ hex: thisHex });
 								this.destroy();
 							} else {
 								// TODO: Warn player

@@ -1,8 +1,19 @@
 import * as Honeycomb from 'honeycomb-grid';
+import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
 import Faction from './Faction.mjs';
-import { Grid } from './Hex.mjs';
+import Goods from './Goods.mjs';
+import Laborer from './Laborer.mjs';
+import Tile from './Tile.mjs';
+import { FindPath, Grid } from './Hex.mjs';
+
+let FoodSprites = [];
+const FoodSpriteOptions = {
+	ease: 'Linear',
+	duration: 1000,
+	yoyo: false,
+};
 
 export const currentGame = {
 	players: [],

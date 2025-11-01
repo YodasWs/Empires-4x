@@ -90,7 +90,7 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 }
 
 export function IsLegalMove(row, col, unit = ResourceTransporter) {
-	// Grab Target Tile
+	// Grab Target Hex
 	const targetHex = Grid.getHex({ row, col });
 	if (!(targetHex instanceof Honeycomb.Hex)) return false;
 

@@ -3,6 +3,7 @@ import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
 import Faction from './Faction.mjs';
+import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -107,8 +108,8 @@ function Tile({
 			enumerable: true,
 			get: () => laborers,
 			set(val) {
-				if (!(val instanceof Citizen)) {
-					throw new TypeError('Tile.laborers expects to be assigned object instance of Citizen!');
+				if (!(val instanceof Laborer)) {
+					throw new TypeError('Tile.laborers expects to be assigned object instance of Laborer!');
 				}
 				laborers.add(val);
 				return true;

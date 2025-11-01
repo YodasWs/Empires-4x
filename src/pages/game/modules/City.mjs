@@ -1,6 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
+import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
 import { Grid } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
