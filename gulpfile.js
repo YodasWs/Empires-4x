@@ -21,13 +21,6 @@ import { hideBin } from 'yargs/helpers';
 import yargs from 'yargs';
 const argv = yargs(hideBin(process.argv))
 	.usage("\n\x1b[1mUsage:\x1b[0m gulp \x1b[36m<command>\x1b[0m \x1b[34m[options]\x1b[0m")
-	.command('init', 'Initialize app', {
-		name: {
-			describe: 'Name for your app',
-			required: true,
-			alias: 'n',
-		},
-	})
 	.command('*', 'Compile files, run the server, and watch for changes to files', {
 		port: {
 			describe: 'The server port to listen to',
@@ -36,7 +29,7 @@ const argv = yargs(hideBin(process.argv))
 			alias: 'p',
 		},
 	})
-	.command(['serve'], 'Run server', {
+	.command('serve', 'Run server', {
 		port: {
 			describe: 'The server port to listen to',
 			type: 'number',
@@ -65,6 +58,7 @@ const argv = yargs(hideBin(process.argv))
 		},
 	})
 	.command('lint', 'Lint all JavaScript and Sass/SCSS files')
+	.command('test', 'Run all tests')
 	.command('transfer-files', 'Transfer all static assets and resources to docs folder')
 	.command('watch', 'Watch files for changes to recompile')
 	.help('?')
@@ -506,9 +500,20 @@ export function lintSass() {
 		.pipe(plugins.lintSass.format());
 };
 
+export function lintTests() {
+	return gulp.src([
+		'src/**/*{-,.}test.{js,mjs}',
+		'!**/*.min.js',
+		'!**/min.js',
+	])
+		.pipe(plugins.lintES(options.lintES || {}))
+		.pipe(plugins.lintES.format());
+};
+
 export function lintJs() {
 	return gulp.src([
 		'src/**/*.{js,mjs}',
+		'!src/**/*{-,.}test.{js,mjs}',
 		'!src/json/**/*.mjs',
 		'!**/*.min.js',
 		'!**/min.js',
