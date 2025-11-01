@@ -25,16 +25,41 @@ describe('Game Configuration', () => {
 	});
 });
 
-describe('Tile class', () => {
-});
-
-describe('Laborer class', () => {
-});
-
 describe('City class', () => {
 });
 
 describe('Faction class', () => {
+	it('initializes with correct color and index', () => {
+		const faction = new Faction({ index: 1 });
+		assert.equal(faction.index, 1);
+		assert.equal(faction.color, 0xff0000);
+	});
+
+	it('Faction.money setter enforces positive numbers', () => {
+		const faction = new Faction({ index: 0 });
+		faction.money = 100;
+		assert.equal(faction.money, 100);
+		assert.throws(() => {
+			faction.money = -5;
+		}, 'expects to be assigned a positive number');
+	});
+
+	it('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
+		const mockEndTurn = t.mock.fn();
+		t.mock.method(currentGame, 'endTurn', mockEndTurn);
+
+		const faction = new Faction({ index: 0 });
+		faction.activateNext = () => false; // force endTurn path
+		faction.checkEndTurn();
+
+		assert.equal(mockEndTurn.mock.callCount(), 1);
+	});
+});
+
+describe('Goods class', () => {
+});
+
+describe('Laborer class', () => {
 });
 
 describe('Nation class', () => {
@@ -57,7 +82,7 @@ describe('Nation class', () => {
 	});
 });
 
-describe('Goods class', () => {
+describe('Tile class', () => {
 });
 
 describe('Unit class', () => {
