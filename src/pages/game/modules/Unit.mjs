@@ -1,5 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
+import World from './../../../json/world.mjs';
 
 import { Actions } from './Actions.mjs';
 import City from './City.mjs';
@@ -61,7 +62,7 @@ function Unit(unitType, {
 	faction,
 }) {
 	// Check unitType exists
-	const base = json.world.units[unitType];
+	const base = World.units[unitType];
 	if (typeof base !== 'object' || base === null) {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}

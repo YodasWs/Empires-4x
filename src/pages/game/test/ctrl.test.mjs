@@ -6,18 +6,18 @@ assert.false = (val) => assert.equal(val, false);
 assert.true = (val) => assert.equal(val, true);
 
 import * as Honeycomb from 'honeycomb-grid';
-import * as GameConfig from './modules/Config.mjs';
+import * as GameConfig from '../modules/Config.mjs';
 
-import { Actions, DoAction, OpenUnitActionMenu } from './modules/Actions.mjs';
-import City from './modules/City.mjs';
-import Faction from './modules/Faction.mjs';
-import Goods from './modules/Goods.mjs';
-import Laborer from './modules/Laborer.mjs';
-import Nation from './modules/Nation.mjs';
-import Tile from './modules/Tile.mjs';
-import { default as Unit, init as initUnitModule } from './modules/Unit.mjs';
-import { FindPath, Grid, IsLegalMove, MovementCost } from './modules/Hex.mjs';
-import { currentGame } from './modules/Game.mjs';
+import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
+import City from '../modules/City.mjs';
+import Faction from '../modules/Faction.mjs';
+import Goods from '../modules/Goods.mjs';
+import Laborer from '../modules/Laborer.mjs';
+import Nation from '../modules/Nation.mjs';
+import Tile from '../modules/Tile.mjs';
+import { default as Unit, init as initUnitModule } from '../modules/Unit.mjs';
+import { FindPath, Grid, IsLegalMove, MovementCost } from '../modules/Hex.mjs';
+import { currentGame } from '../modules/Game.mjs';
 
 describe('Game Configuration', () => {
 	it('should have correct tile and unit sizes', () => {

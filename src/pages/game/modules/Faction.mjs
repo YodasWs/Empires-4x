@@ -2,6 +2,7 @@ import World from './../../../json/world.mjs';
 
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
+import * as utils from '../utils/FactionUtils.mjs';
 
 let activeUnit = null;
 
@@ -9,25 +10,13 @@ let activeUnit = null;
 function Faction({
 	index,
 }) {
-	const color = (() => {
-		switch (index % 3) {
-			case 0:
-				return 0x32cd32;
-			case 1:
-				return 0xff0000;
-			case 2:
-				return 0x0000ff;
-			default:
-				return 0xaaaaaa;
-		}
-	})();
 	const name = World?.FactionNames[index];
 	let money = 0;
 	let units = [];
 	Object.defineProperties(this, {
 		color: {
 			enumerable: true,
-			get: () => color,
+			get: () => utils.getFactionColor(index),
 		},
 		index: {
 			enumerable: true,
@@ -58,17 +47,12 @@ function Faction({
 				if (!Array.isArray(val)) {
 					throw new TypeError('Faction.units expects to be assigned an Array!');
 				}
-				units = val.filter(unit => unit instanceof Unit && unit.deleted === false);
+				units = utils.filterValidUnits(units);
 			},
 		},
 		activeUnit: {
 			enumerable: true,
-			get() {
-				if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
-					return units[activeUnit];
-				}
-				return undefined;
-			},
+			get: () => utils.getActiveUnit(units, activeUnit),
 			set(val) {
 				if (Number.isInteger(val) && val >= 0) {
 					if (val >= units.length) {
@@ -107,10 +91,7 @@ Object.assign(Faction.prototype, {
 			return false;
 		}
 		const unit = this.units[intUnit];
-		if (!(unit instanceof Unit)) {
-			return false;
-		}
-		if (unit.deleted === true) {
+		if (!utils.activatableUnit(this.units[intUnit])) {
 			return false;
 		}
 		unit.activate();
@@ -118,25 +99,7 @@ Object.assign(Faction.prototype, {
 		return true;
 	},
 	activateNext() {
-		// Find and activate next unit
-		for (let i = activeUnit + 1; i < this.units.length; i++) {
-			if (!(this.units[i] instanceof Unit)) {
-				continue;
-			}
-			if (this.units[i].moves > 0 && this.activateUnit(i)) {
-				return true;
-			}
-		}
-		// Check for unmoved unit we skipped
-		for (let i = 0; i <= activeUnit; i++) {
-			if (!(this.units[i] instanceof Unit)) {
-				continue;
-			}
-			if (this.units[i].moves > 0 && this.activateUnit(i)) {
-				return true;
-			}
-		}
-		return false;
+		return utils.getNextActivatableUnit(this.units, activeUnit);
 	},
 });
 export default Faction;
