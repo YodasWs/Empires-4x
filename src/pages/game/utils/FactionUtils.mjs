@@ -1,16 +1,11 @@
 import Unit from '../modules/Unit.mjs';
 
 export function getFactionColor(index) {
-	switch (index % 3) {
-		case 0:
-			return 0x32cd32;
-		case 1:
-			return 0xff0000;
-		case 2:
-			return 0x0000ff;
-		default:
-			return 0xaaaaaa;
-	}
+	return [
+		0x32cd32,
+		0xff0000,
+		0x0000ff,
+	][index] ?? 0xaaaaaa;
 }
 
 export function activatableUnit(unit) {

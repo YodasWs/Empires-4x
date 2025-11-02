@@ -13,7 +13,6 @@ describe('FactionUtils module', () => {
 	};
 
 	test('getFactionColor returns correct color for index', (t) => {
-		t.todo('No idea why this test fails in CLI but pass locally');
 		assert.equal(utils.getFactionColor(0), 0x32cd32);
 		assert.equal(utils.getFactionColor(1), 0xff0000);
 		assert.equal(utils.getFactionColor(2), 0x0000ff);
