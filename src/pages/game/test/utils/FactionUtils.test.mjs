@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as utils from '../../utils/FactionUtils.mjs';
 import Unit from '../../modules/Unit.mjs';
@@ -12,7 +12,7 @@ describe('FactionUtils module', () => {
 		},
 	};
 
-	it('getFactionColor returns correct color for index', (t) => {
+	test('getFactionColor returns correct color for index', (t) => {
 		t.todo('No idea why this test fails in CLI but pass locally');
 		assert.equal(utils.getFactionColor(0), 0x32cd32);
 		assert.equal(utils.getFactionColor(1), 0xff0000);
@@ -20,30 +20,36 @@ describe('FactionUtils module', () => {
 		assert.equal(utils.getFactionColor(99), 0xaaaaaa);
 	});
 
-	it('filterValidUnits removes deleted units', (t) => {
+	test('filterValidUnits removes deleted units', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
 		const validUnit1 = new Unit('homesteader', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
+		const deletedUnit1 = new Unit('homesteader', unitOptions);
+		const deletedUnit2 = new Unit('rancher', unitOptions);
+		deletedUnit1.destroy();
+		deletedUnit2.destroy();
 		const units = [
-		validUnit1,
-			new Unit('rancher', { ...unitOptions, deleted: true }),
+			validUnit1,
+			deletedUnit1,
 			validUnit2,
-			new Unit('rancher', { ...unitOptions, deleted: true }),
+			deletedUnit2,
 		];
 		const result = utils.filterValidUnits(units);
 		assert.deepEqual(result, [validUnit1, validUnit2]);
 	});
 
-	it('filterValidUnits keeps only valid Unit instances', (t) => {
+	test('filterValidUnits keeps only valid Unit instances', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
 		const validUnit1 = new Unit('homesteader', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
+		const deletedUnit1 = new Unit('rancher', unitOptions);
+		deletedUnit1.destroy();
 		assert.deepEqual(
 			utils.filterValidUnits([
 				validUnit1,
-				new Unit('rancher', { ...unitOptions, deleted: true }),
+				deletedUnit1,
 				new Unit('not-real-unit', unitOptions),
 				{ deleted: false }, // not an instance of Unit
 				validUnit2,
@@ -52,14 +58,14 @@ describe('FactionUtils module', () => {
 		);
 	});
 
-	it('getActiveUnit returns correct unit by index', () => {
+	test('getActiveUnit returns correct unit by index', () => {
 		const units = [{ id: 1 }, { id: 2 }, { id: 3 }];
 		assert.deepEqual(utils.getActiveUnit(units, 1), { id: 2 });
 		assert.equal(utils.getActiveUnit(units, -1), undefined);
 		assert.equal(utils.getActiveUnit(units, 99), undefined);
 	});
 
-	it('getNextActivatableUnit returns correct index', (t) => {
+	test('getNextActivatableUnit returns correct index', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
 		const units = [
@@ -71,7 +77,7 @@ describe('FactionUtils module', () => {
 		assert.equal(result, 1);
 	});
 
-	it('getNextActivatableUnit wraps around if needed', (t) => {
+	test('getNextActivatableUnit wraps around if needed', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
 		const units = [
@@ -82,7 +88,7 @@ describe('FactionUtils module', () => {
 		assert.equal(result, 0);
 	});
 
-	it('getNextActivatableUnit returns false if no valid unit', (t) => {
+	test('getNextActivatableUnit returns false if no valid unit', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
 		const units = [

@@ -1,6 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
-import World from './../../../json/world.mjs';
+import World from '../../../json/world.mjs';
+import * as utils from '../utils/UnitUtils.mjs';
 
 import { Actions } from './Actions.mjs';
 import City from './City.mjs';
@@ -28,45 +29,12 @@ function hideActionSprites() {
 	}
 }
 
-function actionTileCoordinates(action, row, col) {
-	switch (action) {
-		case 'u':
-			if (col % 2 == 0) row--;
-			col--;
-			break;
-		case 'i':
-			row--;
-			break;
-		case 'o':
-			if (col % 2 == 0) row--;
-			col++;
-			break;
-		case 'j':
-			if (col % 2 == 1) row++;
-			col--;
-			break;
-		case 'k':
-			row++;
-			break;
-		case 'l':
-			if (col % 2 == 1) row++;
-			col++;
-			break;
-	}
-	return [row, col];
-}
-
 function Unit(unitType, {
 	row,
 	col,
 	faction,
 }) {
-	// Check unitType exists
-	const base = World.units[unitType];
-	if (typeof base !== 'object' || base === null) {
-		throw new TypeError(`Unknown unit '${unitType}'`);
-	}
-
+	utils.validateUnitType(unitType);
 	// Add sprite
 	const { x, y } = Grid.getHex({ row, col });
 	const sprite = MainGameScene.add.sprite(x, y, `unit.${unitType}`)
@@ -152,7 +120,7 @@ Object.assign(Unit.prototype, {
 			'I',
 			'O',
 		].forEach((move) => {
-			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
+			const [row, col] = utils.actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (IsLegalMove(row, col, this)) {
 				const hex = Grid.getHex({ row, col });
 				const text = MainGameScene.add.text(
@@ -230,7 +198,7 @@ Object.assign(Unit.prototype, {
 			'k',
 			'l',
 		].includes(action)) {
-			const [row, col] = actionTileCoordinates(action, this.row, this.col);
+			const [row, col] = utils.actionTileCoordinates(action, this.row, this.col);
 			this.moveTo(Grid.getHex({ row, col }));
 		} else if (action === 'c') {
 			const thisHex = Grid.getHex({ row: this.row, col: this.col});
