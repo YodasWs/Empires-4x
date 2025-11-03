@@ -180,7 +180,7 @@ const config = {
 
 			// TODO: Build Starting Players and Units
 			currentGame.players[0].addUnit('rancher', 2, 3, this);
-			currentGame.players[0].addUnit('homesteader', 2, 4, this);
+			currentGame.players[0].addUnit('farmer', 2, 4, this);
 			currentGame.players[0].addUnit('miner', 2, 2, this);
 			currentGame.players[0].addUnit('settler', 3, 3, this);
 			currentGame.players[0].addUnit('builder', 1, 3, this);

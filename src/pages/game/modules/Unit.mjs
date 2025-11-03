@@ -264,7 +264,7 @@ Object.assign(Unit.prototype, {
 							return;
 					}
 					break;
-				case 'homesteader':
+				case 'farmer':
 					switch (action) {
 						// Build farm
 						case 'f':

@@ -127,7 +127,7 @@
 				"swamp": 24
 			}
 		},
-		"homesteader": {
+		"farmer": {
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,

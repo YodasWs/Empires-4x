@@ -240,7 +240,7 @@ export function OpenUnitActionMenu(hex) {
 						possibleActions.push('b');
 					}
 					break;
-				case 'homesteader':
+				case 'farmer':
 					// TODO: Centralize check for hex's overlay
 					[
 						'f',

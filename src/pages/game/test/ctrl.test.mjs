@@ -78,9 +78,9 @@ describe('Faction class', () => {
 	test('filterValidUnits removes deleted units', (t) => {
 		t.skip('Need to decouple Unit from Phaser to run this test');
 		return;
-		const validUnit1 = new Unit('homesteader', unitOptions);
+		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
-		const deletedUnit1 = new Unit('homesteader', unitOptions);
+		const deletedUnit1 = new Unit('farmer', unitOptions);
 		const deletedUnit2 = new Unit('rancher', unitOptions);
 		deletedUnit1.destroy();
 		deletedUnit2.destroy();
@@ -194,7 +194,7 @@ describe('Tile class', () => {
 	it('should have a Nation owner', (t) => {
 		t.todo('Not yet implemented');
 	});
-	it('should have a Set of Laborer', (t) => {
+	it('should have a Set of Laborers', (t) => {
 		t.todo('Not yet implemented');
 	});
 	it('should accept a new Laborer', (t) => {
