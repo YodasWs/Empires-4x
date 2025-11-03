@@ -5,7 +5,6 @@ import { Actions } from './Actions.mjs';
 import City from './City.mjs';
 import * as Hex from './Hex.mjs';
 import Laborer from './Laborer.mjs';
-import { FindPath, Grid, IsLegalMove, MovementCost } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
 
 const offscreen = globalThis.window === undefined ? -10000
@@ -48,7 +47,7 @@ export function init() {
 	MainGameScene = currentGame.scenes.getScene('mainGameScene');
 }
 
-function hideActionSprites() {
+export function hideActionSprites() {
 	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
 	actionOutlines.graphics?.destroy();
 	while (actionOutlines.text.length > 0) {
@@ -65,7 +64,7 @@ function Unit(unitType, {
 		throw new TypeError(`Unknown unit '${unitType}'`);
 	}
 	// Add sprite
-	const { x, y } = Grid.getHex({ row, col });
+	const { x, y } = Hex.Grid.getHex({ row, col });
 	const sprite = MainGameScene.add.sprite(x, y, `unit.${unitType}`)
 		.setTint(0x383838)
 		.setDepth(GameConfig.depths.inactiveUnits);
@@ -84,7 +83,7 @@ function Unit(unitType, {
 		},
 		hex: {
 			enumerable: true,
-			get: () => Grid.getHex({ row: this.row, col: this.col }),
+			get: () => Hex.Grid.getHex({ row: this.row, col: this.col }),
 		},
 		faction: {
 			enumerable: true,
@@ -107,7 +106,7 @@ function Unit(unitType, {
 Object.assign(Unit.prototype, {
 	activate() {
 		hideActionSprites();
-		const thisHex = Grid.getHex({ row: this.row, col: this.col });
+		const thisHex = Hex.Grid.getHex({ row: this.row, col: this.col });
 		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
 
 		// Pan camera to active unit
@@ -128,7 +127,7 @@ Object.assign(Unit.prototype, {
 
 		// Continue on path
 		if (Array.isArray(this.path) && this.path.length > 0) {
-			while (this.moves >= MovementCost(this, this.path[0])) {
+			while (this.moves >= Hex.MovementCost(this, this.path[0])) {
 				this.doAction('moveTo', this.path.shift());
 			}
 			this.deactivate(true);
@@ -151,8 +150,8 @@ Object.assign(Unit.prototype, {
 			'O',
 		].forEach((move) => {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-			if (IsLegalMove(row, col, this)) {
-				const hex = Grid.getHex({ row, col });
+			if (Hex.IsLegalMove(row, col, this)) {
+				const hex = Hex.Grid.getHex({ row, col });
 				const text = MainGameScene.add.text(
 					hex.x - GameConfig.tileWidth / 2,
 					hex.y + GameConfig.tileWidth / 6,
@@ -205,12 +204,12 @@ Object.assign(Unit.prototype, {
 		}
 		// Move unit
 		if (action === 'moveTo' && Hex.isHex(hex)) {
-			if (Grid.distance(this.hex, hex) === 1) {
+			if (Hex.Grid.distance(this.hex, hex) === 1) {
 				// Neighbor, move there
 				this.moveTo(hex);
 			} else {
 				// Find path
-				const path = FindPath(this.hex, hex, this);
+				const path = Hex.FindPath(this.hex, hex, this);
 				if (!Array.isArray(path) || path.length === 0) {
 					// TODO: Warn User no path was found
 					console.warn('Sam, no path found!');
@@ -229,9 +228,9 @@ Object.assign(Unit.prototype, {
 			'l',
 		].includes(action)) {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			this.moveTo(Grid.getHex({ row, col }));
+			this.moveTo(Hex.Grid.getHex({ row, col }));
 		} else if (action === 'c') {
-			const thisHex = Grid.getHex({ row: this.row, col: this.col});
+			const thisHex = Hex.Grid.getHex({ row: this.row, col: this.col});
 			if (!Actions['c'].isValidOption({ hex: thisHex, faction: this.faction })) {
 				// TODO: Show message to Player that territory already belongs to them!
 				console.warn('Sam, you own this already');
@@ -241,7 +240,7 @@ Object.assign(Unit.prototype, {
 			thisHex.tile.claimTerritory(this.faction, 10);
 			this.deactivate(true);
 		} else {
-			const thisHex = Grid.getHex({ row: this.row, col: this.col});
+			const thisHex = Hex.Grid.getHex({ row: this.row, col: this.col});
 			// Unit-specific actions
 			switch (this.unitType) {
 				case 'settler':
@@ -303,7 +302,7 @@ Object.assign(Unit.prototype, {
 	},
 	moveTo(hex) {
 		if (!Hex.isHex(hex)) return;
-		if (!IsLegalMove(hex.row, hex.col, this)) return;
+		if (!Hex.IsLegalMove(hex.row, hex.col, this)) return;
 		this.row = hex.row;
 		this.col = hex.col;
 		// TODO: Chain tweens to multiple hexes instead of straight to last hex
@@ -318,7 +317,7 @@ Object.assign(Unit.prototype, {
 				tween.destroy();
 			},
 		});
-		this.moves -= MovementCost(this, hex);
+		this.moves -= Hex.MovementCost(this, hex);
 		if (this.moves <= 0) this.deactivate();
 	},
 });

@@ -12,7 +12,7 @@ import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Nation from '../modules/Nation.mjs';
 import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
-import { FindPath, Grid, IsLegalMove, MovementCost } from '../modules/Hex.mjs';
+import * as Hex from '../modules/Hex.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
 describe('Game Configuration', () => {

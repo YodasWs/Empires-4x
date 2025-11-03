@@ -176,9 +176,6 @@ function Tile({
 	});
 }
 Object.assign(Tile.prototype, {
-	isTile(tile) {
-		return tile instanceof Tile;
-	},
 	claimTerritory(factionOrNation, claimIncrement = 0) {
 		if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
 			let prevPlayer = undefined;
@@ -204,4 +201,7 @@ Object.assign(Tile.prototype, {
 		}
 	},
 });
+Tile.isTile = function isTile(tile) {
+	return tile instanceof Tile;
+};
 export default Tile;

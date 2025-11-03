@@ -8,26 +8,11 @@ import Goods from './modules/Goods.mjs';
 import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
-import { default as Unit, init as initUnitModule } from './modules/Unit.mjs';
+import Unit, * as UnitUtils from './modules/Unit.mjs';
 import * as Hex from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
-
-// Searches all players units to find any units on the specified hex
-function getUnitsOnHex(hex) {
-	if (!Hex.isHex(hex)) return [];
-
-	const units = [];
-	currentGame.players.forEach(player => {
-		player.units.forEach(unit => {
-			if (unit.hex.row === hex.row && unit.hex.col === hex.col && !unit.deleted) {
-				units.push(unit);
-			}
-		});
-	});
-	return units;
-}
 
 const scale = 0.5;
 
@@ -40,7 +25,7 @@ const config = {
 	scene: {
 		key: 'mainGameScene',
 		preload() {
-			initUnitModule();
+			UnitUtils.init();
 			// Load World Tile Images
 			Object.entries(json.world.terrains).forEach(([key, terrain]) => {
 				this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
@@ -187,7 +172,7 @@ const config = {
 			this.input.on('pointerup', (pointer) => {
 				if (!isDragging) {
 					// Treat as click
-					OpenUnitActionMenu(Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
+					OpenUnitActionMenu(Hex.Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
 				}
 				// Reset drag state
 				isDragging = false;
@@ -237,7 +222,7 @@ const config = {
 			this.events.on('pause', () => {
 				console.log('Sam, mainGameScene paused');
 				currentGame.scenes.sleep('mainControls');
-				hideActionSprites();
+				UnitUtils.hideActionSprites();
 			});
 			this.events.on('resume', () => {
 				console.log('Sam, mainGameScene resumed');

@@ -5,6 +5,20 @@ import Tile from './Tile.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
 
+// Searches all players' units to find all units on the specified hex
+function getUnitsOnHex(hex) {
+	if (!Hex.isHex(hex)) return [];
+	const units = [];
+	currentGame.players.forEach((player) => {
+		player.units.forEach((unit) => {
+			if (Unit.isActivatableUnit(unit) && unit.hex.row === hex.row && unit.hex.col === hex.col) {
+				units.push(unit);
+			}
+		});
+	});
+	return units;
+}
+
 // TODO: This object should define every action and handle all of each action's programming
 function Action(def) {
 	Object.keys(def).forEach((key) => {
@@ -35,7 +49,7 @@ export const Actions = [
 		key: 'moveTo',
 		text: ({ hex }) => Hex.isHex(hex) ? `Move to ${hex.row}×${hex.col}` : 'Move here',
 		isValidOption({ hex, unit }) {
-			return IsLegalMove(hex.row, hex.col, unit);
+			return Hex.IsLegalMove(hex.row, hex.col, unit);
 		},
 	},
 	{
@@ -107,7 +121,7 @@ export const Actions = [
 				return false;
 			}
 			// Make sure there is no city on this tile or an adjacent tile
-			if (Grid.traverse(Honeycomb.spiral({
+			if (Hex.Grid.traverse(Honeycomb.spiral({
 				start: [ hex.q, hex.r ],
 				radius: 1,
 			})).filter((hex) => {
@@ -241,7 +255,7 @@ export function OpenUnitActionMenu(hex) {
 			if (Actions['c'].isValidOption({ hex, faction: currentGame.activeUnit.faction })) {
 				possibleActions.push('c');
 			}
-		} else if (IsLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
+		} else if (Hex.IsLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
 			// Offer to move unit here
 			possibleActions.push('moveTo');
 		}
@@ -271,7 +285,7 @@ export function OpenUnitActionMenu(hex) {
 	if (possibleActions.length === 1 && typeof possibleActions[0] === 'object') switch (possibleActions[0].action) {
 		case 'moveTo':
 			// Automatically move to adjacent hex
-			if (Grid.distance(currentGame.activeUnit.hex, hex) === 1) {
+			if (Hex.Grid.distance(currentGame.activeUnit.hex, hex) === 1) {
 				currentGame.activeUnit.doAction('moveTo', hex);
 				return;
 			}

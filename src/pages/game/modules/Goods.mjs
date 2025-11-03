@@ -37,13 +37,19 @@ function Goods({
 		num: {
 			enumerable: true,
 			get: () => num,
+			set(val) {
+				if (!Number.isInteger(val) || val < 0) {
+					throw new TypeError('Goods.num expects to be assigned a nonnegative integer!');
+				}
+				num = val;
+			},
 		},
 		rounds: {
 			enumerable: true,
 			get: () => rounds,
 			set(val) {
-				if (!Number.isFinite(val) || val < 0) {
-					throw new TypeError('Goods.rounds expects to be assigned a positive number!');
+				if (!Number.isInteger(val) || val < 0) {
+					throw new TypeError('Goods.rounds expects to be assigned a nonnegative integer!');
 				}
 				rounds = val;
 			},
