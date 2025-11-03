@@ -1,15 +1,45 @@
 import City from './City.mjs';
 import * as Hex from './Hex.mjs';
 import Tile from './Tile.mjs';
-import * as utils from '../utils/LaborerUtils.mjs';
+
+// Thanks to Microsoft Copilot for this name generator!
+export function generateRomanBritishName() {
+	const praenomina = [
+		'Gaius', 'Lucius', 'Marcus', 'Quintus', 'Titus', 'Publius', 'Aulus', 'Sextus',
+	];
+
+	const celticNames = [
+		'Bran', 'Cai', 'Elen', 'Rhiannon', 'Taran', 'Mabon', 'Nia', 'Owain',
+	];
+
+	const cognomina = [
+		'Agricola', 'Felix', 'Silvanus', 'Varus', 'Florus', 'Crispus', 'Severus', 'Vitalis',
+	];
+
+	const epithets = [
+		'the Smith', 'of Londinium', 'the Younger', 'the Red', 'from Camulodunum', 'the Hunter',
+	];
+
+	const first = Math.random() < 0.5
+		? praenomina[Math.floor(Math.random() * praenomina.length)]
+		: celticNames[Math.floor(Math.random() * celticNames.length)];
+
+	const last = cognomina[Math.floor(Math.random() * cognomina.length)];
+	const epithet = Math.random() < 0.3
+		? epithets[Math.floor(Math.random() * epithets.length)]
+		: '';
+
+	return `${first} ${last} ${epithet}`.trim();
+}
 
 function Laborer({
 	city,
 	hex,
+	sprite: 'laborers.farmer',
 	tile,
-}) {
-	const name = utils.generateRomanBritishName();
-	if (city instanceof City) {
+} = {}) {
+	const name = generateRomanBritishName();
+	if (City.isCity(city)) {
 		Object.defineProperty(this, 'city', {
 			enumerable: true,
 			get: () => city,
@@ -34,12 +64,11 @@ function Laborer({
 		},
 		sprite: {
 			enumerable: true,
-			get: () => 'laborers.farmer',
+			get: () => sprite,
 		},
 	});
 }
 Object.assign(Laborer.prototype, {
-	FOOD_CONSUMPTION: 2,
 	assignTile(tile) {
 		if (!Tile.isTile(tile)) {
 			throw new TypeError('Laborer.assignTile expects to be passed object instance of Tile!');
@@ -48,4 +77,5 @@ Object.assign(Laborer.prototype, {
 		this.tile = tile;
 	},
 });
+Laborer.FOOD_CONSUMPTION = 2;
 export default Laborer;

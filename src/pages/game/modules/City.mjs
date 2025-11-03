@@ -78,4 +78,7 @@ function City({
 }
 Object.assign(City.prototype, {
 });
+City.isCity = function isCity(city) {
+	return city instanceof City;
+}
 export default City;

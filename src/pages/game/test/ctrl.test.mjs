@@ -8,7 +8,7 @@ import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
 import City from '../modules/City.mjs';
 import Faction, * as FactionUtils from '../modules/Faction.mjs';
 import Goods from '../modules/Goods.mjs';
-import Laborer from '../modules/Laborer.mjs';
+import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Nation from '../modules/Nation.mjs';
 import Tile from '../modules/Tile.mjs';
 import { default as Unit, init as initUnitModule } from '../modules/Unit.mjs';
@@ -136,6 +136,26 @@ describe('Goods class', () => {
 });
 
 describe('Laborer class', () => {
+	test('generateRomanBritishName returns a non-empty string', () => {
+		const name = LaborerUtils.generateRomanBritishName();
+		assert.equal(typeof name, 'string');
+		assert.true(name.length > 0);
+	});
+	it('should be assigned housing', (t) => {
+		t.todo('Not yet implemented');
+	});
+	it('should be assigned a tile to work', (t) => {
+		t.todo('Not yet implemented');
+	});
+	it('should be reassigned which tile to work', (t) => {
+		t.todo('Not yet implemented');
+	});
+	it('should consume Food at the end of the Round', (t) => {
+		t.todo('Not yet implemented');
+	});
+	it('should die if (not given enough Food', (t) => {
+		t.todo('Not yet implemented');
+	});
 });
 
 describe('Nation class', () => {
