@@ -627,24 +627,6 @@ yodasws.page('pageGame').setRoute({
 		}, 1000);
 	}, 1000);
 
-	game.scene.add('main-menu', {
-		preload() {
-		},
-		create() {
-		},
-		update() {
-		},
-	});
-
-	game.scene.add('tech-tree', {
-		preload() {
-		},
-		create() {
-		},
-		update() {
-		},
-	});
-
 	Object.assign(currentGame, {
 		scenes: game.scene,
 		domContainer: game.domContainer,
