@@ -11,7 +11,7 @@ import Goods from '../modules/Goods.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Nation from '../modules/Nation.mjs';
 import Tile from '../modules/Tile.mjs';
-import { default as Unit, init as initUnitModule } from '../modules/Unit.mjs';
+import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import { FindPath, Grid, IsLegalMove, MovementCost } from '../modules/Hex.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
@@ -209,4 +209,35 @@ describe('Tile class', () => {
 });
 
 describe('Unit class', () => {
+	test('actionTileCoordinates handles all directions for even column', () => {
+		const row = 5;
+		const col = 2;
+		const expected = {
+			u: [4, 1],
+			i: [4, 2],
+			o: [4, 3],
+			j: [5, 1],
+			k: [6, 2],
+			l: [5, 3],
+		};
+		Object.entries(expected).forEach(([dir, coords]) => {
+			assert.deepEqual(UnitUtils.actionTileCoordinates(dir, row, col), coords);
+		});
+	});
+
+	test('actionTileCoordinates handles all directions for odd column', () => {
+		const row = 5;
+		const col = 3;
+		const expected = {
+			u: [5, 2],
+			i: [4, 3],
+			o: [5, 4],
+			j: [6, 2],
+			k: [6, 3],
+			l: [6, 4],
+		};
+		Object.entries(expected).forEach(([dir, coords]) => {
+			assert.deepEqual(UnitUtils.actionTileCoordinates(dir, row, col), coords);
+		});
+	});
 });

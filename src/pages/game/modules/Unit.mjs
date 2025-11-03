@@ -1,6 +1,5 @@
 import * as GameConfig from './Config.mjs';
 import World from '../../../json/world.mjs';
-import * as utils from '../utils/UnitUtils.mjs';
 
 import { Actions } from './Actions.mjs';
 import City from './City.mjs';
@@ -16,6 +15,34 @@ const actionOutlines = {
 };
 
 let MainGameScene;
+
+export function actionTileCoordinates(action, row, col) {
+	switch (action) {
+		case 'u':
+			if (col % 2 == 0) row--;
+			col--;
+			break;
+		case 'i':
+			row--;
+			break;
+		case 'o':
+			if (col % 2 == 0) row--;
+			col++;
+			break;
+		case 'j':
+			if (col % 2 == 1) row++;
+			col--;
+			break;
+		case 'k':
+			row++;
+			break;
+		case 'l':
+			if (col % 2 == 1) row++;
+			col++;
+			break;
+	}
+	return [row, col];
+}
 
 export function init() {
 	MainGameScene = currentGame.scenes.getScene('mainGameScene');
@@ -34,7 +61,9 @@ function Unit(unitType, {
 	col,
 	faction,
 }) {
-	utils.validateUnitType(unitType);
+	if (typeof (World.units[unitType] ?? false) !== 'object') {
+		throw new TypeError(`Unknown unit '${unitType}'`);
+	}
 	// Add sprite
 	const { x, y } = Grid.getHex({ row, col });
 	const sprite = MainGameScene.add.sprite(x, y, `unit.${unitType}`)
@@ -42,11 +71,12 @@ function Unit(unitType, {
 		.setDepth(GameConfig.depths.inactiveUnits);
 	sprite.setScale(GameConfig.unitWidth / sprite.width);
 
-	// Define properties
+	const base = World.units[unitType];
 	this.col = col;
 	this.row = row;
 	this.path = [];
 	this.deleted = false;
+
 	Object.defineProperties(this, {
 		base: {
 			enumerable: true,
@@ -120,7 +150,7 @@ Object.assign(Unit.prototype, {
 			'I',
 			'O',
 		].forEach((move) => {
-			const [row, col] = utils.actionTileCoordinates(move.toLowerCase(), this.row, this.col);
+			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (IsLegalMove(row, col, this)) {
 				const hex = Grid.getHex({ row, col });
 				const text = MainGameScene.add.text(
@@ -198,7 +228,7 @@ Object.assign(Unit.prototype, {
 			'k',
 			'l',
 		].includes(action)) {
-			const [row, col] = utils.actionTileCoordinates(action, this.row, this.col);
+			const [row, col] = actionTileCoordinates(action, this.row, this.col);
 			this.moveTo(Grid.getHex({ row, col }));
 		} else if (action === 'c') {
 			const thisHex = Grid.getHex({ row: this.row, col: this.col});
