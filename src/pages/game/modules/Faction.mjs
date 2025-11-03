@@ -2,7 +2,24 @@ import World from './../../../json/world.mjs';
 
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
-import * as utils from '../utils/FactionUtils.mjs';
+
+export function getFactionColor(index) {
+	return [
+		0x32cd32,
+		0xff0000,
+		0x0000ff,
+	][index] ?? 0xaaaaaa;
+}
+
+export function getNextMovableUnit(units, activeUnit) {
+	for (let i = 0; i < units.length; i++) {
+		const unitIndex = (activeUnit + 1 + i) % units.length;
+		if (Unit.isMovableUnit(units[unitIndex])) {
+			return units[unitIndex];
+		}
+	}
+	return false;
+}
 
 let activeUnit = null;
 
@@ -10,13 +27,14 @@ let activeUnit = null;
 function Faction({
 	index,
 }) {
+	const color = getFactionColor(index);
 	const name = World?.FactionNames[index];
 	let money = 0;
 	let units = [];
 	Object.defineProperties(this, {
 		color: {
 			enumerable: true,
-			get: () => utils.getFactionColor(index),
+			get: () => color,
 		},
 		index: {
 			enumerable: true,
@@ -47,12 +65,17 @@ function Faction({
 				if (!Array.isArray(val)) {
 					throw new TypeError('Faction.units expects to be assigned an Array!');
 				}
-				units = utils.filterValidUnits(units);
+				units = val.filter(Unit.isActivatableUnit);
 			},
 		},
 		activeUnit: {
 			enumerable: true,
-			get: () => utils.getActiveUnit(units, activeUnit),
+			get: () => {
+				if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
+					return units[activeUnit];
+				}
+				return undefined;
+			},
 			set(val) {
 				if (Number.isInteger(val) && val >= 0) {
 					if (val >= units.length) {
@@ -80,8 +103,8 @@ Object.assign(Faction.prototype, {
 		}));
 	},
 	checkEndTurn() {
-		let isActiveUnit = this.activateNext();
-		if (!isActiveUnit) {
+		const isMovableUnit = this.activateNext();
+		if (!isMovableUnit) {
 			currentGame.endTurn();
 		}
 	},
@@ -91,7 +114,7 @@ Object.assign(Faction.prototype, {
 			return false;
 		}
 		const unit = this.units[intUnit];
-		if (!utils.activatableUnit(this.units[intUnit])) {
+		if (!Unit.isActivatableUnit(this.units[intUnit])) {
 			return false;
 		}
 		unit.activate();
@@ -99,7 +122,16 @@ Object.assign(Faction.prototype, {
 		return true;
 	},
 	activateNext() {
-		return utils.getNextActivatableUnit(this.units, activeUnit);
+		const nextUnit = getNextMovableUnit(this.units, activeUnit);
+		if (Unit.isMovableUnit(nextUnit)) {
+			activeUnit = this.units.indexOf(nextUnit);
+			nextUnit.activate();
+			return true;
+		}
+		return false;
 	},
 });
+Faction.isFaction = function isFaction(faction) {
+	return faction instanceof Faction;
+}
 export default Faction;

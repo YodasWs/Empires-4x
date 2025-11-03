@@ -292,4 +292,13 @@ Object.assign(Unit.prototype, {
 		if (this.moves <= 0) this.deactivate();
 	},
 });
+Unit.isUnit = function isUnit(unit) {
+	return unit instanceof Unit;
+}
+Unit.isActivatableUnit = function isActivatableUnit(unit) {
+	return Unit.isUnit(unit) && unit.deleted === false;
+}
+Unit.isMovableUnit = function isMovableUnit(unit) {
+	return Unit.isActivatableUnit(unit) && unit.moves > 0;
+}
 export default Unit;

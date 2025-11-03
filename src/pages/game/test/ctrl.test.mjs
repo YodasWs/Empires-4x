@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { describe, it, test } from 'node:test';
 import assert from './assert.mjs';
 
 import * as Honeycomb from 'honeycomb-grid';
@@ -6,7 +6,7 @@ import * as GameConfig from '../modules/Config.mjs';
 
 import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
 import City from '../modules/City.mjs';
-import Faction from '../modules/Faction.mjs';
+import Faction, * as FactionUtils from '../modules/Faction.mjs';
 import Goods from '../modules/Goods.mjs';
 import Laborer from '../modules/Laborer.mjs';
 import Nation from '../modules/Nation.mjs';
@@ -26,13 +26,21 @@ describe('City class', () => {
 });
 
 describe('Faction class', () => {
-	it('initializes with correct color and index', () => {
+	const unitOptions = {
+		row: 0,
+		col: 0,
+		faction: {
+			index: 0,
+		},
+	};
+
+	test('initializes with correct color and index', () => {
 		const faction = new Faction({ index: 1 });
 		assert.equal(faction.index, 1);
 		assert.equal(faction.color, 0xff0000);
 	});
 
-	it('Faction.money setter enforces positive numbers', () => {
+	test('Faction.money setter enforces positive numbers', () => {
 		const faction = new Faction({ index: 0 });
 		faction.money = 100;
 		assert.equal(faction.money, 100);
@@ -41,15 +49,15 @@ describe('Faction class', () => {
 		}, 'expects to be assigned a positive number');
 	});
 
-	it('addUnit adds a new Unit to faction', async (t) => {
+	test('addUnit adds a new Unit to faction', async (t) => {
 		t.todo('Not yet implemented');
 	});
 
-	it('activateUnit calls activate on valid unit', async (t) => {
+	test('activateUnit calls activate on valid unit', async (t) => {
 		t.todo('Not yet implemented');
 	});
 
-	it('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
+	test('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
 		const mockEndTurn = t.mock.fn();
 		t.mock.method(currentGame, 'endTurn', mockEndTurn);
 
@@ -58,6 +66,66 @@ describe('Faction class', () => {
 		faction.checkEndTurn();
 
 		assert.equal(mockEndTurn.mock.callCount(), 1);
+	});
+
+	test('getFactionColor returns correct color for index', (t) => {
+		assert.equal(FactionUtils.getFactionColor(0), 0x32cd32);
+		assert.equal(FactionUtils.getFactionColor(1), 0xff0000);
+		assert.equal(FactionUtils.getFactionColor(2), 0x0000ff);
+		assert.equal(FactionUtils.getFactionColor(99), 0xaaaaaa);
+	});
+
+	test('filterValidUnits removes deleted units', (t) => {
+		t.skip('Need to decouple Unit from Phaser to run this test');
+		return;
+		const validUnit1 = new Unit('homesteader', unitOptions);
+		const validUnit2 = new Unit('rancher', unitOptions);
+		const deletedUnit1 = new Unit('homesteader', unitOptions);
+		const deletedUnit2 = new Unit('rancher', unitOptions);
+		deletedUnit1.destroy();
+		deletedUnit2.destroy();
+		const units = [
+			validUnit1,
+			deletedUnit1,
+			validUnit2,
+			deletedUnit2,
+		];
+		const result = FactionUtils.filterValidUnits(units);
+		assert.deepEqual(result, [validUnit1, validUnit2]);
+	});
+
+	test('getNextMovableUnit returns correct index', (t) => {
+		t.skip('Need to decouple Unit from Phaser to run this test');
+		return;
+		const units = [
+			{ moves: 0, deleted: false },
+			{ moves: 2, deleted: false },
+			{ moves: 0, deleted: false },
+		];
+		const result = FactionUtils.getNextMovableUnit(units, 0);
+		assert.equal(result, 1);
+	});
+
+	test('getNextMovableUnit wraps around if needed', (t) => {
+		t.skip('Need to decouple Unit from Phaser to run this test');
+		return;
+		const units = [
+			{ moves: 1, deleted: false },
+			{ moves: 0, deleted: false },
+		];
+		const result = FactionUtils.getNextMovableUnit(units, 1);
+		assert.equal(result, 0);
+	});
+
+	test('getNextMovableUnit returns false if no valid unit', (t) => {
+		t.skip('Need to decouple Unit from Phaser to run this test');
+		return;
+		const units = [
+			{ moves: 0, deleted: false },
+			{ moves: 0, deleted: true },
+		];
+		const result = FactionUtils.getNextMovableUnit(units, 0);
+		assert.equal(result, false);
 	});
 });
 
