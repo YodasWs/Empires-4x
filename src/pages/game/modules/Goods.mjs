@@ -1,17 +1,19 @@
+import World from '../../../json/world.mjs';
 import * as GameConfig from './Config.mjs';
 import { currentGame } from './Game.mjs';
 import * as Hex from './Hex.mjs';
-import * as utils from '../utils/GoodsUtils.mjs';
 
 function Goods({
 	num = 1,
 	type,
 	hex,
 } = {}) {
-	if (!Hex.isHex(val)) {
-		throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
+	if (!Hex.isHex(hex)) {
+		throw new TypeError('Goods expects to be assigned a Hex!');
 	}
-	utils.validateGoodsType(type);
+	if (!Goods.isValidGoodsType(type)) {
+		throw new TypeError(`Unknown Goods type '${type}'`);
+	}
 	let rounds = 0;
 	const faction = hex.tile.faction;
 	const scene = currentGame.scenes.getScene('mainGameScene');
@@ -62,4 +64,7 @@ function Goods({
 }
 Object.assign(Goods.prototype, {
 });
+Goods.isValidGoodsType = function isValidGoodsType(type) {
+	return typeof (World.goods[type] ?? false) === 'object';
+}
 export default Goods;

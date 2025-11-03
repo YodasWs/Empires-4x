@@ -130,6 +130,9 @@ describe('Faction class', () => {
 });
 
 describe('Goods class', () => {
+	test('Goods.isValidGoodsType gives false for unknown value', () => {
+		assert.false(Goods.isValidGoodsType('this-is-not-a-good'));
+	});
 });
 
 describe('Laborer class', () => {
