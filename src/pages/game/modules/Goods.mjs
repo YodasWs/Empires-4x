@@ -1,6 +1,6 @@
-import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 import { currentGame } from './Game.mjs';
+import * as Hex from './Hex.mjs';
 import * as utils from '../utils/GoodsUtils.mjs';
 
 function Goods({
@@ -8,7 +8,7 @@ function Goods({
 	type,
 	hex,
 } = {}) {
-	if (!(hex instanceof Honeycomb.Hex)) {
+	if (!Hex.isHex(val)) {
 		throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
 	}
 	utils.validateGoodsType(type);
@@ -26,7 +26,7 @@ function Goods({
 			enumerable: true,
 			get: () => hex,
 			set(val) {
-				if (!(val instanceof Honeycomb.Hex)) {
+				if (!Hex.isHex(val)) {
 					throw new TypeError('Goods.hex expects to be assigned a Honeycomb.Hex!');
 				}
 				hex = val;

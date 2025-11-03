@@ -1,6 +1,5 @@
-import * as Honeycomb from 'honeycomb-grid';
-
 import City from './City.mjs';
+import * as Hex from './Hex.mjs';
 import Tile from './Tile.mjs';
 import * as utils from '../utils/LaborerUtils.mjs';
 
@@ -16,7 +15,7 @@ function Laborer({
 			get: () => city,
 		});
 	}
-	if (hex instanceof Honeycomb.Hex || tile?.hex instanceof Honeycomb.Hex) {
+	if (Hex.isHex(hex) || Hex.isHex(tile?.hex)) {
 		Object.defineProperty(this, 'hex', {
 			enumerable: true,
 			get: () => hex || tile?.hex,

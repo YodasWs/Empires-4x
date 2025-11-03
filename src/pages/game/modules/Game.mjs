@@ -6,7 +6,7 @@ import Faction from './Faction.mjs';
 import Goods from './Goods.mjs';
 import Laborer from './Laborer.mjs';
 import Tile from './Tile.mjs';
-import { FindPath, Grid } from './Hex.mjs';
+import * as Hex from './Hex.mjs';
 
 let FoodSprites = [];
 const FoodSpriteOptions = {
@@ -30,7 +30,7 @@ export const currentGame = {
 			player.units = player.units;
 		});
 		const scene = currentGame.scenes.getScene('mainGameScene');
-		Grid.forEach((hex) => {
+		Hex.Grid.forEach((hex) => {
 			// Adjust each Nations' and Factions' claims on Territory
 			this.nations.forEach((nation) => {
 				if (hex.tile.nation === nation) {
@@ -70,10 +70,10 @@ export const currentGame = {
 		});
 
 		// Check Cities
-		Grid.forEach((hex) => {
+		Hex.Grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				const city = hex.city;
-				Grid.traverse(Honeycomb.spiral({
+				Hex.Grid.traverse(Honeycomb.spiral({
 					start: [ hex.q, hex.r ],
 					radius: 2,
 				})).forEach((hex) => {
@@ -118,7 +118,7 @@ export const currentGame = {
 	} = {}) {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
-		(thisHex instanceof Honeycomb.Hex ? [thisHex] : Grid).forEach((hex) => {
+		(Hex.isHex(thisHex) ? [thisHex] : Hex.Grid).forEach((hex) => {
 			if (!(hex.tile instanceof Tile) || !(hex.tile.faction instanceof Faction)) return;
 			if (fill === false) {
 				graphics.lineStyle(lineWidth, hex.tile.faction.color);
@@ -156,7 +156,7 @@ export const currentGame = {
 
 		// Collect list of villages and cities
 		const cities = [];
-		Grid.forEach((hex) => {
+		Hex.Grid.forEach((hex) => {
 			if (hex.city instanceof City) {
 				cities.push(hex);
 			}
@@ -197,15 +197,15 @@ export const currentGame = {
 			let closestHex = null;
 			let closestDistance = Infinity;
 			cities.forEach((cityHex) => {
-				const dist = Grid.distance(hex, cityHex);
+				const dist = Hex.Grid.distance(hex, cityHex);
 				if (dist < closestDistance) {
 					closestHex = cityHex;
 					closestDistance = dist;
 				}
 			});
 
-			if (closestHex instanceof Honeycomb.Hex && closestHex.city instanceof City) {
-				const path = FindPath(hex, closestHex);
+			if (Hex.isHex(closestHex) && closestHex.city instanceof City) {
+				const path = Hex.FindPath(hex, closestHex);
 				if (Array.isArray(path) && path.length > 0) {
 					const nextHex = path.shift();
 					if (nextHex.city instanceof City) {
@@ -251,7 +251,7 @@ export const currentGame = {
 			}
 		});
 
-		Grid.forEach((hex) => {
+		Hex.Grid.forEach((hex) => {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
 				// TODO: Laborer Starves!
 			}

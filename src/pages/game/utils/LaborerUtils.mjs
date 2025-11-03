@@ -31,5 +31,5 @@ export function generateRomanBritishName() {
 }
 
 export function validateTile(tile) {
-  return tile instanceof Tile;
+	return tile instanceof Tile;
 }

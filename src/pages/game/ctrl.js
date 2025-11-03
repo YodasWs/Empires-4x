@@ -9,14 +9,14 @@ import Laborer from './modules/Laborer.mjs';
 import Nation from './modules/Nation.mjs';
 import Tile from './modules/Tile.mjs';
 import { default as Unit, init as initUnitModule } from './modules/Unit.mjs';
-import { Grid, IsLegalMove, MovementCost } from './modules/Hex.mjs';
+import * as Hex from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
 // Searches all players units to find any units on the specified hex
 function getUnitsOnHex(hex) {
-	if (!(hex instanceof Honeycomb.Hex)) return [];
+	if (!Hex.isHex(hex)) return [];
 
 	const units = [];
 	currentGame.players.forEach(player => {
@@ -76,7 +76,7 @@ const config = {
 			};
 
 			// Build World from Honeycomb Grid
-			Grid.forEach((hex) => {
+			Hex.Grid.forEach((hex) => {
 				const tile = json.world.world[hex.row][hex.col];
 				Object.assign(hex, tile, {
 					tile: new Tile({
@@ -87,7 +87,7 @@ const config = {
 						terrain: tile.terrain,
 					},
 					sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(GameConfig.depths.map).setInteractive(
-						new Phaser.Geom.Polygon(Grid.getHex({ row: 0, col: 0}).corners),
+						new Phaser.Geom.Polygon(Hex.Grid.getHex({ row: 0, col: 0}).corners),
 						Phaser.Geom.Polygon.Contains
 					),
 					text: this.add.text(hex.x - GameConfig.tileWidth / 2, hex.y + GameConfig.tileWidth / 3.6, hex.row + '×' + hex.col, {
@@ -118,8 +118,8 @@ const config = {
 
 			{
 				// TODO: Calculate the zoom and size to show the whole map
-				const w = Grid.pixelWidth;
-				const h = Grid.pixelHeight;
+				const w = Hex.Grid.pixelWidth;
+				const h = Hex.Grid.pixelHeight;
 				const padLeft = window.visualViewport.width / scale / 2;
 				const padTop = window.visualViewport.height / scale / 2;
 				this.cameras.main.setBounds(
@@ -134,7 +134,7 @@ const config = {
 
 				const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
 				minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
-				minimap.centerOn(Grid.pixelWidth / 2, Grid.pixelHeight / 2);
+				minimap.centerOn(Hex.Grid.pixelWidth / 2, Hex.Grid.pixelHeight / 2);
 				minimap.ignore([
 					currentGame.graphics.territoryLines,
 				]);
@@ -381,7 +381,7 @@ yodasws.page('pageGame').setRoute({
 						break;
 						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryLines - 1);
 						// Show territorial claims
-						Grid.forEach((hex) => {
+						Hex.Grid.forEach((hex) => {
 							if (!(hex.tile instanceof Tile)) return;
 							if (!(hex.tile.claims() instanceof Map)) return;
 							hex.tile.claims().forEach((intClaim, player) => {
@@ -419,7 +419,7 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create(data) {
-			if (!(data.hex instanceof Honeycomb.Hex) || !(data.hex.tile instanceof Tile)) {
+			if (!Hex.isHex(data.hex) || !(data.hex.tile instanceof Tile)) {
 				game.scene.resume('mainGameScene');
 				return;
 			}
@@ -461,7 +461,7 @@ yodasws.page('pageGame').setRoute({
 			};
 
 			// Grab and render city hexes
-			Grid.traverse(Honeycomb.spiral({
+			Hex.Grid.traverse(Honeycomb.spiral({
 				start: [ data.hex.q, data.hex.r ],
 				radius: 2,
 			})).forEach((hex) => {
@@ -528,7 +528,7 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create({ hex }) {
-			if (!(hex instanceof Honeycomb.Hex) || !(hex.tile instanceof Tile)) {
+			if (!Hex.isHex(hex) || !(hex.tile instanceof Tile)) {
 				game.scene.resume('mainGameScene');
 				return;
 			}

@@ -16,6 +16,10 @@ class gameHex extends Honeycomb.defineHex({
 	g_cost
 }
 
+export function isHex(hex) {
+	return hex instanceof Honeycomb.Hex;
+}
+
 // The basic resource transporter unit, used to move Goods to the nearest City
 const ResourceTransporter = World.ResourceTransporter;
 
@@ -84,7 +88,7 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 		if (pathHex !== start) {
 			path.unshift(pathHex);
 		}
-	} while (pathHex?.parent instanceof Honeycomb.Hex);
+	} while (isHex(pathHex?.parent));
 
 	return path;
 }
@@ -92,7 +96,7 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 export function IsLegalMove(row, col, unit = ResourceTransporter) {
 	// Grab Target Hex
 	const targetHex = Grid.getHex({ row, col });
-	if (!(targetHex instanceof Honeycomb.Hex)) return false;
+	if (!isHex(targetHex)) return false;
 
 	if (unit instanceof Unit) {
 		// TODO: Check move into City
@@ -116,7 +120,7 @@ export function IsLegalMove(row, col, unit = ResourceTransporter) {
 }
 
 export function MovementCost(unit, nextHex, thisHex = unit.hex) {
-	if (!(nextHex instanceof Honeycomb.Hex)) {
+	if (!isHex(nextHex)) {
 		return Infinity;
 	}
 	if (unit !== ResourceTransporter && !(unit instanceof Unit)) {

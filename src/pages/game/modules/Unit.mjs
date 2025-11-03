@@ -1,10 +1,10 @@
-import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 import World from '../../../json/world.mjs';
 import * as utils from '../utils/UnitUtils.mjs';
 
 import { Actions } from './Actions.mjs';
 import City from './City.mjs';
+import * as Hex from './Hex.mjs';
 import Laborer from './Laborer.mjs';
 import { FindPath, Grid, IsLegalMove, MovementCost } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
@@ -174,7 +174,7 @@ Object.assign(Unit.prototype, {
 			return;
 		}
 		// Move unit
-		if (action === 'moveTo' && hex instanceof Honeycomb.Hex) {
+		if (action === 'moveTo' && Hex.isHex(hex)) {
 			if (Grid.distance(this.hex, hex) === 1) {
 				// Neighbor, move there
 				this.moveTo(hex);
@@ -272,7 +272,7 @@ Object.assign(Unit.prototype, {
 		}
 	},
 	moveTo(hex) {
-		if (!(hex instanceof Honeycomb.Hex)) return;
+		if (!Hex.isHex(hex)) return;
 		if (!IsLegalMove(hex.row, hex.col, this)) return;
 		this.row = hex.row;
 		this.col = hex.col;

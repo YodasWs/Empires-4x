@@ -1,5 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 
+import * as Hex from './Hex.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -31,7 +32,7 @@ Object.assign(Action.prototype, {
 export const Actions = [
 	{
 		key: 'moveTo',
-		text: ({ hex }) => hex instanceof Honeycomb.Hex ? `Move to ${hex.row}×${hex.col}` : 'Move here',
+		text: ({ hex }) => Hex.isHex(hex) ? `Move to ${hex.row}×${hex.col}` : 'Move here',
 		isValidOption({ hex, unit }) {
 			return IsLegalMove(hex.row, hex.col, unit);
 		},
@@ -40,7 +41,7 @@ export const Actions = [
 		key: 'tile',
 		text: 'Information on space',
 		isValidOption({ hex }) {
-			return hex instanceof Honeycomb.Hex && hex.tile instanceof Tile;
+			return Hex.isHex(hex) && hex.tile instanceof Tile;
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
@@ -186,7 +187,7 @@ export function DoAction(evt, hex = null) {
 }
 
 export function OpenUnitActionMenu(hex) {
-	if (!(hex instanceof Honeycomb.Hex) || !(hex.tile instanceof Tile)) {
+	if (!Hex.isHex(hex) || !(hex.tile instanceof Tile)) {
 		// Not valid hex, exit
 		return;
 	}
