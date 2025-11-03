@@ -21,7 +21,7 @@ function Laborer({
 			get: () => hex || tile?.hex,
 		});
 	}
-	if (utils.validateTile(tile) || utils.validateTile(hex?.tile)) {
+	if (Tile.isTile(tile) || Tile.isTile(hex?.tile)) {
 		Object.defineProperty(this, 'tile', {
 			enumerable: true,
 			get: () => tile || hex?.tile,
@@ -41,7 +41,7 @@ function Laborer({
 Object.assign(Laborer.prototype, {
 	FOOD_CONSUMPTION: 2,
 	assignTile(tile) {
-		if (!(utils.validateTile(tile))) {
+		if (!Tile.isTile(tile)) {
 			throw new TypeError('Laborer.assignTile expects to be passed object instance of Tile!');
 		}
 		// TODO: Check if Tile has already been assigned and is at its capacity

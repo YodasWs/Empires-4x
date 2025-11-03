@@ -119,7 +119,7 @@ export const currentGame = {
 		// TODO: Mark only the boundaries of territory
 		// https://www.redblobgames.com/x/1541-hex-region-borders/
 		(Hex.isHex(thisHex) ? [thisHex] : Hex.Grid).forEach((hex) => {
-			if (!(hex.tile instanceof Tile) || !(hex.tile.faction instanceof Faction)) return;
+			if (!Tile.isTile(hex.tile) || !(hex.tile.faction instanceof Faction)) return;
 			if (fill === false) {
 				graphics.lineStyle(lineWidth, hex.tile.faction.color);
 			} else {

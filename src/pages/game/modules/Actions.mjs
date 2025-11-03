@@ -1,6 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 
 import * as Hex from './Hex.mjs';
+import Tile from './Tile.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -41,7 +42,7 @@ export const Actions = [
 		key: 'tile',
 		text: 'Information on space',
 		isValidOption({ hex }) {
-			return Hex.isHex(hex) && hex.tile instanceof Tile;
+			return Hex.isHex(hex) && Tile.isTile(hex.tile);
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
@@ -187,7 +188,7 @@ export function DoAction(evt, hex = null) {
 }
 
 export function OpenUnitActionMenu(hex) {
-	if (!Hex.isHex(hex) || !(hex.tile instanceof Tile)) {
+	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) {
 		// Not valid hex, exit
 		return;
 	}

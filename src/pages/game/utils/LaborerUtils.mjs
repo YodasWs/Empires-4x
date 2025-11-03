@@ -29,7 +29,3 @@ export function generateRomanBritishName() {
 
 	return `${first} ${last} ${epithet}`.trim();
 }
-
-export function validateTile(tile) {
-	return tile instanceof Tile;
-}

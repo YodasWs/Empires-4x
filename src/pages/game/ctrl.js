@@ -382,7 +382,7 @@ yodasws.page('pageGame').setRoute({
 						const graphics = currentGame.graphics.gfxClaims = currentGame.scenes.getScene('mainGameScene').add.graphics({ x: 0, y: 0 }).setDepth(GameConfig.depths.territoryLines - 1);
 						// Show territorial claims
 						Hex.Grid.forEach((hex) => {
-							if (!(hex.tile instanceof Tile)) return;
+							if (!Tile.isTile(hex.tile)) return;
 							if (!(hex.tile.claims() instanceof Map)) return;
 							hex.tile.claims().forEach((intClaim, player) => {
 								if (hex.tile.player === player) return;
@@ -419,7 +419,7 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create(data) {
-			if (!Hex.isHex(data.hex) || !(data.hex.tile instanceof Tile)) {
+			if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile)) {
 				game.scene.resume('mainGameScene');
 				return;
 			}
@@ -528,7 +528,7 @@ yodasws.page('pageGame').setRoute({
 		preload() {
 		},
 		create({ hex }) {
-			if (!Hex.isHex(hex) || !(hex.tile instanceof Tile)) {
+			if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) {
 				game.scene.resume('mainGameScene');
 				return;
 			}
