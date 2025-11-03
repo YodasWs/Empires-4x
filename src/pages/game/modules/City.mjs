@@ -5,7 +5,6 @@ import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
 import { Grid } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
-import * as utils from '../utils/CityUtils.mjs';
 
 let scene = null;
 function City({
@@ -17,7 +16,9 @@ function City({
 	if (scene === null) {
 		scene = currentGame.scenes.getScene('mainGameScene');
 	}
-	utils.validateNation(nation);
+	if (!Nation.isNation(nation)) {
+		throw new TypeError('City expects to be assigned a Nation!');
+	}
 
 	// Tie to hex
 	const thisHex = Grid.getHex({ row, col });

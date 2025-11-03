@@ -27,4 +27,7 @@ function Nation({
 }
 Object.assign(Nation.prototype, {
 });
+Nation.isNation = function isNation(nation) {
+	return nation instanceof Nation;
+}
 export default Nation;
