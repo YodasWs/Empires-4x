@@ -1,9 +1,5 @@
 import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-
-// Expand assert with convenience methods
-assert.false = (val) => assert.equal(val, false);
-assert.true = (val) => assert.equal(val, true);
+import assert from './assert.mjs';
 
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
