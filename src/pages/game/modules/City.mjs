@@ -5,6 +5,7 @@ import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
 import { Grid } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
+import * as utils from '../utils/CityUtils.mjs';
 
 let scene = null;
 function City({
@@ -16,9 +17,7 @@ function City({
 	if (scene === null) {
 		scene = currentGame.scenes.getScene('mainGameScene');
 	}
-	if (!(nation instanceof Nation)) {
-		throw new TypeError('City expects to be assigned a Nation!');
-	}
+	utils.validateNation(nation);
 
 	// Tie to hex
 	const thisHex = Grid.getHex({ row, col });
@@ -47,13 +46,6 @@ function City({
 	});
 
 	// Properties
-	this.housing = (() => {
-		switch (level) {
-			case 1: return 3;
-			case 2: return 6;
-		}
-		return 0;
-	})();
 	Object.defineProperties(this, {
 		hex: {
 			enumerable: true,
@@ -80,10 +72,6 @@ function City({
 		level: {
 			enumerable: true,
 			get: () => level,
-		},
-		housing: {
-			enumerable: true,
-			get: () => this.housing,
 		},
 	});
 }
