@@ -35,7 +35,7 @@ export function generateRomanBritishName() {
 function Laborer({
 	city,
 	hex,
-	sprite: 'laborers.farmer',
+	sprite = 'laborers.farmer',
 	tile,
 } = {}) {
 	const name = generateRomanBritishName();

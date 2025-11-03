@@ -159,20 +159,28 @@ describe('Laborer class', () => {
 });
 
 describe('Nation class', () => {
-	const n = new Nation({
-		index: 0,
+	it('should have the correct color', () => {
+		assert.equal(new Nation({ index: 0 }).color, 0x32cd32);
+		assert.equal(new Nation({ index: 1 }).color, 0xff0000);
+		assert.equal(new Nation({ index: 2 }).color, 0x0000ff);
+		assert.equal(new Nation({ index: 99 }).color, 0xaaaaaa);
 	});
-	it('should have a color', (t) => {
-		t.todo('Not yet implemented');
+
+	it('should have the correct frame', () => {
+		assert.equal(new Nation({ index: 0 }).frame, 1);
+		assert.equal(new Nation({ index: 1 }).frame, 2);
+		assert.equal(new Nation({ index: 2 }).frame, 0);
 	});
-	it('should have a frame', (t) => {
-		t.todo('Not yet implemented');
+
+	it('should have the correct index', () => {
+		assert.equal(new Nation({ index: 0 }).index, 0);
+		assert.equal(new Nation({ index: 1 }).index, 1);
+		assert.equal(new Nation({ index: 2 }).index, 2);
 	});
-	it('should have an index', (t) => {
-		t.todo('Not yet implemented');
-	});
-	it('should be the Roman Empire', (t) => {
-		t.todo('Not yet implemented');
+
+	it('should have the correct name', () => {
+		assert.equal(new Nation({ index: 0 }).name, 'Roman Empire');
+		assert.equal(new Nation({ index: 1 }).name, 'Unknown');
 	});
 });
 

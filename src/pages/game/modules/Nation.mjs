@@ -1,11 +1,15 @@
 import World from '../../../json/world.mjs';
-import * as utils from '../utils/NationUtils.mjs';
 
 function Nation({
 	index,
 }) {
-	const color = utils.getNationColor(index);
-	const name = utils.getNationName(index);
+	const color = [
+		0x32cd32,
+		0xff0000,
+		0x0000ff,
+	][index] ?? 0xaaaaaa;
+	const frame = (index + 1) % 3;
+	const name = World.NationNames?.[index] ?? 'Unknown';
 	Object.defineProperties(this, {
 		color: {
 			enumerable: true,
@@ -13,7 +17,7 @@ function Nation({
 		},
 		frame: {
 			enumerable: true,
-			get: () => utils.getNationFrame(index),
+			get: () => frame,
 		},
 		index: {
 			enumerable: true,
