@@ -14,13 +14,11 @@ import { currentGame } from './modules/Game.mjs';
 
 const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 
-const scale = 0.5;
-
 const config = {
 	type: Phaser.AUTO,
-	height: window.visualViewport.height / scale,
-	width: window.visualViewport.width / scale,
-	zoom: scale,
+	height: window.visualViewport.height / GameConfig.scale,
+	width: window.visualViewport.width / GameConfig.scale,
+	zoom: GameConfig.scale,
 	backgroundColor: '#71ABFF',
 	scene: {
 		key: 'mainGameScene',
@@ -105,8 +103,8 @@ const config = {
 				// TODO: Calculate the zoom and size to show the whole map
 				const w = Hex.Grid.pixelWidth;
 				const h = Hex.Grid.pixelHeight;
-				const padLeft = window.visualViewport.width / scale / 2;
-				const padTop = window.visualViewport.height / scale / 2;
+				const padLeft = window.visualViewport.width / GameConfig.scale / 2;
+				const padTop = window.visualViewport.height / GameConfig.scale / 2;
 				this.cameras.main.setBounds(
 					-padLeft,
 					-padTop,
@@ -117,7 +115,7 @@ const config = {
 					currentGame.graphics.territoryFills,
 				]);
 
-				const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
+				const minimap = this.cameras.add(window.visualViewport.width / GameConfig.scale - 800, window.visualViewport.height / GameConfig.scale - 400, 800, 400);
 				minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
 				minimap.centerOn(Hex.Grid.pixelWidth / 2, Hex.Grid.pixelHeight / 2);
 				minimap.ignore([
