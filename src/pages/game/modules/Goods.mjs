@@ -1,6 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 import { currentGame } from './Game.mjs';
+import * as utils from '../utils/GoodsUtils.mjs';
 
 function Goods({
 	num = 1,
@@ -10,9 +11,7 @@ function Goods({
 	if (!(hex instanceof Honeycomb.Hex)) {
 		throw new TypeError('Goods expects to be assigned a Honeycomb.Hex!');
 	}
-	if ((json.world.goods[type] ?? true) === true) {
-		throw new TypeError(`Unknown Goods type '${type}'`);
-	}
+	utils.validateGoodsType(type);
 	let rounds = 0;
 	const faction = hex.tile.faction;
 	const scene = currentGame.scenes.getScene('mainGameScene');
