@@ -75,54 +75,48 @@ describe('Faction class', () => {
 		assert.equal(FactionUtils.getFactionColor(99), 0xaaaaaa);
 	});
 
-	test('filterValidUnits removes deleted units', (t) => {
-		t.skip('Need to decouple Unit from Phaser to run this test');
-		return;
-		const validUnit1 = new Unit('farmer', unitOptions);
-		const validUnit2 = new Unit('rancher', unitOptions);
-		const deletedUnit1 = new Unit('farmer', unitOptions);
-		const deletedUnit2 = new Unit('rancher', unitOptions);
-		deletedUnit1.destroy();
-		deletedUnit2.destroy();
-		const units = [
-			validUnit1,
-			deletedUnit1,
-			validUnit2,
-			deletedUnit2,
-		];
-		const result = FactionUtils.filterValidUnits(units);
-		assert.deepEqual(result, [validUnit1, validUnit2]);
-	});
-
 	test('getNextMovableUnit returns correct index', (t) => {
-		t.skip('Need to decouple Unit from Phaser to run this test');
-		return;
+		t.todo('This is not a good way to set Unit.moves');
+		const validUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit2 = new Unit('rancher', unitOptions);
+		validUnit1.moves = 12;
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
 		const units = [
-			{ moves: 0, deleted: false },
-			{ moves: 2, deleted: false },
-			{ moves: 0, deleted: false },
+			movedUnit1,
+			validUnit1,
+			movedUnit2,
 		];
-		const result = FactionUtils.getNextMovableUnit(units, 0);
+		const result = units.indexOf(FactionUtils.getNextMovableUnit(units, 0));
 		assert.equal(result, 1);
 	});
 
 	test('getNextMovableUnit wraps around if needed', (t) => {
-		t.skip('Need to decouple Unit from Phaser to run this test');
-		return;
+		t.todo('This is not a good way to set Unit.moves');
+		const validUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit2 = new Unit('rancher', unitOptions);
+		validUnit1.moves = 12;
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
 		const units = [
-			{ moves: 1, deleted: false },
-			{ moves: 0, deleted: false },
+			validUnit1,
+			movedUnit1,
+			movedUnit2,
 		];
-		const result = FactionUtils.getNextMovableUnit(units, 1);
+		const result = units.indexOf(FactionUtils.getNextMovableUnit(units, 1));
 		assert.equal(result, 0);
 	});
 
 	test('getNextMovableUnit returns false if no valid unit', (t) => {
-		t.skip('Need to decouple Unit from Phaser to run this test');
-		return;
+		const movedUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit2 = new Unit('rancher', unitOptions);
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
 		const units = [
-			{ moves: 0, deleted: false },
-			{ moves: 0, deleted: true },
+			movedUnit1,
+			movedUnit2,
 		];
 		const result = FactionUtils.getNextMovableUnit(units, 0);
 		assert.equal(result, false);
@@ -209,6 +203,51 @@ describe('Tile class', () => {
 });
 
 describe('Unit class', () => {
+	const unitOptions = {
+		row: 0,
+		col: 0,
+		faction: {
+			index: 0,
+		},
+	};
+
+	test('isActivatableUnit removes destroyed units', (t) => {
+		const validUnit1 = new Unit('farmer', unitOptions);
+		const validUnit2 = new Unit('rancher', unitOptions);
+		const deletedUnit1 = new Unit('farmer', unitOptions);
+		const deletedUnit2 = new Unit('rancher', unitOptions);
+		deletedUnit1.destroy();
+		deletedUnit2.destroy();
+		const units = [
+			validUnit1,
+			deletedUnit1,
+			validUnit2,
+			deletedUnit2,
+		];
+		const result = units.filter(Unit.isActivatableUnit);
+		assert.deepEqual(result, [validUnit1, validUnit2]);
+	});
+
+	test('isMovableUnit removes units with 0 remaining moves', (t) => {
+		t.todo('This is not a good way to set Unit.moves');
+		const validUnit1 = new Unit('farmer', unitOptions);
+		const validUnit2 = new Unit('rancher', unitOptions);
+		const movedUnit1 = new Unit('farmer', unitOptions);
+		const movedUnit2 = new Unit('rancher', unitOptions);
+		validUnit1.moves = 12;
+		validUnit2.moves = 12;
+		movedUnit1.moves = 0;
+		movedUnit2.moves = 0;
+		const units = [
+			validUnit1,
+			movedUnit1,
+			validUnit2,
+			movedUnit2,
+		];
+		const result = units.filter(Unit.isMovableUnit);
+		assert.deepEqual(result, [validUnit1, validUnit2]);
+	});
+
 	test('actionTileCoordinates handles all directions for even column', () => {
 		const row = 5;
 		const col = 2;
@@ -238,6 +277,33 @@ describe('Unit class', () => {
 		};
 		Object.entries(expected).forEach(([dir, coords]) => {
 			assert.deepEqual(UnitUtils.actionTileCoordinates(dir, row, col), coords);
+		});
+	});
+
+	it('should move to the next tile correctly', (t) => {
+		t.todo('There\'s a long dependency chain to World.json that needs to be decoupled first');
+		return;
+		const row = 5;
+		const col = 5;
+		const unit = new Unit('farmer', {
+			row,
+			col,
+			faction: {
+				index: 0,
+			},
+		});
+		const expected = {
+			u: [5, 4],
+			l: [5, 5],
+			i: [4, 5],
+			k: [5, 5],
+			o: [5, 6],
+			j: [5, 5],
+		};
+		Object.entries(expected).forEach(([dir, coords]) => {
+			unit.doAction(dir);
+			assert.equal(unit.row, coords[0]);
+			assert.equal(unit.col, coords[1]);
 		});
 	});
 });

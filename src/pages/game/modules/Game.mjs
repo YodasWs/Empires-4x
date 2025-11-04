@@ -266,6 +266,8 @@ export const currentGame = {
 		});
 	},
 	closeUnitActionMenu() {
-		this.domContainer.innerHTML = '';
+		if (typeof Element !== 'undefined' && this.domContainer instanceof Element) {
+			this.domContainer.innerHTML = '';
+		}
 	},
 };

@@ -48,7 +48,7 @@ export function init() {
 }
 
 export function hideActionSprites() {
-	currentGame.sprActiveUnit.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
+	currentGame.sprActiveUnit?.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
 	actionOutlines.graphics?.destroy();
 	while (actionOutlines.text.length > 0) {
 		actionOutlines.text.pop().destroy();
@@ -65,10 +65,10 @@ function Unit(unitType, {
 	}
 	// Add sprite
 	const { x, y } = Hex.Grid.getHex({ row, col });
-	const sprite = MainGameScene.add.sprite(x, y, `unit.${unitType}`)
+	const sprite = MainGameScene?.add.sprite(x, y, `unit.${unitType}`)
 		.setTint(0x383838)
 		.setDepth(GameConfig.depths.inactiveUnits);
-	sprite.setScale(GameConfig.unitWidth / sprite.width);
+	sprite?.setScale(GameConfig.unitWidth / sprite.width);
 
 	const base = World.units[unitType];
 	this.col = col;
@@ -107,7 +107,7 @@ Object.assign(Unit.prototype, {
 	activate() {
 		hideActionSprites();
 		const thisHex = Hex.Grid.getHex({ row: this.row, col: this.col });
-		currentGame.sprActiveUnit.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
+		currentGame.sprActiveUnit?.setActive(true).setPosition(thisHex.x, thisHex.y).setDepth(GameConfig.depths.activeUnit - 1);
 
 		// Pan camera to active unit
 		// TODO: Add setting to skip this if automated movement
@@ -123,7 +123,7 @@ Object.assign(Unit.prototype, {
 				this.scene.cameras.main.pan(thisHex.x, thisHex.y, 500, 'Linear', true);
 			}, 0);
 		}, 0);
-		this.sprite.setTint(0xffffff).setDepth(GameConfig.depths.activeUnit);
+		this.sprite?.setTint(0xffffff).setDepth(GameConfig.depths.activeUnit);
 
 		// Continue on path
 		if (Array.isArray(this.path) && this.path.length > 0) {
@@ -152,7 +152,7 @@ Object.assign(Unit.prototype, {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
 			if (Hex.IsLegalMove(row, col, this)) {
 				const hex = Hex.Grid.getHex({ row, col });
-				const text = MainGameScene.add.text(
+				const text = MainGameScene?.add.text(
 					hex.x - GameConfig.tileWidth / 2,
 					hex.y + GameConfig.tileWidth / 6,
 					move,
@@ -171,24 +171,29 @@ Object.assign(Unit.prototype, {
 		});
 
 		currentGame.activeUnit = this;
-		this.scene.input.keyboard.enabled = true;
+		if (typeof this.scene?.input?.keyboard?.enabled === 'boolean') {
+			this.scene.input.keyboard.enabled = true;
+		}
 	},
 	deactivate(endMoves = false) {
 		if (endMoves === true) {
 			this.moves = 0;
 		}
 		hideActionSprites();
-		this.sprite.setTint(0x383838).setDepth(GameConfig.depths.inactiveUnits);
+		this.sprite?.setTint(0x383838).setDepth(GameConfig.depths.inactiveUnits);
 		currentGame.activeUnit = null;
-		this.scene.input.keyboard.enabled = false;
-		currentGame.currentPlayer.checkEndTurn();
+		if (typeof this?.scene?.input?.keyboard?.enabled === 'boolean') {
+			this.scene.input.keyboard.enabled = false;
+		}
+		currentGame.currentPlayer?.checkEndTurn();
 	},
 	destroy() {
 		this.deactivate(true);
-		this.sprite.setActive(false);
-		this.sprite.destroy();
+		this.sprite?.setActive(false);
+		this.sprite?.destroy();
 		this.deleted = true;
 	},
+	// TODO: Move all of this to Actions.mjs
 	doAction(action, hex = null) {
 		currentGame.closeUnitActionMenu();
 		// Wait, to do action later in turn
@@ -306,7 +311,7 @@ Object.assign(Unit.prototype, {
 		this.row = hex.row;
 		this.col = hex.col;
 		// TODO: Chain tweens to multiple hexes instead of straight to last hex
-		MainGameScene.tweens.add({
+		MainGameScene?.tweens.add({
 			targets: this.sprite,
 			x: hex.x,
 			y: hex.y,
