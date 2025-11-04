@@ -127,6 +127,44 @@ describe('Goods class', () => {
 	test('Goods.isValidGoodsType gives false for unknown value', () => {
 		assert.false(Goods.isValidGoodsType('this-is-not-a-good'));
 	});
+
+	it('creates valid Goods instance', (t) => {
+		t.todo('Not yet implemented');
+		const hex = { x: 10, y: 20, tile: { faction: 'Rome' } };
+		const goods = new Goods({ type: 'wheat', hex, num: 3 });
+		assert.equal(goods.type, 'wheat');
+		assert.equal(goods.hex, hex);
+		assert.equal(goods.num, 3);
+		assert.equal(goods.faction, 'Rome');
+		assert.equal(goods.sprite.key, 'goods.wheat');
+	});
+
+	it('throws on invalid hex', (t) => {
+		const hex = { x: 0, y: 0, tile: {} };
+		assert.throws(() => new Goods({ type: 'wheat', hex }), {
+			name: 'TypeError',
+			message: 'Goods expects to be assigned a Hex!'
+		});
+	});
+
+	it('throws on unknown goods type', (t) => {
+		t.todo('Not yet implemented');
+		const hex = { x: 0, y: 0, tile: {} };
+		assert.throws(() => new Goods({ type: 'not-real-name', hex }), {
+			name: 'TypeError',
+			message: "Unknown Goods type 'not-real-name'"
+		});
+	});
+
+	it('rejects invalid num assignment', (t) => {
+		t.todo('Not yet implemented');
+		const hex = { x: 0, y: 0, tile: {} };
+		const goods = new Goods({ type: 'wheat', hex });
+		assert.throws(() => { goods.num = -1 }, {
+			name: 'TypeError',
+			message: 'Goods.num expects to be assigned a nonnegative integer!'
+		});
+	});
 });
 
 describe('Laborer class', () => {
@@ -282,7 +320,6 @@ describe('Unit class', () => {
 
 	it('should move to the next tile correctly', (t) => {
 		t.todo('There\'s a long dependency chain to World.json that needs to be decoupled first');
-		return;
 		const row = 5;
 		const col = 5;
 		const unit = new Unit('farmer', {
