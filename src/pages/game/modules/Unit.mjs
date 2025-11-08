@@ -150,8 +150,8 @@ Object.assign(Unit.prototype, {
 			'O',
 		].forEach((move) => {
 			const [row, col] = actionTileCoordinates(move.toLowerCase(), this.row, this.col);
-			if (Hex.IsLegalMove(row, col, this)) {
-				const hex = Hex.Grid.getHex({ row, col });
+			const hex = Hex.Grid.getHex({ row, col });
+			if (Hex.IsLegalMove(hex, this)) {
 				const text = MainGameScene?.add.text(
 					hex.x - GameConfig.tileWidth / 2,
 					hex.y + GameConfig.tileWidth / 6,
@@ -306,10 +306,10 @@ Object.assign(Unit.prototype, {
 		}
 	},
 	moveTo(hex) {
-		if (!Hex.isHex(hex)) return;
-		if (!Hex.IsLegalMove(hex.row, hex.col, this)) return;
+		if (!Hex.IsLegalMove(hex, this)) return;
 		this.row = hex.row;
 		this.col = hex.col;
+		// TODO: Move tween code to View layer
 		// TODO: Chain tweens to multiple hexes instead of straight to last hex
 		MainGameScene?.tweens.add({
 			targets: this.sprite,

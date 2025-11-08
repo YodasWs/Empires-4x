@@ -59,7 +59,7 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 			if (closedHexes.includes(neighbor)) return;
 
 			// If Unit cannot move here, do not include in path
-			if (!IsLegalMove(neighbor.row, neighbor.col, unit)) return;
+			if (!IsLegalMove(neighbor, unit)) return;
 
 			// g_cost is movement cost from start
 			neighbor.g_cost = current.g_cost + MovementCost(unit, neighbor, current);
@@ -93,9 +93,7 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 	return path;
 }
 
-export function IsLegalMove(row, col, unit = ResourceTransporter) {
-	// Grab Target Hex
-	const targetHex = Grid.getHex({ row, col });
+export function IsLegalMove(targetHex, unit = ResourceTransporter) {
 	if (!isHex(targetHex)) return false;
 
 	if (unit instanceof Unit) {

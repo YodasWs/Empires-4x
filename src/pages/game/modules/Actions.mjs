@@ -49,7 +49,7 @@ export const Actions = [
 		key: 'moveTo',
 		text: ({ hex }) => Hex.isHex(hex) ? `Move to ${hex.row}×${hex.col}` : 'Move here',
 		isValidOption({ hex, unit }) {
-			return Hex.IsLegalMove(hex.row, hex.col, unit);
+			return Hex.IsLegalMove(hex, unit);
 		},
 	},
 	{
@@ -255,7 +255,7 @@ export function OpenUnitActionMenu(hex) {
 			if (Actions['c'].isValidOption({ hex, faction: currentGame.activeUnit.faction })) {
 				possibleActions.push('c');
 			}
-		} else if (Hex.IsLegalMove(hex.row, hex.col, currentGame.activeUnit)) {
+		} else if (Hex.IsLegalMove(hex, currentGame.activeUnit)) {
 			// Offer to move unit here
 			possibleActions.push('moveTo');
 		}
