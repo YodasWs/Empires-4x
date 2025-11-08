@@ -1,6 +1,10 @@
 import * as GameConfig from '../modules/Config.mjs';
 
+import City from '../modules/City.mjs';
+import * as Hex from '../modules/Hex.mjs';
+import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
+import { currentGame } from '../modules/Game.mjs';
 
 export default {
 	preload() {

@@ -1,5 +1,9 @@
 import * as GameConfig from '../modules/Config.mjs';
 
+import * as Hex from '../modules/Hex.mjs';
+import Tile from '../modules/Tile.mjs';
+import { currentGame } from '../modules/Game.mjs';
+
 export default {
 	preload() {
 		this.load.image('coins', `img/resources/coins.png`);
