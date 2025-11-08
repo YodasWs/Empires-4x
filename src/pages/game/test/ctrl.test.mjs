@@ -3,6 +3,7 @@ import assert from './assert.mjs';
 
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
+import World from '../../../json/world.mjs';
 
 import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
 import City from '../modules/City.mjs';
@@ -14,6 +15,18 @@ import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import { currentGame } from '../modules/Game.mjs';
+
+class mockHex extends Honeycomb.defineHex({
+	dimensions: GameConfig.tileWidth / 2,
+	orientation: Honeycomb.Orientation.FLAT,
+	origin: 'topLeft',
+}) {
+	constructor(options) {
+		super(options);
+		this.terrain = World.terrains[options.terrain || 'grass'];
+		this.tile = new Tile(this);
+	}
+}
 
 describe('Game Configuration', () => {
 	it('should have correct tile and unit sizes', () => {
@@ -129,9 +142,13 @@ describe('Goods class', () => {
 	});
 
 	it('creates valid Goods instance', (t) => {
-		t.todo('Not yet implemented');
-		const hex = { x: 10, y: 20, tile: { faction: 'Rome' } };
-		const goods = new Goods({ type: 'wheat', hex, num: 3 });
+		t.todo('Need to decouple from Phaser first');
+		const hex = new mockHex({ row: 0, col: 0 });
+		const goods = new Goods({
+			type: 'wheat',
+			hex,
+			num: 3,
+		});
 		assert.equal(goods.type, 'wheat');
 		assert.equal(goods.hex, hex);
 		assert.equal(goods.num, 3);
@@ -148,8 +165,8 @@ describe('Goods class', () => {
 	});
 
 	it('throws on unknown goods type', (t) => {
-		t.todo('Not yet implemented');
-		const hex = { x: 0, y: 0, tile: {} };
+		t.todo('Need to decouple from Phaser first');
+		const hex = new mockHex({ row: 0, col: 0 });
 		assert.throws(() => new Goods({ type: 'not-real-name', hex }), {
 			name: 'TypeError',
 			message: "Unknown Goods type 'not-real-name'"
@@ -318,8 +335,29 @@ describe('Unit class', () => {
 		});
 	});
 
+	it('should move to the given tile correctly', (t) => {
+		t.todo('Need to decouple from Phaser first');
+		const row = 5;
+		const col = 5;
+		const newRow = row - 1;
+		const newCol = col;
+		const unit = new Unit('farmer', {
+			row,
+			col,
+			faction: {
+				index: 0,
+			},
+		});
+		unit.moveTo(new mockHex({
+			row: newRow,
+			col: newCol,
+		}));
+		assert.equal(unit.row, newRow);
+		assert.equal(unit.col, newCol);
+	});
+
 	it('should move to the next tile correctly', (t) => {
-		t.todo('There\'s a long dependency chain to World.json that needs to be decoupled first');
+		t.todo('Need to decouple from Phaser first');
 		const row = 5;
 		const col = 5;
 		const unit = new Unit('farmer', {
@@ -330,17 +368,17 @@ describe('Unit class', () => {
 			},
 		});
 		const expected = {
-			u: [5, 4],
-			l: [5, 5],
-			i: [4, 5],
-			k: [5, 5],
-			o: [5, 6],
-			j: [5, 5],
+			u: new mockHex({ row: 5, col: 4 }),
+			l: new mockHex({ row: 5, col: 5 }),
+			i: new mockHex({ row: 4, col: 5 }),
+			k: new mockHex({ row: 5, col: 5 }),
+			o: new mockHex({ row: 5, col: 6 }),
+			j: new mockHex({ row: 5, col: 5 }),
 		};
 		Object.entries(expected).forEach(([dir, coords]) => {
 			unit.doAction(dir);
-			assert.equal(unit.row, coords[0]);
-			assert.equal(unit.col, coords[1]);
+			assert.equal(unit.row, coords.row);
+			assert.equal(unit.col, coords.col);
 		});
 	});
 });

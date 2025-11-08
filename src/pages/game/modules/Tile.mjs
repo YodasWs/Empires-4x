@@ -25,6 +25,7 @@ function isValidImprovement(hex, improvement, builtImprovement) {
 function Tile({
 	hex,
 }) {
+	// TODO: Need to decouple scene reference from Tile class
 	if (scene === null) {
 		scene = currentGame.scenes.getScene('mainGameScene');
 	}
