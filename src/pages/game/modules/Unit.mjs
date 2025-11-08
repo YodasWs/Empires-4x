@@ -7,8 +7,6 @@ import * as Hex from './Hex.mjs';
 import Laborer from './Laborer.mjs';
 import { currentGame } from './Game.mjs';
 
-const offscreen = globalThis.window === undefined ? -10000
-	: Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
 const actionOutlines = {
 	text: [],
 };
@@ -48,7 +46,8 @@ export function init() {
 }
 
 export function hideActionSprites() {
-	currentGame.sprActiveUnit?.setActive(false).setPosition(offscreen, offscreen).setDepth(GameConfig.depths.offscreen);
+	const windowConfig = GameConfig.getWindowConfig();
+	currentGame.sprActiveUnit?.setActive(false).setPosition(windowConfig.offscreen, windowConfig.offscreen).setDepth(GameConfig.depths.offscreen);
 	actionOutlines.graphics?.destroy();
 	while (actionOutlines.text.length > 0) {
 		actionOutlines.text.pop().destroy();

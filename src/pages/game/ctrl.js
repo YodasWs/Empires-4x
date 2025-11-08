@@ -12,12 +12,9 @@ import Unit, * as UnitUtils from './modules/Unit.mjs';
 import * as Hex from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 
-const offscreen = Math.max(window.visualViewport.width, window.visualViewport.height) * -2;
-
 const config = {
 	type: Phaser.AUTO,
-	height: window.visualViewport.height / GameConfig.scale,
-	width: window.visualViewport.width / GameConfig.scale,
+	...GameConfig.getWindowConfig(),
 	zoom: GameConfig.scale,
 	backgroundColor: '#71ABFF',
 	scene: {

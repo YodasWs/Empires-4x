@@ -1,8 +1,8 @@
-game.scene.add('tech-tree', {
+export default {
 	preload() {
 	},
 	create() {
 	},
 	update() {
 	},
-});
+}

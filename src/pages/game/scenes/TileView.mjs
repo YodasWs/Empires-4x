@@ -1,4 +1,4 @@
-game.scene.add('tile-view', {
+export default {
 	preload() {
 	},
 	create({ hex }) {
@@ -103,4 +103,4 @@ game.scene.add('tile-view', {
 	},
 	update() {
 	},
-});
+}

@@ -1,4 +1,6 @@
-game.scene.add('mainControls', {
+import * as GameConfig from '../modules/Config.mjs';
+
+export default {
 	preload() {
 		this.load.image('coins', `img/resources/coins.png`);
 	},
@@ -46,7 +48,7 @@ game.scene.add('mainControls', {
 		}
 
 		graphics.fillStyle(0x000000, 0.5);
-		graphics.fillRect(0, 0, config.width, lineY);
+		graphics.fillRect(0, 0, GameConfig.getWindowConfig().width, lineY);
 
 		this.input.keyboard.on('keydown', (evt) => {
 			// Ctrl+R, reload; Ctrl+1, change browser tab
@@ -96,9 +98,7 @@ game.scene.add('mainControls', {
 					break;
 			}
 		});
-		// buildMainControls();
-		this.events.once('create', checkToStart);
 	},
 	update() {
 	},
-}, true)
+};

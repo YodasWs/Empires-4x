@@ -1,7 +1,10 @@
-game.scene.add('city-view', {
+import * as GameConfig from '../modules/Config.mjs';
+
+export default {
 	preload() {
 	},
 	create(data) {
+		const config = GameConfig.getWindowConfig();
 		if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile)) {
 			game.scene.resume('mainGameScene');
 			return;
@@ -105,4 +108,4 @@ game.scene.add('city-view', {
 	},
 	update() {
 	},
-});
+}

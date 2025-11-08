@@ -1,8 +1,8 @@
-game.scene.add('main-menu', {
+export default {
 	preload() {
 	},
 	create() {
 	},
 	update() {
 	},
-});
+}

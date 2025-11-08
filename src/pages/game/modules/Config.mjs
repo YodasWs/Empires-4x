@@ -15,6 +15,21 @@ export const depths = {
 	activeUnit: 100,
 };
 
+if (globalThis.window === undefined) {
+	globalThis.window = {
+		visualViewport: {
+			height: 1080,
+			width: 1920,
+		},
+	};
+}
+
+export const getWindowConfig = () => ({
+	height: window.visualViewport.height / scale,
+	width: window.visualViewport.width / scale,
+	offscreen: Math.max(window.visualViewport.width, window.visualViewport.height) * -2,
+});
+
 // Helper to find a point along a line between two points
 export function lineShift(point1, point2, t = 0.9) {
 	const m = (point1.y - point2.y) / (point1.x - point2.x)

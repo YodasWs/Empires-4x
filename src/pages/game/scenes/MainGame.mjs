@@ -1,4 +1,8 @@
-game.scene.add('mainGameScene', {
+import * as GameConfig from '../modules/Config.mjs';
+
+import Unit, * as UnitUtils from '../modules/Unit.mjs';
+
+export default {
 	preload() {
 		UnitUtils.init();
 		// Load World Tile Images
@@ -73,15 +77,16 @@ game.scene.add('mainGameScene', {
 			}
 		});
 
+		const windowConfig = GameConfig.getWindowConfig();
 		// Add Game Sprites and Images
-		currentGame.sprActiveUnit = this.add.image(offscreen, offscreen, 'activeUnit').setActive(false);
+		currentGame.sprActiveUnit = this.add.image(windowConfig.offscreen, windowConfig.offscreen, 'activeUnit').setActive(false);
 
 		{
 			// TODO: Calculate the zoom and size to show the whole map
 			const w = Hex.Grid.pixelWidth;
 			const h = Hex.Grid.pixelHeight;
-			const padLeft = window.visualViewport.width / scale / 2;
-			const padTop = window.visualViewport.height / scale / 2;
+			const padLeft = windowConfig.width / 2;
+			const padTop = windowConfig.height / 2;
 			this.cameras.main.setBounds(
 				-padLeft,
 				-padTop,
@@ -92,7 +97,7 @@ game.scene.add('mainGameScene', {
 				currentGame.graphics.territoryFills,
 			]);
 
-			const minimap = this.cameras.add(window.visualViewport.width / scale - 800, window.visualViewport.height / scale - 400, 800, 400);
+			const minimap = this.cameras.add(windowConfig.width - 800, windowConfig.height - 400, 800, 400);
 			minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
 			minimap.centerOn(Hex.Grid.pixelWidth / 2, Hex.Grid.pixelHeight / 2);
 			minimap.ignore([
@@ -208,8 +213,7 @@ game.scene.add('mainGameScene', {
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
 		});
-		this.events.once('create', checkToStart);
 	},
 	update() {
 	},
-});
+};
