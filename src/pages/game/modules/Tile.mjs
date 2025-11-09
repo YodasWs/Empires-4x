@@ -7,7 +7,6 @@ import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
 import { currentGame } from './Game.mjs';
 
-let scene = null;
 function isValidImprovement(hex, improvement, builtImprovement) {
 	if (!Hex.isHex(hex)) return false;
 	if (typeof improvement !== 'string' || improvement === '') return false;
@@ -25,10 +24,6 @@ function isValidImprovement(hex, improvement, builtImprovement) {
 function Tile({
 	hex,
 }) {
-	// TODO: Need to decouple scene reference from Tile class
-	if (scene === null) {
-		scene = currentGame.scenes.getScene('mainGameScene');
-	}
 	const claims = {
 		faction: new Map(),
 		nation: new Map(),
@@ -40,7 +35,6 @@ function Tile({
 	};
 
 	const laborers = new Set();
-	let road = undefined;
 
 	this.food = 0;
 	Object.defineProperties(this, {
@@ -116,36 +110,10 @@ function Tile({
 				return true;
 			},
 		},
-		road: {
-			enumerable: true,
-			get: () => road || {},
-			set(val) {
-				// Destroy all roads on Tile
-				if (val === 'destroy') {
-					if (road?.image instanceof Phaser.GameObjects.Image) {
-						road.image.destroy();
-					}
-					road = undefined;
-					return true;
-				}
-				if (Object.keys(json.world.improvements).includes(val)) {
-					road = {
-						...json.world.roads[val],
-						image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(GameConfig.depths.road),
-						key: val,
-					};
-					return true;
-				}
-				return false;
-			},
-		},
 		setImprovement: {
 			get: () => (val, faction = null) => {
 				// Destroy all improvements on Tile
 				if (val === 'destroy') {
-					if (objImprovement?.image instanceof Phaser.GameObjects.Image) {
-						objImprovement.image.destroy();
-					}
 					objImprovement = undefined;
 					builtImprovement = {
 						key: '',
@@ -156,7 +124,6 @@ function Tile({
 				if (isValidImprovement(hex, val, builtImprovement)) {
 					objImprovement = {
 						...json.world.improvements[val],
-						image: scene.add.image(hex.x, hex.y, `improvements.${val}`).setDepth(GameConfig.depths.improvement),
 						key: val,
 					};
 					if (faction instanceof Faction) {
@@ -186,7 +153,7 @@ Object.assign(Tile.prototype, {
 				prevPlayer = this.faction.index;
 			}
 			this.claims(factionOrNation, claimIncrement);
-			// Only update scene if nation owner has changed
+			// Only update territory lines if faction owner has changed
 			if (factionOrNation instanceof Faction && this.faction?.index !== prevPlayer) {
 				currentGame.markTerritory(this.hex, {
 					graphics: currentGame.graphics.territoryFills,

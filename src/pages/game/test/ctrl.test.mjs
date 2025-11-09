@@ -142,29 +142,26 @@ describe('Goods class', () => {
 	});
 
 	it('creates valid Goods instance', (t) => {
-		t.todo('Need to decouple from Phaser first');
 		const hex = new mockHex({ row: 0, col: 0 });
 		const goods = new Goods({
-			type: 'wheat',
+			type: 'food',
 			hex,
 			num: 3,
 		});
-		assert.equal(goods.type, 'wheat');
+		assert.equal(goods.type, 'food');
 		assert.equal(goods.hex, hex);
 		assert.equal(goods.num, 3);
-		assert.equal(goods.faction, 'Rome');
 	});
 
 	it('throws on invalid hex', (t) => {
 		const hex = { x: 0, y: 0, tile: {} };
-		assert.throws(() => new Goods({ type: 'wheat', hex }), {
+		assert.throws(() => new Goods({ type: 'food', hex }), {
 			name: 'TypeError',
 			message: 'Goods expects to be assigned a Hex!'
 		});
 	});
 
 	it('throws on unknown goods type', (t) => {
-		t.todo('Need to decouple from Phaser first');
 		const hex = new mockHex({ row: 0, col: 0 });
 		assert.throws(() => new Goods({ type: 'not-real-name', hex }), {
 			name: 'TypeError',
@@ -173,9 +170,8 @@ describe('Goods class', () => {
 	});
 
 	it('rejects invalid num assignment', (t) => {
-		t.todo('Not yet implemented');
-		const hex = { x: 0, y: 0, tile: {} };
-		const goods = new Goods({ type: 'wheat', hex });
+		const hex = new mockHex({ row: 0, col: 0 });
+		const goods = new Goods({ type: 'food', hex });
 		assert.throws(() => { goods.num = -1 }, {
 			name: 'TypeError',
 			message: 'Goods.num expects to be assigned a nonnegative integer!'

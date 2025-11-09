@@ -228,5 +228,12 @@ export default {
 	},
 	update() {
 		GoodsOnBoard.forEach(item => renderGoods(item, this));
+		Hex.Grid.forEach((hex) => {
+			if (hex.tile.improvement.key) {
+				renderImprovement(hex.tile, this);
+			} else {
+				removeImprovement(hex.tile);
+			}
+		});
 	},
 };
