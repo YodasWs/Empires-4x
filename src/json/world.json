@@ -54,18 +54,24 @@
 		}
 	},
 	"ResourceTransporter": {
-		"moves": 12,
-		"base": {
-			"moveOnWater": false,
-			"movementPoints": 12,
-			"movementCosts": {
-				"desert": 12,
-				"grass": 12,
-				"hill": 12,
-				"moor": 12,
-				"mountain": 24,
-				"swamp": 24
-			}
+		"crossCreeks": 1.25,
+		"crossStreams": 2,
+		"moveOnCanal": true,
+		"moveOnLand": true,
+		"moveOnWater": false,
+		"movementPoints": 12,
+		"movementCosts": {
+			"canal": 3,
+			"stream": 6,
+			"river": 3,
+			"desert": 12,
+			"grass": 12,
+			"hill": 18,
+			"marsh": 18,
+			"moor": 12,
+			"mountain": 24,
+			"oceans": 12,
+			"swamp": 24
 		}
 	},
 	"goods": {

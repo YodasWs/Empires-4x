@@ -3,72 +3,62 @@ import World from '../../../json/world.mjs';
 import * as Hex from './Hex.mjs';
 import Movable from './Movable.mjs';
 
+export default class Goods extends Movable {
+	#goodsType
+	#num;
+	#rounds = 0;
+	#start;
 
-function Goods({
-	num = 1,
-	type,
-	hex,
-} = {}) {
-	if (!Hex.isHex(hex)) {
-		throw new TypeError('Goods expects to be assigned a Hex!');
+	constructor(goodsType, {
+		hex,
+		num = 1,
+	}) {
+		if (!Goods.isValidGoodsType(goodsType)) {
+			throw new TypeError(`Unknown Goods type '${goodsType}'`);
+		}
+
+		super({
+			base: World.ResourceTransporter,
+			hex,
+		});
+		this.#goodsType = goodsType;
+		this.num = num;
+		this.#start = hex;
 	}
-	if (!Goods.isValidGoodsType(type)) {
-		throw new TypeError(`Unknown Goods type '${type}'`);
+
+	get goodsType() {
+		return this.#goodsType;
 	}
-	let rounds = 0;
-	const faction = hex.tile.faction;
-	const start = hex;
-	Object.defineProperties(this, {
-		faction: {
-			enumerable: true,
-			get: () => faction,
-		},
-		hex: {
-			enumerable: true,
-			get: () => hex,
-			set(val) {
-				if (!Hex.isHex(val)) {
-					throw new TypeError('Goods.hex expects to be assigned a Honeycomb.Hex!');
-				}
-				hex = val;
-			},
-		},
-		num: {
-			enumerable: true,
-			get: () => num,
-			set(val) {
-				if (!Number.isInteger(val) || val < 0) {
-					throw new TypeError('Goods.num expects to be assigned a nonnegative integer!');
-				}
-				num = val;
-			},
-		},
-		rounds: {
-			enumerable: true,
-			get: () => rounds,
-			set(val) {
-				if (!Number.isInteger(val) || val < 0) {
-					throw new TypeError('Goods.rounds expects to be assigned a nonnegative integer!');
-				}
-				rounds = val;
-			},
-		},
-		start: {
-			enumerable: true,
-			get: () => start,
-		},
-		type: {
-			enumerable: true,
-			get: () => type,
-		},
-	});
+
+	get num() {
+		return this.#num;
+	}
+	set num(val) {
+		if (!Number.isInteger(val) || val < 0) {
+			throw new TypeError('Goods.num expects to be assigned a nonnegative integer!');
+		}
+		this.#num = val;
+	}
+
+	get rounds() {
+		return this.#rounds;
+	}
+	set rounds(val) {
+		if (!Number.isInteger(val) || val < 0) {
+			throw new TypeError('Goods.rounds expects to be assigned a nonnegative integer!');
+		}
+		this.#rounds = val;
+	}
+
+	get start() {
+		return this.#start;
+	}
+
+	static isGoods(goods) {
+		return goods instanceof Goods;
+	}
+
+	static isValidGoodsType(type) {
+		return typeof (World.goods[type] ?? false) === 'object';
+	}
 }
-Object.assign(Goods.prototype, {
-});
-Goods.isGoods = function isGoods(goods) {
-	return goods instanceof Goods;
-}
-Goods.isValidGoodsType = function isValidGoodsType(type) {
-	return typeof (World.goods[type] ?? false) === 'object';
-}
-export default Goods;

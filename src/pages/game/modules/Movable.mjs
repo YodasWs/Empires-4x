@@ -107,6 +107,7 @@ export default class Movable {
 	moveOneStep() {
 		if (this.#moveIterator !== null) {
 			const result = this.#moveIterator.next();
+			this.#hex = result.value;
 			if (result.done) {
 				this.#moveIterator = null;
 			}

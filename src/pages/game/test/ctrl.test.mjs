@@ -150,8 +150,8 @@ describe('Goods class', () => {
 			hex,
 			num: 3,
 		});
-		assert.equal(goods.type, type);
-		assert.true(Goods.isValidGoodsType(goods.type));
+		assert.equal(goods.goodsType, type);
+		assert.true(Goods.isValidGoodsType(goods.goodsType));
 		assert.equal(goods.hex, hex);
 		assert.equal(goods.num, 3);
 	});
@@ -161,7 +161,7 @@ describe('Goods class', () => {
 			hex: { row: 0, col: 0, tile: {} },
 		}), {
 			name: 'TypeError',
-			message: 'Goods expects to be assigned a Hex!'
+			message: 'Movable expects to be assigned a Hex!'
 		});
 	});
 
