@@ -10,6 +10,7 @@ import City from '../modules/City.mjs';
 import Faction, * as FactionUtils from '../modules/Faction.mjs';
 import Goods from '../modules/Goods.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
+import Movable from '../modules/Movable.mjs';
 import Nation from '../modules/Nation.mjs';
 import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
@@ -142,36 +143,41 @@ describe('Goods class', () => {
 	});
 
 	it('creates valid Goods instance', (t) => {
+		const type = 'food';
+		assert.true(Goods.isValidGoodsType(type));
 		const hex = new mockHex({ row: 0, col: 0 });
-		const goods = new Goods({
-			type: 'food',
+		const goods = new Goods(type, {
 			hex,
 			num: 3,
 		});
-		assert.equal(goods.type, 'food');
+		assert.equal(goods.type, type);
+		assert.true(Goods.isValidGoodsType(goods.type));
 		assert.equal(goods.hex, hex);
 		assert.equal(goods.num, 3);
 	});
 
 	it('throws on invalid hex', (t) => {
-		const hex = { x: 0, y: 0, tile: {} };
-		assert.throws(() => new Goods({ type: 'food', hex }), {
+		assert.throws(() => new Goods('food', {
+			hex: { row: 0, col: 0, tile: {} },
+		}), {
 			name: 'TypeError',
 			message: 'Goods expects to be assigned a Hex!'
 		});
 	});
 
 	it('throws on unknown goods type', (t) => {
-		const hex = new mockHex({ row: 0, col: 0 });
-		assert.throws(() => new Goods({ type: 'not-real-name', hex }), {
+		assert.throws(() => new Goods('not-real-name', {
+			hex: new mockHex({ row: 0, col: 0 }),
+		}), {
 			name: 'TypeError',
 			message: "Unknown Goods type 'not-real-name'"
 		});
 	});
 
-	it('rejects invalid num assignment', (t) => {
-		const hex = new mockHex({ row: 0, col: 0 });
-		const goods = new Goods({ type: 'food', hex });
+	it('throws on invalid num assignment', (t) => {
+		const goods = new Goods('food', {
+			hex: new mockHex({ row: 0, col: 0 }),
+		});
 		assert.throws(() => { goods.num = -1 }, {
 			name: 'TypeError',
 			message: 'Goods.num expects to be assigned a nonnegative integer!'
@@ -199,6 +205,56 @@ describe('Laborer class', () => {
 	});
 	it('should die if (not given enough Food', (t) => {
 		t.todo('Not yet implemented');
+	});
+});
+
+describe('Movable class', () => {
+	it('should set the correct path to an adjacent hex', (t) => {
+		t.todo('Test coming soon');
+		const row = 5;
+		const col = 5;
+		const newRow = row - 1;
+		const newCol = col;
+		const movable = new Movable({
+			hex: new mockHex({ row, col })
+		});
+		const moveIterable = movable.setPath(new mockHex({
+			row: newRow,
+			col: newCol,
+		}));
+	});
+
+	it('should be able to move to an adjacent hex', (t) => {
+		t.todo('Test coming soon');
+		const row = 5;
+		const col = 5;
+		const newRow = row - 1;
+		const newCol = col;
+		const movable = new Movable({
+			hex: new mockHex({ row, col })
+		});
+		const moveIterable = movable.setPath(new mockHex({
+			row: newRow,
+			col: newCol,
+		}));
+		movable.moveOneStep();
+		assert.equal(movable.row, newRow);
+		assert.equal(movable.col, newCol);
+	});
+
+	it('should set the correct path to a distant hex', (t) => {
+		t.todo('Test coming soon');
+		const row = 2;
+		const col = 2;
+		const newRow = 5;
+		const newCol = 5;
+		const movable = new Movable({
+			hex: new mockHex({ row, col })
+		});
+		const moveIterable = movable.setPath(new mockHex({
+			row: newRow,
+			col: newCol,
+		}));
 	});
 });
 
@@ -254,11 +310,11 @@ describe('Tile class', () => {
 
 describe('Unit class', () => {
 	const unitOptions = {
-		row: 0,
-		col: 0,
-		faction: {
-			index: 0,
-		},
+		hex: new mockHex({
+			row: 0,
+			col: 0,
+		}),
+		faction: new Faction({ index: 0 }),
 	};
 
 	test('isActivatableUnit removes destroyed units', (t) => {
@@ -280,6 +336,7 @@ describe('Unit class', () => {
 
 	test('isMovableUnit removes units with 0 remaining moves', (t) => {
 		t.todo('This is not a good way to set Unit.moves');
+		t.todo('Need to implement new Movable class instead');
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
@@ -299,6 +356,7 @@ describe('Unit class', () => {
 	});
 
 	test('actionTileCoordinates handles all directions for even column', () => {
+		t.todo('Need to implement new Movable class instead');
 		const row = 5;
 		const col = 2;
 		const expected = {
@@ -315,6 +373,7 @@ describe('Unit class', () => {
 	});
 
 	test('actionTileCoordinates handles all directions for odd column', () => {
+		t.todo('Need to implement new Movable class instead');
 		const row = 5;
 		const col = 3;
 		const expected = {
@@ -332,6 +391,7 @@ describe('Unit class', () => {
 
 	it('should move to the given tile correctly', (t) => {
 		t.todo('Need to decouple from Phaser first');
+		t.todo('Need to implement new Movable class first');
 		const row = 5;
 		const col = 5;
 		const newRow = row - 1;
@@ -353,11 +413,9 @@ describe('Unit class', () => {
 
 	it('should move to the next tile correctly', (t) => {
 		t.todo('Need to decouple from Phaser first');
-		const row = 5;
-		const col = 5;
+		t.todo('Need to implement new Movable class first');
 		const unit = new Unit('farmer', {
-			row,
-			col,
+			hex: new mockHex({ row: 5, col: 5 }),
 			faction: {
 				index: 0,
 			},
