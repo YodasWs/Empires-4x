@@ -2,6 +2,7 @@ import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 
 export default {
+	key: 'tile-view',
 	preload() {
 	},
 	create({ hex }) {

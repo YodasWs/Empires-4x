@@ -4,10 +4,10 @@ import Tile from '../modules/Tile.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
 export default {
+	key: 'city-view',
 	preload() {
 	},
 	create(data) {
-		const config = GameConfig.getWindowConfig();
 		if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile)) {
 			game.scene.resume('mainGameScene');
 			return;

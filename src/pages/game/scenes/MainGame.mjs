@@ -6,7 +6,11 @@ import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
+const sceneKey = 'mainGameScene';
+
 export default {
+	key: sceneKey,
+	autoStart: true,
 	preload() {
 		UnitUtils.init();
 		// Load World Tile Images
@@ -217,6 +221,8 @@ export default {
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
 		});
+
+		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
 	},

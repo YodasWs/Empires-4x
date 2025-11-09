@@ -4,7 +4,11 @@ import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
+const sceneKey = 'mainControls';
+
 export default {
+	key: sceneKey,
+	autoStart: true,
 	preload() {
 		this.load.image('coins', `img/resources/coins.png`);
 	},
@@ -102,6 +106,8 @@ export default {
 					break;
 			}
 		});
+
+		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
 	},
