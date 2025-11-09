@@ -8,8 +8,8 @@ import Laborer from './Laborer.mjs';
 import Tile from './Tile.mjs';
 import * as Hex from './Hex.mjs';
 
-let FoodSprites = [];
-const FoodSpriteOptions = {
+export let GoodsOnBoard = [];
+const GoodsSpriteOptions = {
 	ease: 'Linear',
 	duration: 1000,
 	yoyo: false,
@@ -60,7 +60,7 @@ export const currentGame = {
 				food += hex.tile.improvement.food || 0;
 				if (food > 0) {
 					// TODO: Add some particle effect to show food being generated and not stacked
-					FoodSprites.push(new Goods({
+					GoodsOnBoard.push(new Goods({
 						type: 'food',
 						num: food,
 						hex,
@@ -162,14 +162,15 @@ export const currentGame = {
 			}
 		});
 
-		// Remove any FoodSprites that have no food or have been destroyed
-		FoodSprites = FoodSprites.filter(({ num, sprite }) => {
+		// Remove any GoodsOnBoard that have no items or have been destroyed
+		// TODO: Use GoodsView.removeGoods() instead
+		GoodsOnBoard = GoodsOnBoard.filter(({ num, sprite }) => {
 			return num > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
 		});
 
 		// Move Food towards nearest City
-		FoodSprites.forEach((FoodSprite, i) => {
-			let { faction, hex, num: food, sprite, type } = FoodSprite;
+		GoodsOnBoard.forEach((GoodsItem, i) => {
+			let { faction, hex, num: food, sprite, type } = GoodsItem;
 			if (type !== 'food') {
 				return;
 			}
@@ -183,7 +184,7 @@ export const currentGame = {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
 				const neededFood = Math.max(0, hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION - hex.tile.food);
 				const takeFood = Math.min(neededFood, food);
-				FoodSprite.num = food -= takeFood;
+				GoodsItem.num = food -= takeFood;
 				hex.tile.food += takeFood;
 
 				if (food <= 0) {
@@ -214,7 +215,7 @@ export const currentGame = {
 								targets: sprite,
 								x: nextHex.x,
 								y: nextHex.y,
-								...FoodSpriteOptions,
+								...GoodsSpriteOptions,
 								onComplete(tween) {
 									faction.money += food * 10;
 									currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
@@ -226,13 +227,13 @@ export const currentGame = {
 							});
 						}));
 					} else {
-						FoodSprite.hex = nextHex;
+						GoodsItem.hex = nextHex;
 						delaysForEndRound.push(new Promise((resolve) => {
 							scene.tweens.add({
 								targets: sprite,
 								x: nextHex.x,
 								y: nextHex.y,
-								...FoodSpriteOptions,
+								...GoodsSpriteOptions,
 								onComplete(tween) {
 									tween.destroy();
 									resolve();
@@ -244,8 +245,8 @@ export const currentGame = {
 				// TODO: What if there's no path?!
 			}
 
-			// TODO: Limit lifespan of FoodSprite
-			if (type === 'food' && ++FoodSprite.rounds > 5) {
+			// TODO: Limit lifespan of Food goods on the board
+			if (type === 'food' && ++GoodsItem.rounds > 5) {
 				sprite.setActive(false);
 				sprite.destroy();
 			}

@@ -1,6 +1,4 @@
 import World from '../../../json/world.mjs';
-import * as GameConfig from './Config.mjs';
-import { currentGame } from './Game.mjs';
 import * as Hex from './Hex.mjs';
 
 function Goods({
@@ -16,8 +14,6 @@ function Goods({
 	}
 	let rounds = 0;
 	const faction = hex.tile.faction;
-	const scene = currentGame.scenes.getScene('mainGameScene');
-	const sprite = scene.add.sprite(hex.x, hex.y, `goods.${type}`).setDepth(GameConfig.depths.goods);
 	const start = hex;
 	Object.defineProperties(this, {
 		faction: {
@@ -53,10 +49,6 @@ function Goods({
 				}
 				rounds = val;
 			},
-		},
-		sprite: {
-			enumerable: true,
-			get: () => sprite,
 		},
 		start: {
 			enumerable: true,

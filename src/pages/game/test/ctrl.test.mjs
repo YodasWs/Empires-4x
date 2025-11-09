@@ -153,7 +153,6 @@ describe('Goods class', () => {
 		assert.equal(goods.hex, hex);
 		assert.equal(goods.num, 3);
 		assert.equal(goods.faction, 'Rome');
-		assert.equal(goods.sprite.key, 'goods.wheat');
 	});
 
 	it('throws on invalid hex', (t) => {

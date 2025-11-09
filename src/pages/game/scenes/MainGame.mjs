@@ -4,7 +4,9 @@ import City from '../modules/City.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
-import { currentGame } from '../modules/Game.mjs';
+import { currentGame, GoodsOnBoard } from '../modules/Game.mjs';
+
+import { renderGoods } from '../views/GoodsView.mjs';
 
 const sceneKey = 'mainGameScene';
 
@@ -225,5 +227,6 @@ export default {
 		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
+		GoodsOnBoard.forEach(item => renderGoods(item, this));
 	},
 };
