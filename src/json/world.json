@@ -33,6 +33,26 @@
 	"NationNames": [
 		"Roman Empire"
 	],
+	"StandardMovable": {
+		"crossCreeks": 1.25,
+		"crossStreams": 1.5,
+		"moveOnLand": true,
+		"moveOnWater": false,
+		"movementPoints": 12,
+		"movementCosts": {
+			"canal": 12,
+			"stream": 12,
+			"river": 24,
+			"desert": 12,
+			"grass": 12,
+			"hill": 18,
+			"marsh": 18,
+			"moor": 12,
+			"mountain": 24,
+			"oceans": 12,
+			"swamp": 24
+		}
+	},
 	"ResourceTransporter": {
 		"moves": 12,
 		"base": {

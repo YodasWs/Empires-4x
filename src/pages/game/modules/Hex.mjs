@@ -1,4 +1,4 @@
-import World from './../../../json/world.mjs';
+import World from '../../../json/world.mjs';
 
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
@@ -91,6 +91,20 @@ export function FindPath(start, end, unit = ResourceTransporter) {
 	} while (isHex(pathHex?.parent));
 
 	return path;
+}
+
+export function isValidPath(path) {
+	if (!Array.isArray(path) || path.length === 0 || path.some((hex) => !isHex(hex))) {
+		return false;
+	}
+	for (let i = 1; i < path.length; i++) {
+		const prevHex = path[i - 1];
+		const currentHex = path[i];
+		if (Grid.distance(prevHex, currentHex) !== 1) {
+			return false;
+		}
+	}
+	return true;
 }
 
 export function IsLegalMove(targetHex, unit = ResourceTransporter) {

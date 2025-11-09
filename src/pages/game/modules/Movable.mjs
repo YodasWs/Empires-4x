@@ -94,15 +94,14 @@ export default class Movable {
 		}
 
 		const path = Hex.FindPath(this.#hex, hex, this);
-		if (!Array.isArray(path) || path.length === 0) {
+		if (!Hex.isValidPath(path)) {
 			// TODO: Warn User no path was found
 			console.warn('Sam, no path found!');
-			return;
+			return this.#moveIterator = null;
 		}
-		if (Array.isArray(path) && path.length > 0) {
-			this.#path = path;
-			return this.#moveIterator = this.#PathGenerator();
-		}
+
+		this.#path = path;
+		return this.#moveIterator = this.#PathGenerator();
 	}
 
 	moveOneStep() {

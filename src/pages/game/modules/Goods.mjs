@@ -1,5 +1,8 @@
 import World from '../../../json/world.mjs';
+
 import * as Hex from './Hex.mjs';
+import Movable from './Movable.mjs';
+
 
 function Goods({
 	num = 1,
@@ -62,6 +65,9 @@ function Goods({
 }
 Object.assign(Goods.prototype, {
 });
+Goods.isGoods = function isGoods(goods) {
+	return goods instanceof Goods;
+}
 Goods.isValidGoodsType = function isValidGoodsType(type) {
 	return typeof (World.goods[type] ?? false) === 'object';
 }
