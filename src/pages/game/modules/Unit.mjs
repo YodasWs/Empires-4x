@@ -380,6 +380,17 @@ export default class Unit extends Movable {
 		super.destroy();
 	}
 
+	doAction(action) {
+		try {
+			const [row, col] = actionTileCoordinates(action);
+			const targetHex = currentGame.grid.getHex(row, col);
+			super.setPath(targetHex);
+			super.moveOneStep();
+		} catch (e) {
+			// I don't think we care about the error here
+		}
+	}
+
 	static isUnit(unit) {
 		return unit instanceof Unit;
 	}

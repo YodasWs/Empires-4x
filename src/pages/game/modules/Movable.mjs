@@ -12,7 +12,7 @@ export default class Movable {
 	#moves = 0;
 	#path = [];
 
-	constructor({ base, hex, faction }) {
+	constructor({ base = {}, hex, faction }) {
 		if (!Hex.isHex(hex)) {
 			throw new TypeError('Movable expects to be assigned a Hex!');
 		}
@@ -46,6 +46,13 @@ export default class Movable {
 
 	get moves() {
 		return this.#moves;
+	}
+
+	get row() {
+		return this.#hex.row;
+	}
+	get col() {
+		return this.#hex.col;
 	}
 
 	activate() {
@@ -87,8 +94,7 @@ export default class Movable {
 			}
 			this.#moves -= cost
 			this.#hex = nextHex;
-			this.#path.shift();
-			yield;
+			yield this.#path.shift();
 		}
 	}
 

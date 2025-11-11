@@ -204,19 +204,19 @@ describe('Laborer class', () => {
 		assert.true(name.length > 0);
 	});
 	it('should be assigned housing', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should be assigned a tile to work', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should be reassigned which tile to work', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should consume Food at the end of the Round', (t) => {
-		t.todo('Test not yet implemented');
+		t.skip('Test not yet implemented');
 	});
 	it('should die if not given enough Food', (t) => {
-		t.todo('Test not yet implemented');
+		t.skip('Test not yet implemented');
 	});
 });
 
@@ -234,6 +234,7 @@ describe('Movable class', () => {
 			row: newRow,
 			col: newCol,
 		}));
+		assert.notEqual(moveIterable, null);
 	});
 
 	it('should be able to move to an adjacent hex', (t) => {
@@ -249,6 +250,7 @@ describe('Movable class', () => {
 			row: newRow,
 			col: newCol,
 		}));
+		assert.notEqual(moveIterable, null);
 		movable.moveOneStep();
 		assert.equal(movable.row, newRow);
 		assert.equal(movable.col, newCol);
@@ -267,6 +269,7 @@ describe('Movable class', () => {
 			row: newRow,
 			col: newCol,
 		}));
+		assert.notEqual(moveIterable, null);
 	});
 });
 
@@ -298,25 +301,25 @@ describe('Nation class', () => {
 
 describe('Tile class', () => {
 	it('should have a Hex coordinate', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should have a Faction owner', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should have a Nation owner', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should have a Set of Laborers', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should accept a new Laborer', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should update territorial claims for Faction', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 	it('should update territorial claims for Nation', (t) => {
-		t.todo('Not yet implemented');
+		t.skip('Not yet implemented');
 	});
 });
 

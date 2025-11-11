@@ -4,6 +4,8 @@ import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
+import Goods from './Goods.mjs';
+import Movable from './Movable.mjs';
 import Unit from './Unit.mjs';
 
 class gameHex extends Honeycomb.defineHex({
@@ -23,9 +25,9 @@ export function isHex(hex) {
 export const Grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
 
 // Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
-export function FindPath(start, end, unit) {
-	if (!Movable.isInstanceofMovable(unit)) {
-		throw new TypeError('FindPath expects a Movable unit!');
+export function FindPath(start, end, movable) {
+	if (!Movable.isInstanceofMovable(movable)) {
+		throw new TypeError('FindPath expects a Movable!');
 	}
 	let openHexes = [];
 	let closedHexes = [];
@@ -58,11 +60,11 @@ export function FindPath(start, end, unit) {
 			// If checked path already
 			if (closedHexes.includes(neighbor)) return;
 
-			// If Unit cannot move here, do not include in path
-			if (!IsLegalMove(neighbor, unit)) return;
+			// If Movable cannot move here, do not include in path
+			if (!IsLegalMove(neighbor, movable)) return;
 
 			// g_cost is movement cost from start
-			neighbor.g_cost = current.g_cost + MovementCost(unit, neighbor, current);
+			neighbor.g_cost = current.g_cost + MovementCost(movable, neighbor, current);
 			// h_cost is simple distance to end
 			neighbor.h_cost = Grid.distance(current, end);
 			// f_cost is sum of above two
@@ -107,28 +109,33 @@ export function isValidPath(path) {
 	return true;
 }
 
-export function IsLegalMove(targetHex, unit) {
+export function IsLegalMove(targetHex, movable) {
 	if (!isHex(targetHex)) return false;
+	if (!Movable.isInstanceofMovable(movable)) return false;
 
-	if (unit instanceof Unit) {
+	if (Unit.isUnit(movable)) {
 		// TODO: Check move into City
-		if (targetHex.city instanceof City && targetHex.city.nation !== unit.faction.nation) {
-			if (!unit.attack || !unit.attackCities) return false;
+		if (targetHex.city instanceof City && targetHex.city.nation !== movable.faction.nation) {
+			if (!movable.attack || !movable.attackCities) return false;
 		}
 
 		// TODO: Check for battle
 		// const tileUnits = grabUnitsOnTile(row, col);
 		let tileUnits;
 		if (false) {
-			if (!unit.attack) return false;
-			if (units[tileUnits[0]].index == 'britton' && unit.faction == 'roman') return false;
+			if (!movable.attack) return false;
+			if (units[tileUnits[0]].index == 'britton' && movable.faction == 'roman') return false;
 		}
+	} else if (Goods.isGoods(movable)) {
+		// Uh, what do we need to check? Or is this all handled by MovementCost?
+	} else {
+		return false;
 	}
 
 	// Check movement into terrain
-	const moves = MovementCost(unit, targetHex);
+	const moves = MovementCost(movable, targetHex);
 	if (!Number.isFinite(moves)) return false;
-	return moves <= unit.moves;
+	return moves <= movable.moves;
 }
 
 export function MovementCost(movable, nextHex, thisHex = movable.hex) {
