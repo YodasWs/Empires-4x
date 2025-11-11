@@ -61,11 +61,24 @@ describe('Faction class', () => {
 	});
 
 	test('addUnit adds a new Unit to faction', async (t) => {
-		t.todo('Test not yet implemented');
+		const faction = new Faction({ index: 0 });
+		assert.true(Array.isArray(faction.units));
+		assert.equal(faction.units.length, 0);
+		faction.addUnit('farmer', new mockHex({ row: 0, col: 0 }));
+		assert.true(Array.isArray(faction.units));
+		assert.equal(faction.units.length, 1);
 	});
 
 	test('activateUnit calls activate on valid unit', async (t) => {
-		t.todo('Test not yet implemented');
+		const faction = new Faction({ index: 0 });
+		faction.addUnit('farmer', new mockHex({ row: 0, col: 0 }));
+		assert.true(Array.isArray(faction.units));
+		assert.equal(faction.units.length, 1);
+		faction.units.forEach((unit) => {
+			unit.prepareForNewTurn();
+		});
+		faction.activateUnit(0);
+		assert.equal(currentGame.activeUnit, faction.units[0]);
 	});
 
 	test('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
@@ -200,16 +213,16 @@ describe('Laborer class', () => {
 		t.todo('Not yet implemented');
 	});
 	it('should consume Food at the end of the Round', (t) => {
-		t.todo('Not yet implemented');
+		t.todo('Test not yet implemented');
 	});
-	it('should die if (not given enough Food', (t) => {
-		t.todo('Not yet implemented');
+	it('should die if not given enough Food', (t) => {
+		t.todo('Test not yet implemented');
 	});
 });
 
 describe('Movable class', () => {
 	it('should set the correct path to an adjacent hex', (t) => {
-		t.todo('Test coming soon');
+		t.todo('Test not yet implemented; currently relies on Grid');
 		const row = 5;
 		const col = 5;
 		const newRow = row - 1;
@@ -224,7 +237,7 @@ describe('Movable class', () => {
 	});
 
 	it('should be able to move to an adjacent hex', (t) => {
-		t.todo('Test coming soon');
+		t.todo('Test not yet implemented; currently relies on Grid');
 		const row = 5;
 		const col = 5;
 		const newRow = row - 1;
@@ -242,7 +255,7 @@ describe('Movable class', () => {
 	});
 
 	it('should set the correct path to a distant hex', (t) => {
-		t.todo('Test coming soon');
+		t.todo('Test not yet implemented; currently relies on Grid');
 		const row = 2;
 		const col = 2;
 		const newRow = 5;
@@ -316,40 +329,48 @@ describe('Unit class', () => {
 		faction: new Faction({ index: 0 }),
 	};
 
-	test('isActivatableUnit removes destroyed units', (t) => {
+	test('isActivatableUnit removes destroyed units', () => {
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
 		const deletedUnit1 = new Unit('farmer', unitOptions);
 		const deletedUnit2 = new Unit('rancher', unitOptions);
-		deletedUnit1.destroy();
-		deletedUnit2.destroy();
+		const movedUnit1 = new Unit('farmer', unitOptions);
 		const units = [
 			validUnit1,
 			deletedUnit1,
+			movedUnit1,
 			validUnit2,
 			deletedUnit2,
 		];
+		units.forEach((unit) => {
+			unit.prepareForNewTurn();
+		});
+		movedUnit1.deactivate(true);
+		deletedUnit1.destroy();
+		deletedUnit2.destroy();
 		const result = units.filter(Unit.isActivatableUnit);
-		assert.deepEqual(result, [validUnit1, validUnit2]);
+		assert.deepEqual(result, [validUnit1, movedUnit1, validUnit2]);
 	});
 
-	test('isMovableUnit removes units with 0 remaining moves', (t) => {
-		t.todo('This is not a good way to set Unit.moves');
-		t.todo('Need to implement new Movable class instead');
+	test('isMovableUnit removes units with 0 remaining moves', () => {
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
-		validUnit1.moves = 12;
-		validUnit2.moves = 12;
-		movedUnit1.moves = 0;
-		movedUnit2.moves = 0;
+		const deletedUnit1 = new Unit('rancher', unitOptions);
 		const units = [
 			validUnit1,
 			movedUnit1,
 			validUnit2,
 			movedUnit2,
+			deletedUnit1,
 		];
+		units.forEach((unit) => {
+			unit.prepareForNewTurn();
+		});
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
+		deletedUnit1.destroy();
 		const result = units.filter(Unit.isMovableUnit);
 		assert.deepEqual(result, [validUnit1, validUnit2]);
 	});
@@ -387,19 +408,16 @@ describe('Unit class', () => {
 	});
 
 	it('should move to the given tile correctly', (t) => {
-		t.todo('Need to decouple from Phaser first');
-		t.todo('Need to implement new Movable class first');
+		t.todo('Need to implement new Movable class instead');
 		const row = 5;
 		const col = 5;
 		const newRow = row - 1;
 		const newCol = col;
 		const unit = new Unit('farmer', {
-			row,
-			col,
-			faction: {
-				index: 0,
-			},
+			hex: new mockHex({ row: 5, col: 5 }),
+			faction: new Faction({ index: 0 }),
 		});
+		unit.prepareForNewTurn();
 		unit.moveTo(new mockHex({
 			row: newRow,
 			col: newCol,
@@ -409,13 +427,10 @@ describe('Unit class', () => {
 	});
 
 	it('should move to the next tile correctly', (t) => {
-		t.todo('Need to decouple from Phaser first');
 		t.todo('Need to implement new Movable class first');
 		const unit = new Unit('farmer', {
 			hex: new mockHex({ row: 5, col: 5 }),
-			faction: {
-				index: 0,
-			},
+			faction: new Faction({ index: 0 }),
 		});
 		const expected = {
 			u: new mockHex({ row: 5, col: 4 }),

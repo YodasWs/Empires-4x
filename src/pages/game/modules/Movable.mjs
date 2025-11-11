@@ -49,7 +49,7 @@ export default class Movable {
 	}
 
 	activate() {
-		this.moves = this.#base.movementPoints;
+		this.#moves = this.#base.movementPoints;
 
 		// TODO: Continue on path
 		if (Array.isArray(this.#path) && this.#path.length > 0) {
@@ -97,7 +97,7 @@ export default class Movable {
 			throw new TypeError('Movable.setPath expects to be assigned a Hex!');
 		}
 
-		const path = Hex.FindPath(this.#hex, hex, this);
+		const path = Hex.FindPath(this.#hex, targetHex, this);
 		if (!Hex.isValidPath(path)) {
 			// TODO: Warn User no path was found
 			console.warn('Sam, no path found!');
@@ -120,13 +120,14 @@ export default class Movable {
 			}
 		}
 	}
-}
-Movable.isInstanceofMovable = function isInstanceofMovable(movable) {
-	return movable instanceof Movable;
-}
-Movable.isActivatableMovable = function isActivatableMovable(movable) {
-	return Movable.isInstanceofMovable(movable) && movable.deleted === false;
-}
-Movable.isMovableCanMove = function isMovableCanMove(movable) {
-	return Movable.isActivatableMovable(movable) && movable.moves > 0;
+
+	static isInstanceofMovable(movable) {
+		return movable instanceof Movable;
+	}
+	static isActivatableMovable(movable) {
+		return Movable.isInstanceofMovable(movable) && movable.deleted === false;
+	}
+	static isMovableCanMove(movable) {
+		return Movable.isActivatableMovable(movable) && movable.moves > 0;
+	}
 }

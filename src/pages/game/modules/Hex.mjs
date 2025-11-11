@@ -20,13 +20,13 @@ export function isHex(hex) {
 	return hex instanceof Honeycomb.Hex;
 }
 
-// The basic resource transporter unit, used to move Goods to the nearest City
-const ResourceTransporter = World.ResourceTransporter;
-
 export const Grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
 
 // Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
-export function FindPath(start, end, unit = ResourceTransporter) {
+export function FindPath(start, end, unit) {
+	if (!Movable.isInstanceofMovable(unit)) {
+		throw new TypeError('FindPath expects a Movable unit!');
+	}
 	let openHexes = [];
 	let closedHexes = [];
 	let explored = 0;
@@ -107,7 +107,7 @@ export function isValidPath(path) {
 	return true;
 }
 
-export function IsLegalMove(targetHex, unit = ResourceTransporter) {
+export function IsLegalMove(targetHex, unit) {
 	if (!isHex(targetHex)) return false;
 
 	if (unit instanceof Unit) {
@@ -131,17 +131,17 @@ export function IsLegalMove(targetHex, unit = ResourceTransporter) {
 	return moves <= unit.moves;
 }
 
-export function MovementCost(unit, nextHex, thisHex = unit.hex) {
+export function MovementCost(movable, nextHex, thisHex = movable.hex) {
 	if (!isHex(nextHex)) {
 		return Infinity;
 	}
-	if (unit !== ResourceTransporter && !(unit instanceof Unit)) {
+	if (!Movable.isInstanceofMovable(movable)) {
 		return Infinity;
 	}
-	if (nextHex.terrain.isWater && !unit.base.moveOnWater) {
+	if (nextHex.terrain.isWater && !movable.base.moveOnWater) {
 		// Is there a unit override for this terrain movement?
-		return unit.base.movementCosts[nextHex.terrain.terrain] ?? Infinity;
+		return movable.base.movementCosts[nextHex.terrain.terrain] ?? Infinity;
 	}
 	// TODO: Include roads, terrain improvements, etc
-	return unit.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
+	return movable.base.movementCosts[nextHex.terrain.terrain] ?? nextHex.terrain.movementCost ?? Infinity;
 }

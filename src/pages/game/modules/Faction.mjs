@@ -14,7 +14,6 @@ export function getFactionColor(index) {
 export function getNextMovableUnit(units, activeUnitIndex) {
 	for (let i = 0; i < units.length; i++) {
 		const unitIndex = (activeUnitIndex + 1 + i) % units.length;
-		console.log('Sam, checking unit', unitIndex, 'moves:', units[unitIndex].moves);
 		if (Unit.isMovableUnit(units[unitIndex])) {
 			return units[unitIndex];
 		}
@@ -95,11 +94,9 @@ function Faction({
 	});
 }
 Object.assign(Faction.prototype, {
-	addUnit(unitType, row, col, scene) {
+	addUnit(unitType, hex) {
 		this.units.push(new Unit(unitType, {
-			row,
-			col,
-			scene,
+			hex,
 			faction: this,
 		}));
 	},
@@ -114,11 +111,10 @@ Object.assign(Faction.prototype, {
 			this.checkEndTurn();
 			return false;
 		}
-		const unit = this.units[intUnit];
 		if (!Unit.isActivatableUnit(this.units[intUnit])) {
 			return false;
 		}
-		unit.activate();
+		this.units[intUnit].activate();
 		activeUnitIndex = intUnit;
 		return true;
 	},
