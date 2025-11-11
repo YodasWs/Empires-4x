@@ -16,12 +16,12 @@ const GoodsSpriteOptions = {
 };
 
 export const currentGame = {
+	events: new EventTarget(),
 	players: [],
 	turn: 0,
 	activeUnit: null,
 	currentPlayer: null,
 	intCurrentPlayer: null,
-	sprActiveUnit: null,
 	graphics: {},
 	uiDisplays: {},
 	startRound() {

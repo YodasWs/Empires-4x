@@ -44,6 +44,10 @@ export default class Movable {
 		return this.#hex;
 	}
 
+	get movementCosts() {
+		return this.#base.movementCosts;
+	}
+
 	get moves() {
 		return this.#moves;
 	}

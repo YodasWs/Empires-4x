@@ -28,21 +28,10 @@ export function actionTileCoordinates(action, row, col) {
 			if (col % 2 == 1) row++;
 			col++;
 			break;
+		default:
+			throw new TypeError(`Unknown action tile '${action}'`);
 	}
 	return [row, col];
-}
-
-export function init() {
-	MainGameScene = currentGame.scenes.getScene('mainGameScene');
-}
-
-export function hideActionSprites() {
-	const windowConfig = GameConfig.getWindowConfig();
-	currentGame.sprActiveUnit?.setActive(false).setPosition(windowConfig.offscreen, windowConfig.offscreen).setDepth(GameConfig.depths.offscreen);
-	actionOutlines.graphics?.destroy();
-	while (actionOutlines.text.length > 0) {
-		actionOutlines.text.pop().destroy();
-	}
 }
 
 function Unit(unitType, {
@@ -317,13 +306,10 @@ Object.assign(Unit.prototype, {
 	},
 });
 Unit.isUnit = function isUnit(unit) {
-	return unit instanceof Unit;
 }
 Unit.isActivatableUnit = function isActivatableUnit(unit) {
-	return Unit.isUnit(unit) && unit.deleted === false;
 }
 Unit.isMovableUnit = function isMovableUnit(unit) {
-	return Unit.isActivatableUnit(unit) && unit.moves > 0;
 }
 export default Unit;
 
@@ -366,13 +352,15 @@ export default class Unit extends Movable {
 
 		super.activate();
 
+		currentGame.activeUnit = this;
+
 		// Not the human player's unit, do nothing (for now)
 		if (this.faction.index !== 0) {
 			this.deactivate(true);
 			return;
 		}
 
-		currentGame.activeUnit = this;
+		currentGame.events.dispatchEvent(new CustomEvent('unit-activated', { detail: { unit: this } }));
 	}
 
 	destroy() {
@@ -401,3 +389,4 @@ export default class Unit extends Movable {
 		return Unit.isActivatableUnit(unit) && unit.moves > 0;
 	}
 }
+export const isUnit = Unit.isUnit;
