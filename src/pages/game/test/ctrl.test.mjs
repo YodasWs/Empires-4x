@@ -41,11 +41,8 @@ describe('City class', () => {
 
 describe('Faction class', () => {
 	const unitOptions = {
-		row: 0,
-		col: 0,
-		faction: {
-			index: 0,
-		},
+		hex: new mockHex({ row: 0, col: 0 }),
+		faction: new Faction({ index: 0 }),
 	};
 
 	test('initializes with correct color and index', () => {
@@ -64,11 +61,11 @@ describe('Faction class', () => {
 	});
 
 	test('addUnit adds a new Unit to faction', async (t) => {
-		t.todo('Not yet implemented');
+		t.todo('Test not yet implemented');
 	});
 
 	test('activateUnit calls activate on valid unit', async (t) => {
-		t.todo('Not yet implemented');
+		t.todo('Test not yet implemented');
 	});
 
 	test('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
@@ -90,35 +87,37 @@ describe('Faction class', () => {
 	});
 
 	test('getNextMovableUnit returns correct index', (t) => {
-		t.todo('This is not a good way to set Unit.moves');
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
-		validUnit1.moves = 12;
-		movedUnit1.deactivate(true);
-		movedUnit2.deactivate(true);
 		const units = [
 			movedUnit1,
 			validUnit1,
 			movedUnit2,
 		];
+		units.forEach((unit) => {
+			unit.prepareForNewTurn();
+		});
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
 		const result = units.indexOf(FactionUtils.getNextMovableUnit(units, 0));
 		assert.equal(result, 1);
 	});
 
 	test('getNextMovableUnit wraps around if needed', (t) => {
-		t.todo('This is not a good way to set Unit.moves');
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
-		validUnit1.moves = 12;
-		movedUnit1.deactivate(true);
-		movedUnit2.deactivate(true);
 		const units = [
 			validUnit1,
 			movedUnit1,
 			movedUnit2,
 		];
+		units.forEach((unit) => {
+			unit.prepareForNewTurn();
+		});
+		movedUnit1.deactivate(true);
+		movedUnit2.deactivate(true);
 		const result = units.indexOf(FactionUtils.getNextMovableUnit(units, 1));
 		assert.equal(result, 0);
 	});
@@ -356,7 +355,6 @@ describe('Unit class', () => {
 	});
 
 	test('actionTileCoordinates handles all directions for even column', () => {
-		t.todo('Need to implement new Movable class instead');
 		const row = 5;
 		const col = 2;
 		const expected = {
@@ -373,7 +371,6 @@ describe('Unit class', () => {
 	});
 
 	test('actionTileCoordinates handles all directions for odd column', () => {
-		t.todo('Need to implement new Movable class instead');
 		const row = 5;
 		const col = 3;
 		const expected = {

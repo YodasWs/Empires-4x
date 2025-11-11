@@ -1,5 +1,6 @@
 import World from '../../../json/world.mjs';
 
+import Faction from './Faction.mjs';
 import Movable from './Movable.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -351,9 +352,7 @@ export default class Unit extends Movable {
 	}
 
 	deactivate(endMoves = false) {
-		if (endMoves === true) {
-			this.moves = 0;
-		}
+		super.deactivate(endMoves);
 		currentGame.activeUnit = null;
 		// TODO: Probably do this by event emitter instead
 		currentGame.currentPlayer?.checkEndTurn();

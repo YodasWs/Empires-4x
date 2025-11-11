@@ -103,7 +103,7 @@ export const currentGame = {
 
 		// Reset each unit's movement points
 		this.currentPlayer.units.forEach((unit) => {
-			unit.moves = unit.base.movementPoints;
+			unit.prepareForNewTurn();
 		});
 		// Activate first unit
 		this.currentPlayer.activateUnit(0);

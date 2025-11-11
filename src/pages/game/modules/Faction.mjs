@@ -11,9 +11,10 @@ export function getFactionColor(index) {
 	][index] ?? 0xaaaaaa;
 }
 
-export function getNextMovableUnit(units, activeUnit) {
+export function getNextMovableUnit(units, activeUnitIndex) {
 	for (let i = 0; i < units.length; i++) {
-		const unitIndex = (activeUnit + 1 + i) % units.length;
+		const unitIndex = (activeUnitIndex + 1 + i) % units.length;
+		console.log('Sam, checking unit', unitIndex, 'moves:', units[unitIndex].moves);
 		if (Unit.isMovableUnit(units[unitIndex])) {
 			return units[unitIndex];
 		}
@@ -21,7 +22,7 @@ export function getNextMovableUnit(units, activeUnit) {
 	return false;
 }
 
-let activeUnit = null;
+let activeUnitIndex = null;
 
 // Each Human/AI Player controls a Faction
 function Faction({
@@ -71,22 +72,22 @@ function Faction({
 		activeUnit: {
 			enumerable: true,
 			get: () => {
-				if (Number.isInteger(activeUnit) && activeUnit >= 0 && activeUnit <= units.length) {
-					return units[activeUnit];
+				if (Number.isInteger(activeUnitIndex) && activeUnitIndex >= 0 && activeUnitIndex <= units.length) {
+					return units[activeUnitIndex];
 				}
 				return undefined;
 			},
 			set(val) {
 				if (Number.isInteger(val) && val >= 0) {
 					if (val >= units.length) {
-						activeUnit = val % units.length;
+						activeUnitIndex = val % units.length;
 						return true;
 					}
-					activeUnit = val;
+					activeUnitIndex = val;
 					return true;
 				}
 				if (val === null) {
-					activeUnit = null;
+					activeUnitIndex = null;
 				}
 				return false;
 			},
@@ -103,12 +104,12 @@ Object.assign(Faction.prototype, {
 		}));
 	},
 	checkEndTurn() {
-		const isMovableUnit = this.activateNext();
-		if (!isMovableUnit) {
+		const hasMovableUnit = this.activateNext();
+		if (!hasMovableUnit) {
 			currentGame.endTurn();
 		}
 	},
-	activateUnit(intUnit = activeUnit) {
+	activateUnit(intUnit = activeUnitIndex) {
 		if (this.units.length === 0) {
 			this.checkEndTurn();
 			return false;
@@ -118,13 +119,13 @@ Object.assign(Faction.prototype, {
 			return false;
 		}
 		unit.activate();
-		activeUnit = intUnit;
+		activeUnitIndex = intUnit;
 		return true;
 	},
 	activateNext() {
-		const nextUnit = getNextMovableUnit(this.units, activeUnit);
+		const nextUnit = getNextMovableUnit(this.units, activeUnitIndex);
 		if (Unit.isMovableUnit(nextUnit)) {
-			activeUnit = this.units.indexOf(nextUnit);
+			activeUnitIndex = this.units.indexOf(nextUnit);
 			nextUnit.activate();
 			return true;
 		}

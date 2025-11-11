@@ -47,33 +47,37 @@ export default class Movable {
 	get moves() {
 		return this.#moves;
 	}
-	set moves(val) {
-		if (!Number.isInteger(val) || val < 0) {
-			throw new TypeError('Movable.moves expects to be assigned a nonnegative integer!');
-		}
-		this.#moves = val;
-	}
 
 	activate() {
 		this.moves = this.#base.movementPoints;
 
-		// Continue on path
+		// TODO: Continue on path
 		if (Array.isArray(this.#path) && this.#path.length > 0) {
-			this.#moveIterator = this.#PathGenerator();
+			this.#moveIterator = this.#FollowPathGenerator();
 			return;
 		}
 
 		this.#moveIterator = null;
 	}
 
+	deactivate(endMoves = false) {
+		if (endMoves === true) {
+			this.#moves = 0;
+		}
+	}
+
 	destroy() {
-		this.moves = 0;
+		this.#moves = 0;
 		this.#path = [];
 		this.deleted = true;
 		this.#moveIterator = null;
 	}
 
-	async *#PathGenerator() {
+	prepareForNewTurn() {
+		this.#moves = this.#base.movementPoints;
+	}
+
+	async *#FollowPathGenerator() {
 		while (this.#path.length > 0) {
 			const nextHex = this.#path[0];
 			const cost = Hex.MovementCost(this, nextHex);
@@ -101,7 +105,7 @@ export default class Movable {
 		}
 
 		this.#path = path;
-		return this.#moveIterator = this.#PathGenerator();
+		return this.#moveIterator = this.#FollowPathGenerator();
 	}
 
 	moveOneStep() {
@@ -110,6 +114,9 @@ export default class Movable {
 			this.#hex = result.value;
 			if (result.done) {
 				this.#moveIterator = null;
+				if (this.#moves <= 0) {
+					this.deactivate(true);
+				}
 			}
 		}
 	}
