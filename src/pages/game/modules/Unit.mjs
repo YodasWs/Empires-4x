@@ -4,6 +4,8 @@ import Faction from './Faction.mjs';
 import Movable from './Movable.mjs';
 import { currentGame } from './Game.mjs';
 
+import { destroyUnitSprite } from '../views/UnitView.mjs';
+
 export function actionTileCoordinates(action, row, col) {
 	switch (action) {
 		case 'u':
@@ -366,6 +368,7 @@ export default class Unit extends Movable {
 	destroy() {
 		this.deactivate(true);
 		super.destroy();
+		destroyUnitSprite(this);
 	}
 
 	doAction(action) {
