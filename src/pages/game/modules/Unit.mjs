@@ -1,17 +1,7 @@
-import * as GameConfig from './Config.mjs';
 import World from '../../../json/world.mjs';
 
-import { Actions } from './Actions.mjs';
-import City from './City.mjs';
-import * as Hex from './Hex.mjs';
-import Laborer from './Laborer.mjs';
+import Movable from './Movable.mjs';
 import { currentGame } from './Game.mjs';
-
-const actionOutlines = {
-	text: [],
-};
-
-let MainGameScene;
 
 export function actionTileCoordinates(action, row, col) {
 	switch (action) {
@@ -335,3 +325,69 @@ Unit.isMovableUnit = function isMovableUnit(unit) {
 	return Unit.isActivatableUnit(unit) && unit.moves > 0;
 }
 export default Unit;
+
+function throwTypeError(message) {
+	throw new TypeError(message);
+}
+
+export default class Unit extends Movable {
+	#unitType
+
+	constructor(unitType, {
+		hex,
+		faction,
+	}) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('Unit expects to be assigned a Faction!');
+		}
+		const base = World.units[unitType] ?? throwTypeError(`Unknown unit '${unitType}'`)
+
+		super({ base, hex, faction });
+		this.#unitType = unitType;
+	}
+
+	get unitType() {
+		return this.#unitType;
+	}
+
+	deactivate(endMoves = false) {
+		if (endMoves === true) {
+			this.moves = 0;
+		}
+		currentGame.activeUnit = null;
+		// TODO: Probably do this by event emitter instead
+		currentGame.currentPlayer?.checkEndTurn();
+	}
+
+	activate() {
+		// TODO: Tell View Layer to highlight this unit as active
+		// TODO: Tell View Layer to pan camera to this unit
+		// TODO: Add setting to skip this if automated movement
+		// TODO: Add setting to skip if not human player's unit
+
+		super.activate();
+
+		// Not the human player's unit, do nothing (for now)
+		if (this.faction.index !== 0) {
+			this.deactivate(true);
+			return;
+		}
+
+		currentGame.activeUnit = this;
+	}
+
+	destroy() {
+		this.deactivate(true);
+		super.destroy();
+	}
+
+	static isUnit(unit) {
+		return unit instanceof Unit;
+	}
+	static isActivatableUnit(unit) {
+		return Unit.isUnit(unit) && unit.deleted === false;
+	}
+	static isMovableUnit(unit) {
+		return Unit.isActivatableUnit(unit) && unit.moves > 0;
+	}
+}
