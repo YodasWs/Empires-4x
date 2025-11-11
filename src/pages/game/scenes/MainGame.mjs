@@ -71,13 +71,21 @@ export function ShowActiveUnitHelpSprites(event) {
 		}
 	});
 
-	currentGame.activeUnit = unit;
-
+	// TODO: Move this to Input Manager
 	if (typeof MainGameScene.input?.keyboard?.enabled === 'boolean') {
 		MainGameScene.input.keyboard.enabled = true;
 	}
 }
 currentGame.events.addEventListener('unit-activated', ShowActiveUnitHelpSprites);
+
+function CenterCameraOnActiveUnit(event) {
+	if (globalThis.Phaser === undefined) {
+		return;
+	}
+	const hex = event.detail.unit.hex;
+	MainGameScene.cameras.main.pan(hex.x, hex.y, 500, 'Linear', true);
+}
+currentGame.events.addEventListener('unit-activated', CenterCameraOnActiveUnit);
 
 export default {
 	key: sceneKey,
