@@ -31,8 +31,8 @@ function hideActionSprites() {
 		ActionSprites.shortcutKeys.pop().destroy();
 	}
 }
-currentGame.events.addEventListener('unit-deactivated', hideActionSprites);
-currentGame.events.addEventListener('unit-activated', hideActionSprites);
+currentGame.events.on('unit-deactivated', hideActionSprites);
+currentGame.events.on('unit-activated', hideActionSprites);
 
 export function ShowActiveUnitHelpSprites(event) {
 	if (globalThis.Phaser === undefined) {
@@ -73,7 +73,7 @@ export function ShowActiveUnitHelpSprites(event) {
 		}
 	});
 }
-currentGame.events.addEventListener('unit-activated', ShowActiveUnitHelpSprites);
+currentGame.events.on('unit-activated', ShowActiveUnitHelpSprites);
 
 function CenterCameraOnActiveUnit(event) {
 	if (globalThis.Phaser === undefined) {
@@ -82,7 +82,7 @@ function CenterCameraOnActiveUnit(event) {
 	const hex = event.detail.unit.hex;
 	MainGameScene.cameras.main.pan(hex.x, hex.y, 500, 'Linear', true);
 }
-currentGame.events.addEventListener('unit-activated', CenterCameraOnActiveUnit);
+currentGame.events.on('unit-activated', CenterCameraOnActiveUnit);
 
 export default {
 	key: sceneKey,

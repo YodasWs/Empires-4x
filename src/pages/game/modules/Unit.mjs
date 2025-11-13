@@ -1,5 +1,6 @@
 import World from '../../../json/world.mjs';
 
+import * as Hex from './Hex.mjs';
 import Faction from './Faction.mjs';
 import Movable from './Movable.mjs';
 import { currentGame } from './Game.mjs';
@@ -362,7 +363,7 @@ export default class Unit extends Movable {
 			return;
 		}
 
-		currentGame.events.dispatchEvent(new CustomEvent('unit-activated', { detail: { unit: this } }));
+		currentGame.events.emit('unit-activated', { unit: this });
 	}
 
 	destroy() {
@@ -374,9 +375,10 @@ export default class Unit extends Movable {
 	doAction(action) {
 		try {
 			const [row, col] = actionTileCoordinates(action);
-			const targetHex = currentGame.grid.getHex(row, col);
+			const targetHex = Hex.Grid.getHex(row, col);
 			super.setPath(targetHex);
 			super.moveOneStep();
+			currentGame.events.emit('unit-moved', this);
 		} catch (e) {
 			// I don't think we care about the error here
 		}

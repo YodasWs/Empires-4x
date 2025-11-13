@@ -15,8 +15,20 @@ const GoodsSpriteOptions = {
 	yoyo: false,
 };
 
+class Emitter extends EventTarget {
+	on(eventName, listener) {
+		this.addEventListener(eventName, listener);
+	}
+	off(eventName, listener) {
+		this.removeEventListener(eventName, listener);
+	}
+	emit(eventName, detail = {}) {
+		this.dispatchEvent(new CustomEvent(eventName, { detail }));
+	}
+}
+
 export const currentGame = {
-	events: new EventTarget(),
+	events: new Emitter(),
 	players: [],
 	turn: 0,
 	activeUnit: null,
