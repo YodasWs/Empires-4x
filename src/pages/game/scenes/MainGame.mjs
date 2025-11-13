@@ -6,6 +6,8 @@ import Tile from '../modules/Tile.mjs';
 import * as UnitUtils from '../modules/Unit.mjs';
 import { currentGame, GoodsOnBoard } from '../modules/Game.mjs';
 
+import InputManager from '../modules/InputManager.mjs';
+
 import { renderGoods } from '../views/GoodsView.mjs';
 import { renderUnit } from '../views/UnitView.mjs';
 import { removeImprovement, renderImprovement } from '../views/TileView.mjs';
@@ -70,11 +72,6 @@ export function ShowActiveUnitHelpSprites(event) {
 			MainGameScene.cameras.getCamera('mini').ignore(text);
 		}
 	});
-
-	// TODO: Move this to Input Manager
-	if (typeof MainGameScene.input?.keyboard?.enabled === 'boolean') {
-		MainGameScene.input.keyboard.enabled = true;
-	}
 }
 currentGame.events.addEventListener('unit-activated', ShowActiveUnitHelpSprites);
 
@@ -195,59 +192,6 @@ export default {
 			]);
 		}
 
-		// Pointer handling: support drag-to-pan (drag) and click-to-open (click)
-		let isDragging = false;
-		const dragStart = { x: 0, y: 0 };
-		const camStart = { x: 0, y: 0 };
-		let dragThreshold = 4; // default (pixels)
-
-		this.input.on('pointerdown', (pointer) => {
-			// Record starting positions (screen coords and camera scroll)
-			dragStart.x = pointer.x;
-			dragStart.y = pointer.y;
-			camStart.x = this.cameras.main.scrollX;
-			camStart.y = this.cameras.main.scrollY;
-			isDragging = false;
-			// Set drag threshold based on input device type. Touch/pens are less precise
-			// so use a larger threshold to avoid accidental drags.
-			switch (pointer.pointerType) {
-				case 'touch':
-					dragThreshold = 10;
-					break;
-				case 'pen':
-					dragThreshold = 8;
-					break;
-				case 'mouse':
-				default:
-					dragThreshold = 4;
-			}
-		});
-
-		this.input.on('pointermove', (pointer) => {
-			if (!pointer.isDown) return;
-			const dx = pointer.x - dragStart.x;
-			const dy = pointer.y - dragStart.y;
-			// Start dragging after threshold so clicks are not interpreted as drags
-			if (!isDragging && (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold)) {
-				isDragging = true;
-			}
-			if (isDragging) {
-				// Adjust camera scroll. Movement must be scaled by camera zoom to map
-				// screen pixels to world pixels correctly.
-				const zoom = this.cameras.main.zoom || 1;
-				this.cameras.main.setScroll(camStart.x - dx / zoom, camStart.y - dy / zoom);
-			}
-		});
-
-		this.input.on('pointerup', (pointer) => {
-			if (!isDragging) {
-				// Treat as click
-				OpenUnitActionMenu(Hex.Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
-			}
-			// Reset drag state
-			isDragging = false;
-		});
-
 		// TODO: Build Starting Players and Units
 		currentGame.players[0].addUnit('rancher', Hex.Grid.getHex({ row: 2, col: 3 }), this);
 		currentGame.players[0].addUnit('farmer', Hex.Grid.getHex({ row: 2, col: 4 }), this);
@@ -255,53 +199,24 @@ export default {
 		currentGame.players[0].addUnit('settler', Hex.Grid.getHex({ row: 3, col: 3 }), this);
 		currentGame.players[0].addUnit('builder', Hex.Grid.getHex({ row: 1, col: 3 }), this);
 
-		// Listen for key presses
-		this.input.keyboard.on('keydown', (evt) => {
-			// Ctrl+R, reload; Ctrl+1, change browser tab
-			if (evt.ctrlKey && [
-				'r', 'R', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-			].includes(evt.key)) {
-				return;
-			}
-			// Ctrl+Shift+I, open Chrome dev tools
-			if (evt.ctrlKey && evt.key === 'I') return;
-			evt.preventDefault();
-			switch (evt.key) {
-				case 'ArrowUp':
-					this.cameras.main.scrollY -= 25;
-					return;
-				case 'ArrowDown':
-					this.cameras.main.scrollY += 25;
-					return;
-				case 'ArrowLeft':
-					this.cameras.main.scrollX -= 25;
-					return;
-				case 'ArrowRight':
-					this.cameras.main.scrollX += 25;
-					return;
-				case 'ContextMenu':
-				case ' ':
-					if (UnitUtils.isUnit(currentGame.activeUnit)) {
-						OpenUnitActionMenu(currentGame.activeUnit.hex);
-					}
-					return;
-			}
-			DoAction(evt);
-		}).enabled = false;
+		const inputManager = new InputManager(this);
 
 		this.events.on('pause', () => {
 			console.log('Sam, mainGameScene paused');
 			currentGame.scenes.sleep('mainControls');
 			hideActionSprites();
+			inputManager.disableKeyboardInput();
 		});
 		this.events.on('resume', () => {
 			console.log('Sam, mainGameScene resumed');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
+			inputManager.enableKeyboardInput();
 		}).on('wake', () => {
 			console.log('Sam, mainGameScene woken');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
+			inputManager.enableKeyboardInput();
 		});
 
 		MainGameScene = this;
