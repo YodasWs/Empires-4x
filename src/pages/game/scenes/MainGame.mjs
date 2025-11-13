@@ -199,30 +199,31 @@ export default {
 		currentGame.players[0].addUnit('settler', Hex.Grid.getHex({ row: 3, col: 3 }), this);
 		currentGame.players[0].addUnit('builder', Hex.Grid.getHex({ row: 1, col: 3 }), this);
 
-		const inputManager = new InputManager(this);
+		this.inputManager = new InputManager(this);
 
 		this.events.on('pause', () => {
 			console.log('Sam, mainGameScene paused');
 			currentGame.scenes.sleep('mainControls');
 			hideActionSprites();
-			inputManager.disableKeyboardInput();
+			this.inputManager.disableKeyboardInput();
 		});
 		this.events.on('resume', () => {
 			console.log('Sam, mainGameScene resumed');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
-			inputManager.enableKeyboardInput();
+			this.inputManager.enableKeyboardInput();
 		}).on('wake', () => {
 			console.log('Sam, mainGameScene woken');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
-			inputManager.enableKeyboardInput();
+			this.inputManager.enableKeyboardInput();
 		});
 
 		MainGameScene = this;
 		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
+		this.inputManager.update();
 		currentGame.players.forEach((faction) => {
 			// TODO: Optimize by only updating changed units, call moveUnitSprite
 			faction.units.forEach((unit) => renderUnit(unit, this));

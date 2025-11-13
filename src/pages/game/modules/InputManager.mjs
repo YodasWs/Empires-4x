@@ -4,8 +4,10 @@ import * as Hex from './Hex.mjs';
 import Unit from './Unit.mjs';
 
 export default class InputManager {
-	#scene
 	#cursors
+	#scene
+	#sceneKey
+	#shiftKey
 
     constructor(scene) {
 		if (!(scene instanceof globalThis.Phaser.Scene)) {
@@ -14,7 +16,8 @@ export default class InputManager {
 
         this.#scene = scene;
         this.#cursors = scene.input.keyboard.createCursorKeys();
-		switch (this.#scene.scene.key) {
+		this.#shiftKey = scene.input.keyboard.addKey(globalThis.Phaser.Input.Keyboard.KeyCodes.SHIFT);
+		switch (this.#sceneKey = this.#scene.scene.key) {
 			case 'mainGameScene':
 				this.#listenOnMainGameScene();
 				break;
@@ -30,6 +33,27 @@ export default class InputManager {
 	enableKeyboardInput() {
 		if (typeof this.#scene.input?.keyboard?.enabled === 'boolean') {
 			this.#scene.input.keyboard.enabled = true;
+		}
+	}
+
+	update() {
+		switch (this.#sceneKey) {
+			case 'mainGameScene':
+				const cam = this.#scene.cameras.main;
+				const speed = this.#shiftKey.isDown ? 25 : 5;
+
+				if (this.#cursors.left.isDown) {
+					cam.scrollX -= speed;
+				} else if (this.#cursors.right.isDown) {
+					cam.scrollX += speed;
+				}
+
+				if (this.#cursors.up.isDown) {
+					cam.scrollY -= speed;
+				} else if (this.#cursors.down.isDown) {
+					cam.scrollY += speed;
+				}
+				break;
 		}
 	}
 
@@ -82,18 +106,6 @@ export default class InputManager {
 					break;
 				case 'F5':
 					break;
-				case 'ArrowUp':
-					this.#scene.cameras.main.scrollY -= 25;
-					return;
-				case 'ArrowDown':
-					this.#scene.cameras.main.scrollY += 25;
-					return;
-				case 'ArrowLeft':
-					this.#scene.cameras.main.scrollX -= 25;
-					return;
-				case 'ArrowRight':
-					this.#scene.cameras.main.scrollX += 25;
-					return;
 				case 'ContextMenu':
 				case ' ':
 					if (UnitUtils.isUnit(currentGame.activeUnit)) {
