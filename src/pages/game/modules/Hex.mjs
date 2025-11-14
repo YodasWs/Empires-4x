@@ -145,7 +145,7 @@ export function MovementCost(movable, nextHex, thisHex = movable.hex) {
 	if (!Movable.isInstanceofMovable(movable)) {
 		return Infinity;
 	}
-	if (nextHex.terrain.isWater && !movable.base.moveOnWater) {
+	if (nextHex.terrain.isWater && !movable.moveOnWater) {
 		// Is there a unit override for this terrain movement?
 		return movable.movementCosts[nextHex.terrain.terrain] ?? Infinity;
 	}

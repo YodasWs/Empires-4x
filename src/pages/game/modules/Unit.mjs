@@ -374,8 +374,8 @@ export default class Unit extends Movable {
 
 	doAction(action) {
 		try {
-			const [row, col] = actionTileCoordinates(action);
-			const targetHex = Hex.Grid.getHex(row, col);
+			const [row, col] = actionTileCoordinates(action, this.row, this.col);
+			const targetHex = Hex.Grid.getHex({ row, col });
 			super.setPath(targetHex);
 			super.moveOneStep();
 			currentGame.events.emit('unit-moved', this);

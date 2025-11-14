@@ -48,6 +48,10 @@ export default class Movable {
 		return this.#base.movementCosts;
 	}
 
+	get moveOnWater() {
+		return this.#base.moveOnWater || false;
+	}
+
 	get moves() {
 		return this.#moves;
 	}
@@ -88,7 +92,7 @@ export default class Movable {
 		this.#moves = this.#base.movementPoints;
 	}
 
-	async *#FollowPathGenerator() {
+	*#FollowPathGenerator() {
 		while (this.#path.length > 0) {
 			const nextHex = this.#path[0];
 			const cost = Hex.MovementCost(this, nextHex);
@@ -122,7 +126,7 @@ export default class Movable {
 		if (this.#moveIterator !== null) {
 			const result = this.#moveIterator.next();
 			this.#hex = result.value;
-			if (result.done) {
+			if (result.done || this.#path.length <= 0) {
 				this.#moveIterator = null;
 				if (this.#moves <= 0) {
 					this.deactivate(true);
