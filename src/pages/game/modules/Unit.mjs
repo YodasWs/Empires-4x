@@ -94,11 +94,11 @@ export default class Unit extends Movable {
 		destroyUnitSprite(this);
 	}
 
-	doAction(action) {
+	doAction(action, Grid = Hex.Grid) {
 		try {
 			const [row, col] = actionTileCoordinates(action, this.row, this.col);
-			const targetHex = Hex.Grid.getHex({ row, col });
-			super.setPath(targetHex);
+			const targetHex = Grid.getHex({ row, col });
+			super.setPath(targetHex, Grid);
 			super.moveOneStep();
 			currentGame.events.emit('unit-moved', this);
 		} catch (e) {

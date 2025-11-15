@@ -1,4 +1,4 @@
-import { describe, it, test } from 'node:test';
+import { beforeEach, describe, it, test } from 'node:test';
 import assert from './assert.mjs';
 
 import * as Honeycomb from 'honeycomb-grid';
@@ -272,13 +272,16 @@ describe('Tile class', () => {
 });
 
 describe('Unit class', () => {
-	const unitOptions = {
-		hex: new mockHex({
-			row: 0,
-			col: 0,
-		}),
-		faction: new Faction({ index: 0 }),
-	};
+	let testGrid;
+	let unitOptions;
+
+	beforeEach(() => {
+		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 3, height: 3 }));
+		unitOptions = {
+			hex: testGrid.getHex({ row: 0, col: 0 }),
+			faction: new Faction({ index: 0 }),
+		};
+	});
 
 	test('isActivatableUnit removes destroyed units', () => {
 		const validUnit1 = new Unit('farmer', unitOptions);
@@ -359,40 +362,45 @@ describe('Unit class', () => {
 	});
 
 	it('should move to the given tile correctly', (t) => {
-		t.todo('Need to mock a grid for pathfinding');
-		const row = 5;
-		const col = 5;
+		const row = 2;
+		const col = 2;
 		const newRow = row - 1;
 		const newCol = col;
 		const unit = new Unit('farmer', {
-			hex: new mockHex({ row: 5, col: 5 }),
+			hex: testGrid.getHex({ row, col }),
 			faction: new Faction({ index: 0 }),
 		});
 		unit.prepareForNewTurn();
-		unit.moveTo(new mockHex({
+		unit.setPath(testGrid.getHex({
 			row: newRow,
 			col: newCol,
-		}));
+		}), testGrid);
+		unit.moveOneStep();
 		assert.equal(unit.row, newRow);
 		assert.equal(unit.col, newCol);
 	});
 
 	it('should move to the next tile correctly', (t) => {
-		t.todo('Need to mock a grid for pathfinding');
+		const [row, col] = [2, 2];
+		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.spiral({
+			start: { row, col },
+			radius: 1,
+		}));
 		const unit = new Unit('farmer', {
-			hex: new mockHex({ row: 5, col: 5 }),
+			hex: testGrid.getHex({ row, col }),
 			faction: new Faction({ index: 0 }),
 		});
 		const expected = {
-			u: new mockHex({ row: 5, col: 4 }),
-			l: new mockHex({ row: 5, col: 5 }),
-			i: new mockHex({ row: 4, col: 5 }),
-			k: new mockHex({ row: 5, col: 5 }),
-			o: new mockHex({ row: 5, col: 6 }),
-			j: new mockHex({ row: 5, col: 5 }),
+			u: testGrid.getHex({ row: row - 1, col: col - 1 }),
+			l: testGrid.getHex({ row, col }),
+			i: testGrid.getHex({ row: row - 1, col }),
+			k: testGrid.getHex({ row, col }),
+			o: testGrid.getHex({ row: row - 1, col: col + 1 }),
+			j: testGrid.getHex({ row, col }),
 		};
 		Object.entries(expected).forEach(([dir, coords]) => {
-			unit.doAction(dir);
+			unit.prepareForNewTurn();
+			unit.doAction(dir, testGrid);
 			assert.equal(unit.row, coords.row);
 			assert.equal(unit.col, coords.col);
 		});
