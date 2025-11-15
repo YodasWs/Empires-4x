@@ -21,140 +21,100 @@ function isValidImprovement(hex, improvement, builtImprovement) {
 	return true;
 }
 
-function Tile({
-	hex,
-}) {
-	const claims = {
+export default class Tile {
+	#claims = {
 		faction: new Map(),
 		nation: new Map(),
 	};
-
-	let objImprovement = undefined;
-	let builtImprovement = {
+	#hex;
+	#objImprovement = undefined;
+	#builtImprovement = {
 		key: '',
 	};
+	#laborers = new Set();
+	#food = 0;
 
-	const laborers = new Set();
+	constructor({ hex }) {
+	}
 
-	this.food = 0;
-	Object.defineProperties(this, {
-		claims: {
-			enumerable: true,
-			get: () => (factionOrNation, claimIncrement) => {
-				// Get numerical value of Player's claim
-				if (factionOrNation instanceof Faction) {
-					if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
-						// But first, increment claim value
-						claims.faction.set(factionOrNation, (claims.faction.get(factionOrNation) || 0) + claimIncrement);
-					}
-					return claims.faction.get(factionOrNation) || 0;
-				} else if (factionOrNation instanceof Nation) {
-					if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
-						// But first, increment claim value
-						claims.nation.set(factionOrNation, (claims.nation.get(factionOrNation) || 0) + claimIncrement);
-					}
-					return claims.nation.get(factionOrNation) || 0;
-				}
-				return claims;
-			},
-		},
-		hex: {
-			get: () => hex,
-		},
-		// TODO: Cache Faction
-		faction: {
-			enumerable: true,
-			get: () => {
-				const topClaimant = {
-					faction: null,
-					claim: 0,
-				};
-				claims.faction.forEach((val, claimPlayer) => {
-					if (topClaimant.claim < val) {
-						topClaimant.faction = claimPlayer;
-						topClaimant.claim = val;
-					}
-				});
-				return topClaimant.faction;
-			},
-		},
-		// TODO: Cache Nation
-		nation: {
-			enumerable: true,
-			get: () => {
-				const topClaimant = {
-					nation: null,
-					claim: 0,
-				};
-				claims.nation.forEach((val, claimPlayer) => {
-					if (topClaimant.claim < val) {
-						topClaimant.nation = claimPlayer;
-						topClaimant.claim = val;
-					}
-				});
-				return topClaimant.nation;
-			},
-		},
-		improvement: {
-			enumerable: true,
-			get: () => objImprovement || {},
-		},
-		laborers: {
-			enumerable: true,
-			get: () => laborers,
-			set(val) {
-				if (!(val instanceof Laborer)) {
-					throw new TypeError('Tile.laborers expects to be assigned object instance of Laborer!');
-				}
-				laborers.add(val);
-				return true;
-			},
-		},
-		setImprovement: {
-			get: () => (val, faction = null) => {
-				// Destroy all improvements on Tile
-				if (val === 'destroy') {
-					objImprovement = undefined;
-					builtImprovement = {
-						key: '',
-					};
-					return true;
-				}
+	// TODO: Cache Faction
+	get faction() {
+		const topClaimant = {
+			faction: null,
+			claim: 0,
+		};
+		this.#claims.faction.forEach((val, claimPlayer) => {
+			if (topClaimant.claim < val) {
+				topClaimant.faction = claimPlayer;
+				topClaimant.claim = val;
+			}
+		});
+		return topClaimant.faction;
+	}
 
-				if (isValidImprovement(hex, val, builtImprovement)) {
-					objImprovement = {
-						...json.world.improvements[val],
-						key: val,
-					};
-					if (faction instanceof Faction) {
-						this.claimTerritory(faction, 10);
-						objImprovement.faction = faction;
-					}
-					builtImprovement.key = val;
-					return true;
-				}
-				return false;
-			},
-		},
-		isValidImprovement: {
-			get() {
-				return (improvement) => isValidImprovement(hex, improvement, builtImprovement);
-			},
-		},
-	});
-}
-Object.assign(Tile.prototype, {
+	get hex() {
+		return this.#hex;
+	}
+
+	get improvement() {
+		return this.#objImprovement || {};
+	}
+
+	get laborers() {
+		return this.#laborers;
+	}
+	set laborers(val) {
+		if (!Laborer.isLaborer(val)) {
+			throw new TypeError('Tile.laborers expects to be assigned object instance of Laborer!');
+		}
+		laborers.add(val);
+	}
+
+	// TODO: Cache Nation
+	get nation() {
+		const topClaimant = {
+			nation: null,
+			claim: 0,
+		};
+		this.#claims.nation.forEach((val, claimPlayer) => {
+			if (topClaimant.claim < val) {
+				topClaimant.nation = claimPlayer;
+				topClaimant.claim = val;
+			}
+		});
+		return topClaimant.nation;
+	}
+
+	claims(factionOrNation, claimIncrement) {
+		// Get numerical value of Player's claim
+		let map = null;
+		if (Faction.isFaction(factionOrNation)) {
+			map = 'faction';
+		} else if (Nation.isNation(factionOrNation)) {
+			map = 'nation';
+		}
+		if (map in this.#claims) {
+			if (Number.isInteger(claimIncrement) && claimIncrement !== 0) {
+				// But first, increment claim value
+				this.#claims[map].set(factionOrNation, (this.#claims[map].get(factionOrNation) || 0) + claimIncrement);
+			}
+			return this.#claims[map].get(factionOrNation) || 0;
+		}
+		return this.#claims;
+	}
+
 	claimTerritory(factionOrNation, claimIncrement = 0) {
 		if (Number.isFinite(claimIncrement) && claimIncrement !== 0) {
 			let prevPlayer = undefined;
-			if (factionOrNation instanceof Nation && this.nation instanceof Nation) {
+			if (Nation.isNation(factionOrNation) && Nation.isNation(this.nation)) {
 				prevPlayer = this.nation.index;
-			} else if (factionOrNation instanceof Faction && this.faction instanceof Faction) {
+			} else if (Faction.isFaction(factionOrNation) && Faction.isFaction(this.faction)) {
 				prevPlayer = this.faction.index;
 			}
 			this.claims(factionOrNation, claimIncrement);
 			// Only update territory lines if faction owner has changed
-			if (factionOrNation instanceof Faction && this.faction?.index !== prevPlayer) {
+			if (Faction.isFaction(factionOrNation) && this.faction?.index !== prevPlayer) {
+				// TODO: Use an event or something instead of direct reference to currentGame
 				currentGame.markTerritory(this.hex, {
 					graphics: currentGame.graphics.territoryFills,
 					lineOffset: 1,
@@ -167,9 +127,38 @@ Object.assign(Tile.prototype, {
 				});
 			}
 		}
-	},
-});
-Tile.isTile = function isTile(tile) {
-	return tile instanceof Tile;
-};
-export default Tile;
+	}
+
+	isValidImprovement(improvement) {
+		return isValidImprovement(this.#hex, improvement, this.#builtImprovement);
+	}
+
+	setImprovement(val, faction = null) {
+		// Destroy all improvements on Tile
+		if (val === 'destroy') {
+			this.#objImprovement = undefined;
+			this.#builtImprovement = {
+				key: '',
+			};
+			return true;
+		}
+
+		if (isValidImprovement(hex, val, builtImprovement)) {
+			this.#objImprovement = {
+				...json.world.improvements[val],
+				key: val,
+			};
+			if (faction instanceof Faction) {
+				this.claimTerritory(faction, 10);
+				this.#objImprovement.faction = faction;
+			}
+			this.#builtImprovement.key = val;
+			return true;
+		}
+		return false;
+	}
+
+	static isTile(tile) {
+		return tile instanceof Tile;
+	};
+}
