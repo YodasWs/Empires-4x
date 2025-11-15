@@ -334,6 +334,7 @@ export default class Unit extends Movable {
 
 		super({ base, hex, faction });
 		this.#unitType = unitType;
+		currentGame.events.emit('unit-created', { unit: this });
 	}
 
 	get unitType() {

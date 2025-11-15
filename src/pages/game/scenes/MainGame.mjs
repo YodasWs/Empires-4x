@@ -9,7 +9,7 @@ import { currentGame, GoodsOnBoard } from '../modules/Game.mjs';
 import InputManager from '../modules/InputManager.mjs';
 
 import { renderGoods } from '../views/GoodsView.mjs';
-import { renderUnit } from '../views/UnitView.mjs';
+import { registerUnitToView, renderUnits } from '../views/UnitView.mjs';
 import { removeImprovement, renderImprovement } from '../views/TileView.mjs';
 
 const sceneKey = 'mainGameScene';
@@ -84,6 +84,10 @@ function CenterCameraOnActiveUnit(event) {
 }
 currentGame.events.on('unit-activated', CenterCameraOnActiveUnit);
 
+currentGame.events.on('unit-created', (evt) => {
+	registerUnitToView(evt.detail.unit, MainGameScene);
+});
+
 export default {
 	key: sceneKey,
 	autoStart: true,
@@ -115,6 +119,8 @@ export default {
 		});
 	},
 	create() {
+		MainGameScene = this;
+
 		// Add graphics objects
 		currentGame.graphics = {
 			...currentGame.graphics,
@@ -219,15 +225,11 @@ export default {
 			this.inputManager.enableKeyboardInput();
 		});
 
-		MainGameScene = this;
 		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
 		this.inputManager.update();
-		currentGame.players.forEach((faction) => {
-			// TODO: Optimize by only updating changed units, call moveUnitSprite
-			faction.units.forEach((unit) => renderUnit(unit, this));
-		});
+		renderUnits();
 		// TODO: Optimize by only updating changed goods
 		GoodsOnBoard.forEach(item => renderGoods(item, this));
 		Hex.Grid.forEach((hex) => {
