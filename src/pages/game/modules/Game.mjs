@@ -182,6 +182,7 @@ export const currentGame = {
 
 		// Move Food towards nearest City
 		GoodsOnBoard.forEach((GoodsItem, i) => {
+			return; // TODO: This should be handled by Movable.mjs
 			let { faction, hex, num: food, sprite, type } = GoodsItem;
 			if (type !== 'food') {
 				return;
