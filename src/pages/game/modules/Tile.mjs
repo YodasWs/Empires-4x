@@ -1,3 +1,4 @@
+import World from '../../../json/world.mjs';
 import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
@@ -11,13 +12,13 @@ function isValidImprovement(hex, improvement, builtImprovement) {
 	if (!Hex.isHex(hex)) return false;
 	if (typeof improvement !== 'string' || improvement === '') return false;
 	// Improvement must exist
-	if (!Object.keys(json.world.improvements).includes(improvement)) return false;
+	if (!(improvement in World.improvements)) return false;
 	// Improvement must be same as current, or new
 	if (builtImprovement.key !== '' && builtImprovement.key !== improvement) return false;
 	// Improvement must be valid for terrain
-	if (!hex.terrain.terrain in json.world.improvements[improvement]?.terrains) return false;
+	if (!(hex.terrain.terrain in World.improvements[improvement]?.terrains)) return false;
 	// Cannot build improvement in city
-	if (hex.city instanceof City) return false;
+	if (City.isCity(hex.city)) return false;
 	return true;
 }
 
@@ -26,7 +27,7 @@ export default class Tile {
 		faction: new Map(),
 		nation: new Map(),
 	};
-	#hex;
+	#hex
 	#objImprovement = undefined;
 	#builtImprovement = {
 		key: '',
@@ -35,6 +36,10 @@ export default class Tile {
 	#food = 0;
 
 	constructor({ hex }) {
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('Tile expects to be assigned object instance of Hex!');
+		}
+		this.#hex = hex;
 	}
 
 	// TODO: Cache Faction
@@ -67,7 +72,7 @@ export default class Tile {
 		if (!Laborer.isLaborer(val)) {
 			throw new TypeError('Tile.laborers expects to be assigned object instance of Laborer!');
 		}
-		laborers.add(val);
+		this.#laborers.add(val);
 	}
 
 	// TODO: Cache Nation
@@ -143,9 +148,9 @@ export default class Tile {
 			return true;
 		}
 
-		if (isValidImprovement(hex, val, builtImprovement)) {
+		if (isValidImprovement(this.#hex, val, this.#builtImprovement)) {
 			this.#objImprovement = {
-				...json.world.improvements[val],
+				...World.improvements[val],
 				key: val,
 			};
 			if (faction instanceof Faction) {

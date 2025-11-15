@@ -78,4 +78,7 @@ Object.assign(Laborer.prototype, {
 	},
 });
 Laborer.FOOD_CONSUMPTION = 2;
+Laborer.isLaborer = function isLaborer(obj) {
+	return obj instanceof Laborer;
+};
 export default Laborer;

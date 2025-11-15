@@ -12,7 +12,6 @@ import Goods from '../modules/Goods.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Movable from '../modules/Movable.mjs';
 import Nation from '../modules/Nation.mjs';
-import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import { currentGame } from '../modules/Game.mjs';
@@ -243,29 +242,5 @@ describe('Nation class', () => {
 	it('should have the correct name', () => {
 		assert.equal(new Nation({ index: 0 }).name, 'Roman Empire');
 		assert.equal(new Nation({ index: 1 }).name, 'Unknown');
-	});
-});
-
-describe('Tile class', () => {
-	it('should have a Hex coordinate', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should have a Faction owner', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should have a Nation owner', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should have a Set of Laborers', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should accept a new Laborer', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should update territorial claims for Faction', (t) => {
-		t.skip('Not yet implemented');
-	});
-	it('should update territorial claims for Nation', (t) => {
-		t.skip('Not yet implemented');
 	});
 });
