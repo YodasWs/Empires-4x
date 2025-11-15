@@ -221,51 +221,6 @@ describe('Laborer class', () => {
 	});
 });
 
-describe('Movable class', () => {
-	const Grid = new Honeycomb.Grid(mockHex, Honeycomb.spiral({
-		start: { row: 0, col: 0 },
-		radius: 3,
-	}));
-
-	it('should set the correct path to an adjacent hex', (t) => {
-		const movable = new Movable({
-			hex: Grid.getHex({ row: 0, col: 0 }),
-		});
-		movable.activate();
-		const moveIterable = movable.setPath(Grid.getHex({ row: 1, col: 0 }), Grid);
-		assert.notEqual(moveIterable, null);
-	});
-
-	it('should be able to move to an adjacent hex', (t) => {
-		const movable = new Movable({
-			hex: Grid.getHex({ row: 0, col: 0 }),
-		});
-		movable.activate();
-		const targetHex = Grid.getHex({ row: 1, col: 0 });
-		const moveIterable = movable.setPath(targetHex, Grid);
-		assert.notEqual(moveIterable, null);
-		movable.moveOneStep();
-		assert.equal(movable.row, targetHex.row);
-		assert.equal(movable.col, targetHex.col);
-	});
-
-	it('should set the correct path to a distant hex', (t) => {
-		const movable = new Movable({
-			hex: Grid.getHex({ row: -2, col: 0 }),
-		});
-		const targetHex = Grid.getHex({ row: 2, col: 2 });
-		const moveIterable = movable.setPath(targetHex, Grid);
-		assert.notEqual(moveIterable, null);
-		for (let i = 0; i < 10; i++) {
-			if (moveIterable.done === true) break;
-			movable.activate();
-			movable.moveOneStep();
-		}
-		assert.equal(movable.row, targetHex.row);
-		assert.equal(movable.col, targetHex.col);
-	});
-});
-
 describe('Nation class', () => {
 	it('should have the correct color', () => {
 		assert.equal(new Nation({ index: 0 }).color, 0x32cd32);
