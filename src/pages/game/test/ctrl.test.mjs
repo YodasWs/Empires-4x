@@ -24,7 +24,8 @@ class mockHex extends Honeycomb.defineHex({
 }) {
 	constructor(options) {
 		super(options);
-		this.terrain = World.terrains[options.terrain || 'grass'];
+		this.terrain = World.terrains[options.terrain || 'grass'] || {};
+		this.terrain.terrain = options.terrain || 'grass'
 		this.tile = new Tile(this);
 	}
 }
@@ -221,55 +222,47 @@ describe('Laborer class', () => {
 });
 
 describe('Movable class', () => {
+	const Grid = new Honeycomb.Grid(mockHex, Honeycomb.spiral({
+		start: { row: 0, col: 0 },
+		radius: 3,
+	}));
+
 	it('should set the correct path to an adjacent hex', (t) => {
-		t.todo('Test not yet implemented; currently relies on Grid');
-		const row = 5;
-		const col = 5;
-		const newRow = row - 1;
-		const newCol = col;
 		const movable = new Movable({
-			hex: new mockHex({ row, col })
+			hex: Grid.getHex({ row: 0, col: 0 }),
 		});
-		const moveIterable = movable.setPath(new mockHex({
-			row: newRow,
-			col: newCol,
-		}));
+		movable.activate();
+		const moveIterable = movable.setPath(Grid.getHex({ row: 1, col: 0 }), Grid);
 		assert.notEqual(moveIterable, null);
 	});
 
 	it('should be able to move to an adjacent hex', (t) => {
-		t.todo('Test not yet implemented; currently relies on Grid');
-		const row = 5;
-		const col = 5;
-		const newRow = row - 1;
-		const newCol = col;
 		const movable = new Movable({
-			hex: new mockHex({ row, col })
+			hex: Grid.getHex({ row: 0, col: 0 }),
 		});
-		const moveIterable = movable.setPath(new mockHex({
-			row: newRow,
-			col: newCol,
-		}));
+		movable.activate();
+		const targetHex = Grid.getHex({ row: 1, col: 0 });
+		const moveIterable = movable.setPath(targetHex, Grid);
 		assert.notEqual(moveIterable, null);
 		movable.moveOneStep();
-		assert.equal(movable.row, newRow);
-		assert.equal(movable.col, newCol);
+		assert.equal(movable.row, targetHex.row);
+		assert.equal(movable.col, targetHex.col);
 	});
 
 	it('should set the correct path to a distant hex', (t) => {
-		t.todo('Test not yet implemented; currently relies on Grid');
-		const row = 2;
-		const col = 2;
-		const newRow = 5;
-		const newCol = 5;
 		const movable = new Movable({
-			hex: new mockHex({ row, col })
+			hex: Grid.getHex({ row: -2, col: 0 }),
 		});
-		const moveIterable = movable.setPath(new mockHex({
-			row: newRow,
-			col: newCol,
-		}));
+		const targetHex = Grid.getHex({ row: 2, col: 2 });
+		const moveIterable = movable.setPath(targetHex, Grid);
 		assert.notEqual(moveIterable, null);
+		for (let i = 0; i < 10; i++) {
+			if (moveIterable.done === true) break;
+			movable.activate();
+			movable.moveOneStep();
+		}
+		assert.equal(movable.row, targetHex.row);
+		assert.equal(movable.col, targetHex.col);
 	});
 });
 
@@ -411,7 +404,7 @@ describe('Unit class', () => {
 	});
 
 	it('should move to the given tile correctly', (t) => {
-		t.todo('Need to implement new Movable class instead');
+		t.todo('Need to mock a grid for pathfinding');
 		const row = 5;
 		const col = 5;
 		const newRow = row - 1;
@@ -430,7 +423,7 @@ describe('Unit class', () => {
 	});
 
 	it('should move to the next tile correctly', (t) => {
-		t.todo('Need to implement new Movable class first');
+		t.todo('Need to mock a grid for pathfinding');
 		const unit = new Unit('farmer', {
 			hex: new mockHex({ row: 5, col: 5 }),
 			faction: new Faction({ index: 0 }),

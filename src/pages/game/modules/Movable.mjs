@@ -29,6 +29,10 @@ export default class Movable {
 		};
 	}
 
+	get baseMovementPoints() {
+		return this.#base.movementPoints;
+	}
+
 	get deleted() {
 		return this.#deleted;
 	}
@@ -106,13 +110,13 @@ export default class Movable {
 		}
 	}
 
-	setPath(targetHex) {
+	setPath(targetHex, Grid = Hex.Grid) {
 		if (!Hex.isHex(targetHex)) {
 			throw new TypeError('Movable.setPath expects to be assigned a Hex!');
 		}
 
-		const path = Hex.FindPath(this.#hex, targetHex, this);
-		if (!Hex.isValidPath(path)) {
+		const path = Hex.FindPath(this.#hex, targetHex, this, Grid);
+		if (!Hex.isValidPath(path, Grid)) {
 			// TODO: Warn User no path was found
 			console.warn('Sam, no path found!');
 			return this.#moveIterator = null;

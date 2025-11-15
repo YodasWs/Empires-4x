@@ -25,7 +25,13 @@ export function isHex(hex) {
 export const Grid = new Honeycomb.Grid(gameHex, Honeycomb.rectangle({ width: 15, height: 6 }));
 
 // Thanks to https://github.com/AlurienFlame/Honeycomb and https://www.redblobgames.com/pathfinding/a-star/introduction.html
-export function FindPath(start, end, movable) {
+export function FindPath(start, end, movable, GridInstance = Grid) {
+	if (!isHex(start)) {
+		throw new TypeError('FindPath expects a Hex as start!');
+	}
+	if (!isHex(end)) {
+		throw new TypeError('FindPath expects a Hex as end!');
+	}
 	if (!Movable.isInstanceofMovable(movable)) {
 		throw new TypeError('FindPath expects a Movable!');
 	}
@@ -53,7 +59,7 @@ export function FindPath(start, end, movable) {
 		closedHexes.push(current);
 
 		// Check the neighbors
-		Grid.traverse(Honeycomb.ring({
+		GridInstance.traverse(Honeycomb.ring({
 			center: [ current.q, current.r ],
 			radius: 1,
 		})).forEach((neighbor) => {
@@ -66,7 +72,7 @@ export function FindPath(start, end, movable) {
 			// g_cost is movement cost from start
 			neighbor.g_cost = current.g_cost + MovementCost(movable, neighbor, current);
 			// h_cost is simple distance to end
-			neighbor.h_cost = Grid.distance(current, end);
+			neighbor.h_cost = GridInstance.distance(current, end);
 			// f_cost is sum of above two
 			neighbor.f_cost = neighbor.g_cost + neighbor.h_cost;
 
@@ -79,7 +85,7 @@ export function FindPath(start, end, movable) {
 	}
 
 	if (!foundPath) {
-		return;
+		return [];
 	}
 
 	// TODO: Return the hexes from end.parent back
@@ -95,14 +101,14 @@ export function FindPath(start, end, movable) {
 	return path;
 }
 
-export function isValidPath(path) {
+export function isValidPath(path, GridInstance = Grid) {
 	if (!Array.isArray(path) || path.length === 0 || path.some((hex) => !isHex(hex))) {
 		return false;
 	}
 	for (let i = 1; i < path.length; i++) {
 		const prevHex = path[i - 1];
 		const currentHex = path[i];
-		if (Grid.distance(prevHex, currentHex) !== 1) {
+		if (GridInstance.distance(prevHex, currentHex) !== 1) {
 			return false;
 		}
 	}
@@ -128,14 +134,12 @@ export function IsLegalMove(targetHex, movable) {
 		}
 	} else if (Goods.isGoods(movable)) {
 		// Uh, what do we need to check? Or is this all handled by MovementCost?
-	} else {
-		return false;
 	}
 
-	// Check movement into terrain
+	// Check that Movable has ability to move into terrain
 	const moves = MovementCost(movable, targetHex);
 	if (!Number.isFinite(moves)) return false;
-	return moves <= movable.moves;
+	return moves <= movable.baseMovementPoints;
 }
 
 export function MovementCost(movable, nextHex, thisHex = movable.hex) {
