@@ -210,7 +210,8 @@ function CloseUnitActionMenu() {
 currentGame.events.on('esc-pressed', CloseUnitActionMenu);
 
 function OpenUnitActionMenu(evt) {
-	const hex = evt.detail?.hex;
+	// TODO: In the future, we don't want to accept the hex, only the Unit
+	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) {
 		// Not valid hex, exit
 		return;
@@ -238,8 +239,7 @@ function OpenUnitActionMenu(evt) {
 		});
 	}
 
-	if (currentGame.activeUnit instanceof Unit) {
-		console.log('Sam, unit, current location:', currentGame.activeUnit.hex.row, currentGame.activeUnit.hex.col);
+	if (Unit.isUnit(currentGame.activeUnit)) {
 		if (currentGame.activeUnit.hex.row == hex.row && currentGame.activeUnit.hex.col == hex.col) {
 			// Check conditions to add actions based on unit type
 			switch (currentGame.activeUnit.unitType) {
@@ -336,4 +336,6 @@ function OpenUnitActionMenu(evt) {
 	currentGame.domContainer.appendChild(div);
 	currentGame.domContainer.style.zIndex = 1;
 }
+// TODO: hex-clicked should change the side panel, not open the unit action menu
 currentGame.events.on('hex-clicked', OpenUnitActionMenu);
+currentGame.events.on('open-unit-menu', OpenUnitActionMenu);

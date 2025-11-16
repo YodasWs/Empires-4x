@@ -58,6 +58,10 @@ export default class InputManager {
 	}
 
 	#listenOnMainGameScene() {
+		this.#scene.input.manager.canvas.addEventListener('contextmenu', (e) => {
+			e.preventDefault();
+		});
+
 		this.#scene.input.keyboard.on('keydown', (evt) => {
 			// Ctrl+R, reload; Ctrl+1, change browser tab
 			if (evt.ctrlKey && [
@@ -112,7 +116,8 @@ export default class InputManager {
 				case 'ContextMenu':
 				case ' ':
 					if (Unit.isUnit(currentGame.activeUnit)) {
-						currentGame.events.emit('open-unit-menu', currentGame.activeUnit.hex);
+						// TODO: Also open unit action menu on right-click of active unit
+						currentGame.events.emit('open-unit-menu', { unit: currentGame.activeUnit });
 					}
 					return;
 			}
