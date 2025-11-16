@@ -1,3 +1,4 @@
+import World from '../../../json/world.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 
 import * as Hex from './Hex.mjs';
@@ -19,6 +20,119 @@ function getUnitsOnHex(hex) {
 	return units;
 }
 
+// TODO: Base action object:
+/*
+action = {
+	key: 'nameOfAction',
+	text: ({ hex, unit, faction }) => 'User-facing Action Name',
+	sprite: 'optional-sprite-key',
+	isValidOption: ({ hex, unit, faction }) => true/false,
+	doAction: ({ hex, unit, faction }) => {
+		// Perform action
+	},
+}
+/**/
+
+class GameAction {
+	constructor(definition) {
+		[
+			'execute',
+			'isValid',
+			'label',
+		].forEach((prop) => {
+			if (prop in definition) {
+				this[`#${prop}`] = definition[prop];
+				delete definition[prop];
+			}
+		});
+		Object.assign(this, definition);
+	}
+
+	isValid(context) {
+		if (this['#isValid'] === true) return true;
+		const fn = ActionValidators[this['#isValid']];
+		return typeof fn === 'function' ? fn(context) : true;
+	}
+
+	execute(context) {
+		const fn = ActionExecutors[this['#execute']];
+		if (!this.isValid(context)) {
+			return false;
+		}
+		if (typeof fn === 'function') {
+			return fn(context);
+		}
+		console.warn(`No executor for action ${this.key}`);
+	}
+
+	get label() {
+		const fn = ActionLabels[this['#label']];
+		if (typeof fn === 'function') return fn(context);
+		return this['#label'];
+	}
+}
+
+const ActionRegistry = new Map();
+
+function loadActions(actionDefs) {
+	actionDefs.forEach(def => {
+		const action = new GameAction(def);
+		ActionRegistry.set(action.key, action);
+	});
+}
+loadActions(World.actions);
+
+const ActionValidators = {
+	isFarmBuildable({ hex, unit }) {
+		return unit.unitType === 'farmer' && hex.tile.isValidImprovement('farm');
+	},
+	isHexControlled({ hex, faction }) {
+		return hex.tile.faction === faction;
+	},
+	// etc.
+};
+
+const ActionExecutors = {
+	buildFarm({ unit, hex }) {
+		hex.tile.setImprovement('farm', unit.faction);
+		unit.destroy();
+	},
+	wait({ unit }) {
+		unit.deactivate();
+	},
+	skip({ unit }) {
+		unit.deactivate(true);
+	},
+	// etc.
+};
+
+// Store any labels that need to be generated dynamically by function
+const ActionLabels = {
+};
+
+export class ActionHandler {
+	static handle(key, context) {
+		const action = ActionRegistry.get(key);
+		if (!(action instanceof GameAction)) return false;
+		if (!action.isValid(context)) return false;
+		action.execute(context);
+		return true;
+	}
+
+	static getAvailableActions(context) {
+		return [...ActionRegistry.values()].filter(action => action.isValid(context));
+	}
+}
+
+currentGame.events.on('key-pressed', (evt) => {
+	const key = evt.detail;
+	const unit = currentGame.activeUnit;
+	if (!Unit.isUnit(unit)) return;
+	const context = { unit, hex: unit.hex, faction: unit.faction };
+	ActionHandler.handle(key, context);
+});
+
+/*
 // TODO: This object should define every action and handle all of each action's programming
 function Action(def) {
 	Object.keys(def).forEach((key) => {
@@ -43,7 +157,9 @@ function Action(def) {
 }
 Object.assign(Action.prototype, {
 });
+//*/
 
+/*
 export const Actions = [
 	{
 		key: 'moveTo',
@@ -175,7 +291,9 @@ export const Actions = [
 	...obj,
 	[action.key]: new Action(action),
 }), {});
+//*/
 
+/*
 export function DoAction(evt, hex = null) {
 	// Not the player's turn, leave
 	if (currentGame.currentPlayer !== currentGame.players[0]) {
@@ -201,6 +319,7 @@ export function DoAction(evt, hex = null) {
 	// All that remains are Unit actions
 	currentGame.activeUnit.doAction(evt.key ?? evt, hex);
 }
+//*/
 
 function CloseUnitActionMenu() {
 	if (typeof Element !== 'undefined' && currentGame.domContainer instanceof Element) {

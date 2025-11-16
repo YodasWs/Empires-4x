@@ -74,6 +74,66 @@ export default class InputManager {
 
 			evt.preventDefault();
 			switch (evt.key) {
+				case 'q':
+					break;
+				case 'w':
+					currentGame.events.emit('key-pressed', 'wait');
+					return;
+				case 'e':
+					break;
+				case 'r':
+					break;
+				case 't':
+					break;
+				case 'y':
+					break;
+				case 'u':
+					// Handled below
+					break;
+				case 'i':
+					// Handled below
+					break;
+				case 'o':
+					// Handled below
+					break;
+				case 'p':
+					break;
+				case 'a':
+					break;
+				case 's':
+					currentGame.events.emit('key-pressed', 'skip');
+					return;
+				case 'd':
+					break;
+				case 'f':
+					break;
+				case 'g':
+					break;
+				case 'h':
+					break;
+				case 'j':
+					// Handled below
+					break;
+				case 'k':
+					// Handled below
+					break;
+				case 'l':
+					// Handled below
+					break;
+				case 'z':
+					break;
+				case 'x':
+					break;
+				case 'c':
+					break;
+				case 'v':
+					break;
+				case 'b':
+					break;
+				case 'n':
+					break;
+				case 'm':
+					break;
 				case 'Escape':
 					currentGame.events.emit('esc-pressed');
 					break;
