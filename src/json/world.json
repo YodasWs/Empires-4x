@@ -1,4 +1,46 @@
 {
+	"actions": [
+		{
+			"key": "wait",
+			"label": "Wait",
+			"description": "Wait and come back later this turn",
+			"icon": "wait.png",
+			"requiresHex": false,
+			"isValid": true,
+			"execute": "wait"
+		},
+		{
+			"key": "skip",
+			"label": "Skip",
+			"description": "Skip this unit's turn",
+			"icon": "skip.png",
+			"requiresHex": false,
+			"isValid": true,
+			"execute": "skip"
+		},
+		{
+			"key": "tile",
+			"label": "Information on space",
+			"description": "View information about this tile",
+			"icon": "about-tile.png",
+			"requiresHex": true,
+			"isValid": "HexTileValid",
+			"execute": "StartTileView"
+		},
+		{
+			"key": "build-farm",
+			"label": "Build Farm",
+			"description": "Construct a farm on this tile",
+			"icon": "farm.png",
+			"unitTypes": [
+				"farmer"
+			],
+			"requiresHex": true,
+			"requiresFactionControl": false,
+			"isValid": "isFarmBuildable",
+			"execute": "buildFarm"
+		}
+	],
 	"improvements": {
 		"farm": {
 			"title": "Subsistence Farm",
@@ -56,7 +98,6 @@
 	"ResourceTransporter": {
 		"crossCreeks": 1.25,
 		"crossStreams": 2,
-		"moveOnCanal": true,
 		"moveOnLand": true,
 		"moveOnWater": false,
 		"movementPoints": 12,

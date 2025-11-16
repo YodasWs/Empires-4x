@@ -60,6 +60,7 @@ class GameAction {
 			return false;
 		}
 		if (typeof fn === 'function') {
+			CloseUnitActionMenu();
 			return fn(context);
 		}
 		console.warn(`No executor for action ${this.key}`);
@@ -89,6 +90,9 @@ const ActionValidators = {
 	isHexControlled({ hex, faction }) {
 		return hex.tile.faction === faction;
 	},
+	HexTileValid({ hex }) {
+		return Hex.isHex(hex) && Tile.isTile(hex.tile);
+	},
 	// etc.
 };
 
@@ -102,6 +106,9 @@ const ActionExecutors = {
 	},
 	skip({ unit }) {
 		unit.deactivate(true);
+	},
+	StartTileView({ hex }) {
+		currentGame.scenes.start('tile-view', { hex });
 	},
 	// etc.
 };
@@ -329,6 +336,57 @@ function CloseUnitActionMenu() {
 currentGame.events.on('esc-pressed', CloseUnitActionMenu);
 
 function OpenUnitActionMenu(evt) {
+	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
+	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) return;
+
+	const unit = currentGame.activeUnit;
+	const faction = currentGame.currentPlayer;
+	const context = { hex, unit, faction };
+
+	const possibleActions = ActionHandler.getAvailableActions(context)
+
+	// No valid actions
+	if (possibleActions.length === 0) {
+		CloseUnitActionMenu();
+		return;
+	}
+
+	// Auto-execute if only one action and it's not a menu-worthy one
+	if (possibleActions.length === 1 && possibleActions[0].key !== 'activateUnit') {
+		possibleActions[0].execute(context);
+		return;
+	}
+
+	// Build menu
+	currentGame.domContainer.innerHTML = '';
+	const div = document.createElement('div');
+	div.classList.add('menu');
+
+	possibleActions.forEach((action) => {
+		const button = document.createElement('button');
+		button.innerHTML = action.label;
+		button.addEventListener('click', () => {
+			action.execute(context);
+		});
+		button.style.pointerEvents = 'auto';
+		button.style.cursor = 'pointer';
+		div.appendChild(button);
+	});
+
+	// Add cancel button
+	const cancel = document.createElement('button');
+	cancel.innerHTML = 'Cancel';
+	cancel.addEventListener('click', CloseUnitActionMenu);
+	cancel.style.pointerEvents = 'auto';
+	cancel.style.cursor = 'pointer';
+	div.appendChild(cancel);
+
+	currentGame.domContainer.appendChild(div);
+	currentGame.domContainer.style.zIndex = 1;
+}
+
+/*
+function OpenUnitActionMenu(evt) {
 	// TODO: In the future, we don't want to accept the hex, only the Unit
 	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) {
@@ -455,6 +513,7 @@ function OpenUnitActionMenu(evt) {
 	currentGame.domContainer.appendChild(div);
 	currentGame.domContainer.style.zIndex = 1;
 }
+//*/
 // TODO: hex-clicked should change the side panel, not open the unit action menu
 currentGame.events.on('hex-clicked', OpenUnitActionMenu);
 currentGame.events.on('open-unit-menu', OpenUnitActionMenu);
