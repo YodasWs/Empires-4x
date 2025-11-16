@@ -13,24 +13,6 @@ import * as Hex from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
 import Scenes from './scenes/scenes.mjs';
 
-// A scene function, for example in `create()`
-function displayImageInHTML({
-	htmlElementId,
-	imageKey,
-	scene = currentGame.scenes.getScene('mainGameScene'),
-} = {}) {
-	// Get the HTML <img> element by its ID
-	const imgElement = document.getElementById(htmlElementId);
-
-	// Get the Texture instance from the Texture Manager
-	const texture = scene.textures.get(imageKey);
-
-	if (texture instanceof Phaser.Textures.Texture && imgElement instanceof Element) {
-		// Get the source image from the texture, which is an HTMLImageElement
-		imgElement.append(texture.getSourceImage());
-	}
-}
-
 yodasws.page('pageGame').setRoute({
 	template: 'pages/game/game.html',
 	canonicalRoute: '/game/',

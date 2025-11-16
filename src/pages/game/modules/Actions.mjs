@@ -60,7 +60,7 @@ export const Actions = [
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
-				closeUnitActionMenu();
+				CloseUnitActionMenu();
 				currentGame.scenes.start('tile-view', {
 					hex,
 				});
@@ -75,7 +75,7 @@ export const Actions = [
 		},
 		doAction({ hex }) {
 			if (this.isValidOption({ hex })) {
-				closeUnitActionMenu();
+				CloseUnitActionMenu();
 				currentGame.scenes.start('city-view', {
 					hex,
 				});
@@ -97,7 +97,7 @@ export const Actions = [
 		},
 		doAction({ unit, faction }) {
 			if (this.isValidOption({ unit })) {
-				closeUnitActionMenu();
+				CloseUnitActionMenu();
 
 				// Deactivate current unit without ending moves
 				if (currentGame.activeUnit instanceof Unit) {
@@ -169,9 +169,7 @@ export const Actions = [
 	{
 		key: '',
 		text: 'Cancel',
-		doAction() {
-			closeUnitActionMenu();
-		},
+		doAction: CloseUnitActionMenu,
 	},
 ].reduce((obj, action) => ({
 	...obj,
@@ -204,11 +202,12 @@ export function DoAction(evt, hex = null) {
 	currentGame.activeUnit.doAction(evt.key ?? evt, hex);
 }
 
-function closeUnitActionMenu() {
+function CloseUnitActionMenu() {
 	if (typeof Element !== 'undefined' && currentGame.domContainer instanceof Element) {
 		currentGame.domContainer.innerHTML = '';
 	}
 }
+currentGame.events.on('esc-pressed', CloseUnitActionMenu);
 
 function OpenUnitActionMenu(evt) {
 	const hex = evt.detail?.hex;
@@ -287,7 +286,7 @@ function OpenUnitActionMenu(evt) {
 
 	// No actions, do nothing
 	if (possibleActions.length === 0) {
-		closeUnitActionMenu();
+		CloseUnitActionMenu();
 		return;
 	}
 

@@ -1,5 +1,24 @@
+import { currentGame } from '../modules/Game.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
+
+// A scene function, for example in `create()`
+function displayImageInHTML({
+	htmlElementId,
+	imageKey,
+	scene,
+} = {}) {
+	// Get the HTML <img> element by its ID
+	const imgElement = document.getElementById(htmlElementId);
+
+	// Get the Texture instance from the Texture Manager
+	const texture = scene.textures.get(imageKey);
+
+	if (texture instanceof Phaser.Textures.Texture && imgElement instanceof Element) {
+		// Get the source image from the texture, which is an HTMLImageElement
+		imgElement.append(texture.getSourceImage());
+	}
+}
 
 export default {
 	key: 'tile-view',
@@ -7,11 +26,11 @@ export default {
 	},
 	create({ hex }) {
 		if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) {
-			game.scene.resume('mainGameScene');
+			currentGame.scenes.resume('mainGameScene');
 			return;
 		}
 		console.log('Sam, tile-view created');
-		game.scene.pause('mainGameScene');
+		this.scene.pause('mainGameScene');
 		const dom = document.getElementById('tile-view');
 
 		// Display Terrain Information
@@ -87,7 +106,7 @@ export default {
 		this.input.keyboard.enabled = true;
 		this.input.keyboard.on('keydown', (evt) => {
 			if (evt.key === 'Escape') {
-				game.scene.stop('tile-view');
+				this.scene.stop('tile-view');
 			}
 		});
 
@@ -95,14 +114,14 @@ export default {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 			console.log('Sam, tile-view sleep');
-			game.domContainer.innerHTML = '';
-			game.scene.wake('mainGameScene');
+			currentGame.domContainer.innerHTML = '';
+			this.scene.wake('mainGameScene');
 		}).on('shutdown', () => {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 			console.log('Sam, tile-view shutdown');
-			game.domContainer.innerHTML = '';
-			game.scene.wake('mainGameScene');
+			currentGame.domContainer.innerHTML = '';
+			this.scene.wake('mainGameScene');
 		});
 	},
 	update() {

@@ -70,6 +70,9 @@ export default class InputManager {
 
 			evt.preventDefault();
 			switch (evt.key) {
+				case 'Escape':
+					currentGame.events.emit('esc-pressed');
+					break;
 				case 'F1':
 					// TODO: Help
 					break;
@@ -108,7 +111,7 @@ export default class InputManager {
 					break;
 				case 'ContextMenu':
 				case ' ':
-					if (UnitUtils.isUnit(currentGame.activeUnit)) {
+					if (Unit.isUnit(currentGame.activeUnit)) {
 						currentGame.events.emit('open-unit-menu', currentGame.activeUnit.hex);
 					}
 					return;
