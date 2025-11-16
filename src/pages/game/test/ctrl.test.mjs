@@ -8,7 +8,6 @@ import World from '../../../json/world.mjs';
 import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
 import City from '../modules/City.mjs';
 import Faction, * as FactionUtils from '../modules/Faction.mjs';
-import Goods from '../modules/Goods.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Movable from '../modules/Movable.mjs';
 import Nation from '../modules/Nation.mjs';
@@ -145,54 +144,6 @@ describe('Faction class', () => {
 		];
 		const result = FactionUtils.getNextMovableUnit(units, 0);
 		assert.equal(result, false);
-	});
-});
-
-describe('Goods class', () => {
-	test('Goods.isValidGoodsType gives false for unknown value', () => {
-		assert.false(Goods.isValidGoodsType('this-is-not-a-good'));
-	});
-
-	it('creates valid Goods instance', (t) => {
-		const type = 'food';
-		assert.true(Goods.isValidGoodsType(type));
-		const hex = new mockHex({ row: 0, col: 0 });
-		const goods = new Goods(type, {
-			hex,
-			num: 3,
-		});
-		assert.equal(goods.goodsType, type);
-		assert.true(Goods.isValidGoodsType(goods.goodsType));
-		assert.equal(goods.hex, hex);
-		assert.equal(goods.num, 3);
-	});
-
-	it('throws on invalid hex', (t) => {
-		assert.throws(() => new Goods('food', {
-			hex: { row: 0, col: 0, tile: {} },
-		}), {
-			name: 'TypeError',
-			message: 'Movable expects to be assigned a Hex!'
-		});
-	});
-
-	it('throws on unknown goods type', (t) => {
-		assert.throws(() => new Goods('not-real-name', {
-			hex: new mockHex({ row: 0, col: 0 }),
-		}), {
-			name: 'TypeError',
-			message: "Unknown Goods type 'not-real-name'"
-		});
-	});
-
-	it('throws on invalid num assignment', (t) => {
-		const goods = new Goods('food', {
-			hex: new mockHex({ row: 0, col: 0 }),
-		});
-		assert.throws(() => { goods.num = -1 }, {
-			name: 'TypeError',
-			message: 'Goods.num expects to be assigned a nonnegative integer!'
-		});
 	});
 });
 

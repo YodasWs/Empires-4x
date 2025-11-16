@@ -4,7 +4,7 @@ import * as Hex from './Hex.mjs';
 import Movable from './Movable.mjs';
 
 export default class Goods extends Movable {
-	#goodsType
+	#goodsType;
 	#num;
 	#rounds = 0;
 	#start;
@@ -22,7 +22,7 @@ export default class Goods extends Movable {
 			hex,
 		});
 		this.#goodsType = goodsType;
-		this.num = num;
+		this.#num = num;
 		this.#start = hex;
 	}
 
