@@ -120,13 +120,6 @@ export default class InputManager {
 			}
 		});
 
-		this.#scene.input.on('pointerup', (pointer) => {
-			if (!pointer.isDown) {
-				const hex = Hex.Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY });
-				scene.events.emit('hex-clicked', hex);
-			}
-		});
-
 		// Pointer handling: support drag-to-pan (drag) and click-to-open (click)
 		let isDragging = false;
 		const dragStart = { x: 0, y: 0 };
@@ -172,9 +165,12 @@ export default class InputManager {
 		});
 
 		this.#scene.input.on('pointerup', (pointer) => {
+			// Treat as click
 			if (!isDragging) {
-				// Treat as click
-				currentGame.events.emit('hex-clicked', Hex.Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY }));
+				const hex = Hex.Grid.pointToHex({ x: pointer.worldX, y: pointer.worldY });
+				if (Hex.isHex(hex)) {
+					currentGame.events.emit('hex-clicked', { hex });
+				}
 			}
 			// Reset drag state
 			isDragging = false;

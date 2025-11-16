@@ -1,7 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './modules/Config.mjs';
 
-import { DoAction, OpenUnitActionMenu } from './modules/Actions.mjs';
+import { DoAction } from './modules/Actions.mjs';
 import City from './modules/City.mjs';
 import Faction from './modules/Faction.mjs';
 import Goods from './modules/Goods.mjs';

@@ -3,7 +3,6 @@ import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
 import Faction from './Faction.mjs';
-import Goods from './Goods.mjs';
 import Laborer from './Laborer.mjs';
 import Tile from './Tile.mjs';
 import * as Hex from './Hex.mjs';
@@ -67,6 +66,7 @@ export const currentGame = {
 
 			// Produce Food
 			if (hex.tile.laborers.size > 0) {
+				return; // TODO: Move this code somewhere else
 				let food = 0;
 				food += hex.terrain.food || 0;
 				food += hex.tile.improvement.food || 0;
@@ -278,10 +278,5 @@ export const currentGame = {
 			currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 			this.startRound();
 		});
-	},
-	closeUnitActionMenu() {
-		if (typeof Element !== 'undefined' && this.domContainer instanceof Element) {
-			this.domContainer.innerHTML = '';
-		}
 	},
 };

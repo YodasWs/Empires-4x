@@ -5,7 +5,7 @@ import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
 import World from '../../../json/world.mjs';
 
-import { Actions, DoAction, OpenUnitActionMenu } from '../modules/Actions.mjs';
+import { Actions, DoAction } from '../modules/Actions.mjs';
 import City from '../modules/City.mjs';
 import Faction, * as FactionUtils from '../modules/Faction.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
