@@ -49,7 +49,10 @@ class GameAction {
 	}
 
 	isValid(context) {
+		if (typeof context.menu === 'string' && !this.showIn.includes(context.menu)) return false;
 		if (this['#isValid'] === true) return true;
+		if (Array.isArray(this.unitTypes) &&
+			(!Unit.isUnit(context.unit) || !this.unitTypes.includes(context.unit.unitType))) return false;
 		const fn = ActionValidators[this['#isValid']];
 		return typeof fn === 'function' ? fn(context) : true;
 	}
@@ -85,6 +88,7 @@ loadActions(World.actions);
 
 const ActionValidators = {
 	isFarmBuildable({ hex, unit }) {
+		if (hex !== unit.hex) return false;
 		return unit.unitType === 'farmer' && hex.tile.isValidImprovement('farm');
 	},
 	isHexControlled({ hex, faction }) {
@@ -330,18 +334,55 @@ export function DoAction(evt, hex = null) {
 
 function CloseUnitActionMenu() {
 	if (typeof Element !== 'undefined' && currentGame.domContainer instanceof Element) {
-		currentGame.domContainer.innerHTML = '';
+		currentGame.domContainer.querySelector('.menu')?.remove();
 	}
 }
 currentGame.events.on('esc-pressed', CloseUnitActionMenu);
 
-function OpenUnitActionMenu(evt) {
+currentGame.events.on('unit-activated', (evt) => {
+	const unit = evt.detail?.unit;
+	if (!Unit.isUnit(unit) || currentGame.activeUnit !== unit) return;
+	console.log('Sam, unit activated:', unit);
+
+	// Build menu
+	currentGame.domContainer.innerHTML = '';
+	const div = document.createElement('div');
+	div.classList.add('unit-actions-menu');
+
+	const faction = currentGame.currentPlayer;
+	const context = {
+		menu: 'unit-actions-menu',
+		hex: unit.hex,
+		unit,
+		faction,
+	};
+
+	ActionHandler.getAvailableActions(context).forEach((action) => {
+		const button = document.createElement('button');
+		button.innerHTML = action.label;
+		button.addEventListener('click', () => {
+			action.execute(context);
+		});
+		button.style.pointerEvents = 'auto';
+		div.appendChild(button);
+	});
+
+	currentGame.domContainer.appendChild(div);
+	currentGame.domContainer.style.zIndex = 1;
+});
+
+function OpenTileMenu(evt) {
 	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) return;
 
 	const unit = currentGame.activeUnit;
 	const faction = currentGame.currentPlayer;
-	const context = { hex, unit, faction };
+	const context = {
+		menu: 'tile-menu',
+		hex,
+		unit,
+		faction,
+	};
 
 	const possibleActions = ActionHandler.getAvailableActions(context)
 
@@ -358,7 +399,7 @@ function OpenUnitActionMenu(evt) {
 	}
 
 	// Build menu
-	currentGame.domContainer.innerHTML = '';
+	currentGame.domContainer.querySelector('.menu')?.remove();
 	const div = document.createElement('div');
 	div.classList.add('menu');
 
@@ -369,7 +410,6 @@ function OpenUnitActionMenu(evt) {
 			action.execute(context);
 		});
 		button.style.pointerEvents = 'auto';
-		button.style.cursor = 'pointer';
 		div.appendChild(button);
 	});
 
@@ -378,7 +418,6 @@ function OpenUnitActionMenu(evt) {
 	cancel.innerHTML = 'Cancel';
 	cancel.addEventListener('click', CloseUnitActionMenu);
 	cancel.style.pointerEvents = 'auto';
-	cancel.style.cursor = 'pointer';
 	div.appendChild(cancel);
 
 	currentGame.domContainer.appendChild(div);
@@ -515,5 +554,5 @@ function OpenUnitActionMenu(evt) {
 }
 //*/
 // TODO: hex-clicked should change the side panel, not open the unit action menu
-currentGame.events.on('hex-clicked', OpenUnitActionMenu);
-currentGame.events.on('open-unit-menu', OpenUnitActionMenu);
+currentGame.events.on('hex-clicked', OpenTileMenu);
+currentGame.events.on('open-unit-menu', OpenTileMenu);

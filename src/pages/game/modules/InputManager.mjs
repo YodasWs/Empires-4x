@@ -58,6 +58,9 @@ export default class InputManager {
 	}
 
 	#listenOnMainGameScene() {
+		currentGame.domContainer.addEventListener('contextmenu', (e) => {
+			e.preventDefault();
+		});
 		this.#scene.input.manager.canvas.addEventListener('contextmenu', (e) => {
 			e.preventDefault();
 		});

@@ -189,7 +189,13 @@ export default {
 			]);
 
 			// Minimap View
-			const minimap = this.cameras.add(windowConfig.width - 800, windowConfig.height - 400, 800, 400);
+			let height = 400;
+			let width = 800;
+			if (window.innerHeight < 600) {
+				height = 300;
+				width = 500;
+			}
+			const minimap = this.cameras.add(windowConfig.width - width, windowConfig.height - height, width, height);
 			minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
 			minimap.centerOn(Hex.Grid.pixelWidth / 2, Hex.Grid.pixelHeight / 2);
 			minimap.ignore([

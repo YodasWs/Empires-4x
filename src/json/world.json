@@ -5,7 +5,7 @@
 			"label": "Wait",
 			"description": "Wait and come back later this turn",
 			"icon": "wait.png",
-			"requiresHex": false,
+			"showIn": ["unit-actions-menu"],
 			"isValid": true,
 			"execute": "wait"
 		},
@@ -14,7 +14,7 @@
 			"label": "Skip",
 			"description": "Skip this unit's turn",
 			"icon": "skip.png",
-			"requiresHex": false,
+			"showIn": ["unit-actions-menu"],
 			"isValid": true,
 			"execute": "skip"
 		},
@@ -23,7 +23,7 @@
 			"label": "Information on space",
 			"description": "View information about this tile",
 			"icon": "about-tile.png",
-			"requiresHex": true,
+			"showIn": ["tile-menu"],
 			"isValid": "HexTileValid",
 			"execute": "StartTileView"
 		},
@@ -35,10 +35,18 @@
 			"unitTypes": [
 				"farmer"
 			],
-			"requiresHex": true,
-			"requiresFactionControl": false,
+			"showIn": ["unit-actions-menu"],
 			"isValid": "isFarmBuildable",
 			"execute": "buildFarm"
+		},
+		{
+			"key": "end-turn",
+			"label": "End Turn",
+			"description": "End Turn",
+			"icon": "end-turn.png",
+			"showIn": ["unit-actions-menu"],
+			"isValid": true,
+			"execute": "end-turn"
 		}
 	],
 	"improvements": {

@@ -17,6 +17,40 @@
 		}
 	}
 
+	div.unit-actions-menu {
+		position: fixed;
+
+		bottom: 0;
+		right: 800px;
+		left: 0;
+		background: forestgreen;
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: space-evenly;
+		padding: 20px 0;
+
+		@media (orientation: landscape) {
+			flex-flow: column nowrap;
+			max-width: 200px;
+			bottom: 0;
+			right: auto;
+			left: 0;
+			top: 110px;
+			padding: 0 20px;
+		}
+
+		> button {
+			font-family: "Trebuchet MS", "Open Sans", "Helvetica Neue", sans-serif;
+			font-size: 40px;
+			border-radius: 100px;
+			padding: 5px 15px;
+
+			&:not([disabled]) {
+				cursor: pointer;
+			}
+		}
+	}
+
 	div.menu {
 		background: white;
 		position: fixed;
@@ -49,6 +83,10 @@
 					content: ")";
 				}
 			}
+
+			&:not([disabled]) {
+				cursor: pointer;
+			}
 		}
 	}
 
@@ -60,6 +98,7 @@
 		height: 100%;
 		width: 100%;
 		background: rgba(0, 0, 0, 0.5);
+		z-index: 10;
 
 		&[hidden] {
 			display: none;
@@ -84,6 +123,10 @@
 				padding: 2px 5px;
 				border-radius: 0.5em;
 			}
+		}
+
+		&:not([hidden]) + .game .unit-actions-menu {
+			display: none;
 		}
 	}
 }
