@@ -18,6 +18,9 @@ export default class InputManager {
         this.#cursors = scene.input.keyboard.createCursorKeys();
 		this.#shiftKey = scene.input.keyboard.addKey(globalThis.Phaser.Input.Keyboard.KeyCodes.SHIFT);
 		switch (this.#sceneKey = this.#scene.scene.key) {
+			case 'tile-view':
+				this.#listenOnTileViewScene();
+				break;
 			case 'mainGameScene':
 				this.#listenOnMainGameScene();
 				break;
@@ -55,6 +58,12 @@ export default class InputManager {
 				}
 				break;
 		}
+	}
+
+	#listenOnTileViewScene() {
+		document.querySelector('#tile-view').addEventListener('contextmenu', (e) => {
+			e.preventDefault();
+		});
 	}
 
 	#listenOnMainGameScene() {

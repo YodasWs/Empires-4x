@@ -2,6 +2,8 @@ import { currentGame } from '../modules/Game.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 
+import InputManager from '../modules/InputManager.mjs';
+
 // A scene function, for example in `create()`
 function displayImageInHTML({
 	htmlElementId,
@@ -110,17 +112,18 @@ export default {
 			}
 		});
 
+		this.inputManager = new InputManager(this);
+
 		this.events.on('sleep', () => {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 			console.log('Sam, tile-view sleep');
-			currentGame.domContainer.innerHTML = '';
 			this.scene.wake('mainGameScene');
+			this.inputManager.disableKeyboardInput();
 		}).on('shutdown', () => {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
 			console.log('Sam, tile-view shutdown');
-			currentGame.domContainer.innerHTML = '';
 			this.scene.wake('mainGameScene');
 		});
 	},
