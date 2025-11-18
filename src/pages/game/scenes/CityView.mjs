@@ -1,4 +1,6 @@
+import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
+
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 import { currentGame } from '../modules/Game.mjs';
@@ -9,25 +11,27 @@ export default {
 	},
 	create(data) {
 		if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile)) {
-			game.scene.resume('mainGameScene');
+			this.scene.resume('mainGameScene');
 			return;
 		}
 		console.log('Sam, city-view created');
-		game.scene.pause('mainGameScene');
+		this.scene.pause('mainGameScene');
+		this.scene.moveAbove('mainControls', 'city-view');
+		const windowConfig = GameConfig.getWindowConfig();
 
 		// Start building graphics scene
 		{
 			// Lay black background
 			const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(0);
 			graphics.fillStyle(0x000000, 0.5);
-			graphics.fillRect(0, 0, config.width, config.height);
+			graphics.fillRect(0, 0, windowConfig.width, windowConfig.height);
 		}
 		const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
 
 		// Close button
 		graphics.fillStyle(0x000000, 1);
-		graphics.fillRect(config.width - 100, 0, 100, 100);
-		this.add.text(config.width - 100, 0, '× ', {
+		graphics.fillRect(windowConfig.width - 100, 0, 100, 100);
+		this.add.text(windowConfig.width - 100, 0, '× ', {
 			fixedWidth: 100,
 			fixedHeight: 100,
 			font: '60pt Trebuchet MS',
@@ -36,17 +40,17 @@ export default {
 			stroke: 'black',
 			strokeThickness: 7,
 		}).setDepth(2).setInteractive().on('pointerdown', () => {
-			game.scene.stop('city-view');
+			this.scene.stop('city-view');
 		});
 
 		// Important constants for translating city tiles locations
 		const [offsetX, offsetY] = [data.hex.x, data.hex.y];
 		// TODO: Need to either make sure tiles fit in screen or that user can pan camera
 
-		const tileScale = Math.min(config.height, config.width) / 7 / GameConfig.tileWidth;
+		const tileScale = Math.min(windowConfig.height, windowConfig.width) / 7 / GameConfig.tileWidth;
 		const center = {
-			x: config.width / 2,
-			y: config.height / 3,
+			x: windowConfig.width / 2,
+			y: windowConfig.height / 3,
 		};
 
 		// Grab and render city hexes
@@ -95,18 +99,16 @@ export default {
 		this.input.keyboard.enabled = true;
 		this.input.keyboard.on('keydown', (evt) => {
 			if (evt.key === 'Escape') {
-				game.scene.stop('city-view');
+				this.scene.stop('city-view');
 			}
 		});
 
 		this.events.on('sleep', () => {
 			console.log('Sam, city-view sleep');
-			game.domContainer.innerHTML = '';
-			game.scene.wake('mainGameScene');
+			this.scene.wake('mainGameScene');
 		}).on('shutdown', () => {
 			console.log('Sam, city-view shutdown');
-			game.domContainer.innerHTML = '';
-			game.scene.wake('mainGameScene');
+			this.scene.wake('mainGameScene');
 		});
 	},
 	update() {

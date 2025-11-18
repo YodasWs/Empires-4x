@@ -2,6 +2,7 @@ import World from '../../../json/world.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 
 import * as Hex from './Hex.mjs';
+import City from './City.mjs';
 import Tile from './Tile.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
@@ -87,6 +88,15 @@ function loadActions(actionDefs) {
 loadActions(World.actions);
 
 const ActionValidators = {
+	currentPlayerTurn() {
+		return currentGame.currentPlayer === currentGame.players[0];
+	},
+	hexTileValid({ hex }) {
+		return Hex.isHex(hex) && Tile.isTile(hex.tile);
+	},
+	isCityTile({ hex }) {
+		return City.isCity(hex.city);
+	},
 	isFarmBuildable({ hex, unit }) {
 		if (hex !== unit.hex) return false;
 		return unit.unitType === 'farmer' && hex.tile.isValidImprovement('farm');
@@ -94,10 +104,6 @@ const ActionValidators = {
 	isHexControlled({ hex, faction }) {
 		return hex.tile.faction === faction;
 	},
-	HexTileValid({ hex }) {
-		return Hex.isHex(hex) && Tile.isTile(hex.tile);
-	},
-	// etc.
 };
 
 const ActionExecutors = {
@@ -105,16 +111,21 @@ const ActionExecutors = {
 		hex.tile.setImprovement('farm', unit.faction);
 		unit.destroy();
 	},
-	wait({ unit }) {
-		unit.deactivate();
+	endTurn() {
+		currentGame.events.emit('end-turn');
 	},
 	skip({ unit }) {
 		unit.deactivate(true);
 	},
-	StartTileView({ hex }) {
+	startCityView({ hex }) {
+		currentGame.scenes.start('city-view', { hex });
+	},
+	startTileView({ hex }) {
 		currentGame.scenes.start('tile-view', { hex });
 	},
-	// etc.
+	wait({ unit }) {
+		unit.deactivate();
+	},
 };
 
 // Store any labels that need to be generated dynamically by function
@@ -285,19 +296,6 @@ export const Actions = [
 			return hex.tile.isValidImprovement('farm');
 		},
 	},
-	{
-		key: 'w', // wait
-		text: '<u>W</u>ait',
-	},
-	{
-		key: 's', // stay
-		text: '<u>S</u>tay here this turn',
-	},
-	{
-		key: '',
-		text: 'Cancel',
-		doAction: CloseUnitActionMenu,
-	},
 ].reduce((obj, action) => ({
 	...obj,
 	[action.key]: new Action(action),
@@ -342,9 +340,9 @@ currentGame.events.on('esc-pressed', CloseUnitActionMenu);
 currentGame.events.on('unit-activated', (evt) => {
 	const unit = evt.detail?.unit;
 	if (!Unit.isUnit(unit) || currentGame.activeUnit !== unit) return;
-	console.log('Sam, unit activated:', unit);
 
 	// Build menu
+	// TODO: Move this to the Scene or View
 	currentGame.domContainer.innerHTML = '';
 	const div = document.createElement('div');
 	div.classList.add('unit-actions-menu');
@@ -371,6 +369,7 @@ currentGame.events.on('unit-activated', (evt) => {
 	currentGame.domContainer.style.zIndex = 1;
 });
 
+// TODO: Move this to the Scene or View
 function OpenTileMenu(evt) {
 	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) return;

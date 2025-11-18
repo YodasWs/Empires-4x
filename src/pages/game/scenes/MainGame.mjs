@@ -217,11 +217,16 @@ export default {
 			console.log('Sam, mainGameScene paused');
 			currentGame.scenes.pause('mainControls');
 			hideActionSprites();
+			currentGame.domContainer.style.zIndex = 0;
+			this.inputManager.disableKeyboardInput();
+		}).on('sleep', () => {
+			currentGame.scenes.sleep('mainControls');
+			currentGame.domContainer.style.zIndex = 0;
 			this.inputManager.disableKeyboardInput();
 		});
 		this.events.on('resume', () => {
 			console.log('Sam, mainGameScene resumed');
-			currentGame.scenes.resume('mainControls');
+			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
 			this.inputManager.enableKeyboardInput();
 		}).on('wake', () => {
