@@ -32,7 +32,7 @@ function hideActionSprites() {
 	}
 }
 currentGame.events.on('unit-deactivated', hideActionSprites);
-currentGame.events.on('unit-activated', hideActionSprites);
+currentGame.events.on('unit-moving', hideActionSprites);
 
 export function ShowActiveUnitHelpSprites(event) {
 	if (globalThis.Phaser === undefined) {
@@ -73,7 +73,10 @@ export function ShowActiveUnitHelpSprites(event) {
 		}
 	});
 }
-currentGame.events.on('unit-activated', ShowActiveUnitHelpSprites);
+currentGame.events.on('unit-activated', (evt) => {
+	hideActionSprites(evt);
+	ShowActiveUnitHelpSprites(evt);
+});
 
 function CenterCameraOnActiveUnit(event) {
 	if (globalThis.Phaser === undefined) {

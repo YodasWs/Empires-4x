@@ -95,20 +95,9 @@ describe('Unit class', () => {
 		assert.equal(unit.col, 2);
 	});
 
-	test('doAction emits unit-moved event', (t) => {
-		const start = testGrid.getHex({ row: 1, col: 1 });
-		const unit = new Unit('farmer', { hex: start, faction });
-		unit.prepareForNewTurn();
-		unit.activate();
+	test('isUnit and isMovableUnit type guards work', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
 
-		const spy = t.mock.fn();
-		t.mock.method(currentGame.events, 'emit', spy);
-
-		unit.doAction('l', testGrid);
-		assert.equal(spy.mock.calls.at(-1).arguments[0], 'unit-moved');
-	});
-
-	test('isUnit and isMovableUnit type guards work', () => {
 		const hex = testGrid.getHex({ row: 1, col: 1 });
 		const unit = new Unit('farmer', { hex, faction });
 		unit.prepareForNewTurn();
@@ -127,7 +116,9 @@ describe('Unit class', () => {
 		};
 	});
 
-	test('isActivatableUnit removes destroyed units', () => {
+	test('isActivatableUnit removes destroyed units', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
 		const deletedUnit1 = new Unit('farmer', unitOptions);
@@ -150,7 +141,9 @@ describe('Unit class', () => {
 		assert.deepEqual(result, [validUnit1, movedUnit1, validUnit2]);
 	});
 
-	test('isMovableUnit removes units with 0 remaining moves', () => {
+	test('isMovableUnit removes units with 0 remaining moves', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const validUnit2 = new Unit('rancher', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);

@@ -1,3 +1,5 @@
+import * as GameConfig from '../modules/Config.mjs';
+
 // TODO: Fog-of-war implementation
 // TODO: Display Improvement on the Tile (or do that in ImprovementView.mjs?)
 

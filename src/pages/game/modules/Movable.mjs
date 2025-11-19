@@ -122,6 +122,10 @@ export default class Movable {
 		return this.#faction;
 	}
 
+	get canContinueOnPath() {
+		return this.#moveIterator !== null && this.#path.length > 0 && this.#moves > 0;
+	}
+
 	get hex() {
 		return this.#hex;
 	}
@@ -145,12 +149,23 @@ export default class Movable {
 		return this.#hex.col;
 	}
 
-	activate() {
-		this.#moves = this.#base.movementPoints;
+	*#FollowPathGenerator() {
+		while (this.#path.length > 0) {
+			const nextHex = this.#path[0];
+			const cost = Hex.MovementCost(this, nextHex);
+			if (this.#moves < cost) {
+				this.deactivate(true);
+				break;
+			}
+			this.#moves -= cost
+			this.#hex = nextHex;
+			yield this.#path.shift();
+		}
+	}
 
-		// TODO: Continue on path
-		if (Array.isArray(this.#path) && this.#path.length > 0) {
-			this.#moveIterator = this.#FollowPathGenerator();
+	activate(continueOnPath = true) {
+		if (continueOnPath === true && this.canContinueOnPath) {
+			this.moveOneTurn();
 			return;
 		}
 
@@ -172,20 +187,6 @@ export default class Movable {
 
 	prepareForNewTurn() {
 		this.#moves = this.#base.movementPoints;
-	}
-
-	*#FollowPathGenerator() {
-		while (this.#path.length > 0) {
-			const nextHex = this.#path[0];
-			const cost = Hex.MovementCost(this, nextHex);
-			if (this.#moves < cost) {
-				this.deactivate(true);
-				break;
-			}
-			this.#moves -= cost
-			this.#hex = nextHex;
-			yield this.#path.shift();
-		}
 	}
 
 	setPath(targetHex, Grid = Hex.Grid) {
@@ -210,10 +211,13 @@ export default class Movable {
 			this.#hex = result.value;
 			if (result.done || this.#path.length <= 0) {
 				this.#moveIterator = null;
-				if (this.#moves <= 0) {
-					this.deactivate(true);
-				}
 			}
+		}
+	}
+
+	moveOneTurn() {
+		while (this.canContinueOnPath) {
+			this.moveOneStep();
 		}
 	}
 

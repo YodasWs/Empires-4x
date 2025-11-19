@@ -280,3 +280,4 @@ export const currentGame = {
 		});
 	},
 };
+currentGame.events.on('end-turn', currentGame.endTurn.bind(currentGame));

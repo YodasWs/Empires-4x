@@ -78,19 +78,20 @@ function Faction({
 			},
 			set(val) {
 				if (Number.isInteger(val) && val >= 0) {
-					if (val >= units.length) {
-						activeUnitIndex = val % units.length;
-						return true;
-					}
-					activeUnitIndex = val;
-					return true;
+					activeUnitIndex = val % units.length;
+					return;
 				}
 				if (val === null) {
 					activeUnitIndex = null;
 				}
-				return false;
 			},
 		},
+	});
+
+	currentGame.events.on('unit-moved', (evt) => {
+		if (evt.detail.faction === this || evt.detail.unit.faction === this) {
+			evt.detail.promise.then(this.checkEndTurn.bind(this));
+		}
 	});
 }
 Object.assign(Faction.prototype, {
@@ -103,12 +104,12 @@ Object.assign(Faction.prototype, {
 	checkEndTurn() {
 		const hasMovableUnit = this.activateNext();
 		if (!hasMovableUnit) {
-			currentGame.endTurn();
+			currentGame.events.emit('end-turn', { faction: this });
 		}
 	},
 	activateUnit(intUnit = activeUnitIndex) {
 		if (this.units.length === 0) {
-			this.checkEndTurn();
+			currentGame.events.emit('end-turn', { faction: this });
 			return false;
 		}
 		if (!Unit.isActivatableUnit(this.units[intUnit])) {

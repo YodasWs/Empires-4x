@@ -53,8 +53,11 @@ export function renderUnits() {
 		}
 
 		if (detail.x !== unit.hex.x || detail.y !== unit.hex.y) {
-			moveUnitSprite(unit, unit.hex).then(() => {
-				detail.update(unit.hex);
+			const promise = moveUnitSprite(unit, unit.hex);
+			detail.update(unit.hex);
+			promise.then(() => {
+				console.log('Sam, emitting unit-moved');
+				currentGame.events.emit('unit-moved', { unit, promise });
 			});
 		}
 
@@ -73,6 +76,7 @@ function moveUnitSprite(unit, targetHex) {
 	if (!detail) return;
 
 	return new Promise((resolve) => {
+		currentGame.events.emit('unit-moving', { unit });
 		detail.scene.tweens.add({
 			targets: detail.sprite,
 			x: targetHex.x,

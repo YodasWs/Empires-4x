@@ -78,15 +78,16 @@ describe('Faction class', () => {
 		assert.equal(currentGame.activeUnit, faction.units[0]);
 	});
 
-	test('Faction.checkEndTurn calls currentGame.endTurn', async (t) => {
-		const mockEndTurn = t.mock.fn();
-		t.mock.method(currentGame, 'endTurn', mockEndTurn);
+	test('Faction.checkEndTurn emit end-turn event', async (t) => {
+		const spy = t.mock.fn();
+		t.mock.method(currentGame.events, 'emit', spy);
 
 		const faction = new Faction({ index: 0 });
 		faction.activateNext = () => false; // force endTurn path
 		faction.checkEndTurn();
 
-		assert.equal(mockEndTurn.mock.callCount(), 1);
+		assert.equal(spy.mock.callCount(), 1);
+		assert.equal(spy.mock.calls[0].arguments[0], 'end-turn');
 	});
 
 	test('getFactionColor returns correct color for index', (t) => {
@@ -97,6 +98,8 @@ describe('Faction class', () => {
 	});
 
 	test('getNextMovableUnit returns correct index', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
@@ -115,6 +118,8 @@ describe('Faction class', () => {
 	});
 
 	test('getNextMovableUnit wraps around if needed', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const validUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
@@ -133,6 +138,8 @@ describe('Faction class', () => {
 	});
 
 	test('getNextMovableUnit returns false if no valid unit', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const movedUnit1 = new Unit('farmer', unitOptions);
 		const movedUnit2 = new Unit('rancher', unitOptions);
 		movedUnit1.deactivate(true);

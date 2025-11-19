@@ -1,5 +1,4 @@
 import World from '../../../json/world.mjs';
-import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
 import Faction from './Faction.mjs';

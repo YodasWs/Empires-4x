@@ -104,6 +104,9 @@ const ActionValidators = {
 	isHexControlled({ hex, faction }) {
 		return hex.tile.faction === faction;
 	},
+	isLegalMove({ hex, unit }) {
+		return Hex.IsLegalMove(hex, unit);
+	},
 };
 
 const ActionExecutors = {
@@ -119,6 +122,11 @@ const ActionExecutors = {
 	},
 	startCityView({ hex }) {
 		currentGame.scenes.start('city-view', { hex });
+	},
+	startMoveTo({ unit, hex }) {
+		if (unit.setPath(hex)) {
+			unit.moveOneTurn();
+		}
 	},
 	startTileView({ hex }) {
 		currentGame.scenes.start('tile-view', { hex });

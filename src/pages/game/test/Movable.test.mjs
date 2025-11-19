@@ -84,10 +84,33 @@ describe('Movable class', () => {
 		assert.true(movable.moves < movable.baseMovementPoints);
 	});
 
+	test('moveOneTurn updates position and reduces moves', () => {
+		const start = testGrid.getHex({ row: 0, col: 0 });
+		const end = testGrid.getHex({ row: 0, col: 2 });
+		const faction = new Faction({ index: 0 });
+		const movable = new Movable({
+			hex: start,
+			faction,
+			base: {
+				movementPoints: 10,
+				movementCosts: {
+					grass: 5,
+				},
+			},
+		});
+		movable.prepareForNewTurn();
+		movable.setPath(end, testGrid);
+		movable.moveOneTurn();
+		assert.equal(movable.row, end.row);
+		assert.equal(movable.col, end.col);
+		assert.equal(movable.moves, 0);
+	});
+
 	it('should be able to move to an adjacent hex', (t) => {
 		const movable = new Movable({
 			hex: testGrid.getHex({ row: 0, col: 0 }),
 		});
+		movable.prepareForNewTurn();
 		movable.activate();
 		const targetHex = testGrid.getHex({ row: 1, col: 0 });
 		movable.setPath(targetHex, testGrid);
@@ -106,8 +129,9 @@ describe('Movable class', () => {
 		assert.notEqual(moveIterable, null);
 		for (let i = 0; i < 10; i++) {
 			if (moveIterable.done === true) break;
+			movable.prepareForNewTurn();
 			movable.activate();
-			movable.moveOneStep();
+			movable.moveOneTurn();
 		}
 		assert.equal(movable.row, targetHex.row);
 		assert.equal(movable.col, targetHex.col);

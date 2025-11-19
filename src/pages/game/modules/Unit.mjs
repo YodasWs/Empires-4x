@@ -66,16 +66,14 @@ export default class Unit extends Movable {
 		super.deactivate(endMoves);
 		currentGame.activeUnit = null;
 		// TODO: Probably do this by event emitter instead
-		currentGame.currentPlayer?.checkEndTurn();
+		this.faction.checkEndTurn();
 	}
 
-	activate() {
-		// TODO: Tell View Layer to highlight this unit as active
-		// TODO: Tell View Layer to pan camera to this unit
+	activate(continueOnPath = true) {
 		// TODO: Add setting to skip this if automated movement
-		// TODO: Add setting to skip if not human player's unit
+		// TODO: Add setting to skip view/center/wait if not human player's unit
 
-		super.activate();
+		super.activate(continueOnPath);
 
 		currentGame.activeUnit = this;
 
@@ -100,7 +98,6 @@ export default class Unit extends Movable {
 			const targetHex = Grid.getHex({ row, col });
 			super.setPath(targetHex, Grid);
 			super.moveOneStep();
-			currentGame.events.emit('unit-moved', this);
 		} catch (e) {
 			// I don't think we care about the error here
 		}
