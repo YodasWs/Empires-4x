@@ -369,6 +369,9 @@ currentGame.events.on('unit-activated', (evt) => {
 		button.addEventListener('click', () => {
 			action.execute(context);
 		});
+		if (typeof action.description === 'string' && action.description !== '') {
+			button.setAttribute('title', action.description);
+		}
 		button.style.pointerEvents = 'auto';
 		div.appendChild(button);
 	});
@@ -416,6 +419,9 @@ function OpenTileMenu(evt) {
 		button.addEventListener('click', () => {
 			action.execute(context);
 		});
+		if (typeof action.description === 'string' && action.description !== '') {
+			button.setAttribute('title', action.description);
+		}
 		button.style.pointerEvents = 'auto';
 		div.appendChild(button);
 	});
