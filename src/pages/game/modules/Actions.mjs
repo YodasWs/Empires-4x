@@ -105,7 +105,7 @@ const ActionValidators = {
 		return hex.tile.faction === faction;
 	},
 	isLegalMove({ hex, unit }) {
-		return Hex.IsLegalMove(hex, unit);
+		return hex !== unit.hex && Hex.IsLegalMove(hex, unit);
 	},
 };
 
