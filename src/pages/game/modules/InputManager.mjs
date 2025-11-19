@@ -117,6 +117,9 @@ export default class InputManager {
 					return;
 				case 'd':
 					break;
+				case 'F':
+					currentGame.events.emit('key-pressed', 'build-farm');
+					break;
 				case 'f':
 					break;
 				case 'g':
