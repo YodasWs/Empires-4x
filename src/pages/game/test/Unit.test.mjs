@@ -76,7 +76,9 @@ describe('Unit class', () => {
 		assert.equal(spy.mock.calls[1].arguments[0], 'unit-activated');
 	});
 
-	test('deactivate clears activeUnit and ends turn', () => {
+	test('deactivate clears activeUnit and ends turn', (t) => {
+		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+
 		const hex = testGrid.getHex({ row: 1, col: 1 });
 		const unit = new Unit('farmer', { hex, faction });
 		unit.prepareForNewTurn();
@@ -96,7 +98,8 @@ describe('Unit class', () => {
 	});
 
 	test('isUnit and isMovableUnit type guards work', (t) => {
-		t.mock.method(currentGame.events, 'emit', t.mock.fn());
+		const spy = t.mock.fn();
+		t.mock.method(currentGame.events, 'emit', spy);
 
 		const hex = testGrid.getHex({ row: 1, col: 1 });
 		const unit = new Unit('farmer', { hex, faction });
@@ -105,6 +108,9 @@ describe('Unit class', () => {
 		assert.true(Unit.isMovableUnit(unit));
 		unit.deactivate(true);
 		assert.false(Unit.isMovableUnit(unit));
+
+		assert.equal(spy.mock.callCount(), 2); // unit-created + end-turn
+		assert.equal(spy.mock.calls[1].arguments[0], 'end-turn');
 	});
 
 	let unitOptions;

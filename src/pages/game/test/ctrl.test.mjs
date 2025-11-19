@@ -78,7 +78,7 @@ describe('Faction class', () => {
 		assert.equal(currentGame.activeUnit, faction.units[0]);
 	});
 
-	test('Faction.checkEndTurn emit end-turn event', async (t) => {
+	test('Faction.checkEndTurn emits end-turn event', async (t) => {
 		const spy = t.mock.fn();
 		t.mock.method(currentGame.events, 'emit', spy);
 
