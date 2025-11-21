@@ -1,6 +1,15 @@
 {
 	"actions": [
 		{
+			"key": "move",
+			"label": "Move here",
+			"description": "Move to target location",
+			"icon": "move-to-tile.png",
+			"showIn": ["tile-menu"],
+			"isValid": "isLegalMove",
+			"execute": "startMoveTo"
+		},
+		{
 			"key": "wait",
 			"label": "Wait",
 			"description": "Wait and come back later this turn",
@@ -24,13 +33,22 @@
 			"description": "View information about this tile",
 			"icon": "about-tile.png",
 			"showIn": ["tile-menu"],
-			"isValid": "HexTileValid",
-			"execute": "StartTileView"
+			"isValid": "hexTileValid",
+			"execute": "startTileView"
+		},
+		{
+			"key": "city-view",
+			"label": "View City",
+			"description": "View information about this city",
+			"icon": "city-view.png",
+			"showIn": ["tile-menu"],
+			"isValid": "isCityTile",
+			"execute": "startCityView"
 		},
 		{
 			"key": "build-farm",
 			"label": "Build Farm",
-			"description": "Construct a farm on this tile",
+			"description": "Construct a farm on this tile. The farmer unit will be consumed and become a laborer to work the farm.",
 			"icon": "farm.png",
 			"unitTypes": [
 				"farmer"
@@ -45,8 +63,8 @@
 			"description": "End Turn",
 			"icon": "end-turn.png",
 			"showIn": ["unit-actions-menu"],
-			"isValid": true,
-			"execute": "end-turn"
+			"isValid": "currentPlayerTurn",
+			"execute": "endTurn"
 		}
 	],
 	"improvements": {
