@@ -65,6 +65,7 @@ export default class Unit extends Movable {
 	deactivate(endMoves = false) {
 		super.deactivate(endMoves);
 		currentGame.activeUnit = null;
+		currentGame.events.emit('unit-deactivated', { unit: this });
 		// TODO: Probably do this by event emitter instead
 		this.faction.checkEndTurn();
 	}

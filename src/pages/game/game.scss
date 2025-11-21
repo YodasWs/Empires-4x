@@ -17,6 +17,16 @@
 		}
 	}
 
+	$max-left-menu-width: 0;
+
+	@media (orientation: landscape) {
+		$max-left-menu-width: 200px;
+
+		div.unit-actions-menu {
+			max-width: $max-left-menu-width;
+		}
+	}
+
 	div.unit-actions-menu {
 		position: fixed;
 
@@ -31,7 +41,6 @@
 
 		@media (orientation: landscape) {
 			flex-flow: column nowrap;
-			max-width: 200px;
 			bottom: 0;
 			right: auto;
 			left: 0;
@@ -54,23 +63,22 @@
 	div.menu {
 		background: white;
 		position: fixed;
-		left: 50%;
-		top: 50%;
-		translate: -50% -50%;
+		bottom: 0;
+		left: math.div($max-left-menu-width, 2);
+		right: 400px;
 		margin: 0;
 		padding: 0.5em 2em;
 		border: 5px solid black;
-		max-height: calc(200vh - 2em);
-		max-width: calc(200vw - 2em);
 		border-radius: 50px;
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: space-evenly;
 
 		> button {
-			display: block;
-			margin: 1em 0;
 			padding: 2px 5px;
-			width: 100%;
 			text-align: left;
 			font-family: "Trebuchet MS", "Open Sans", "Helvetica Neue", sans-serif;
+			font-size: 20px;
 
 			> kbd {
 				font-size: 20pt;

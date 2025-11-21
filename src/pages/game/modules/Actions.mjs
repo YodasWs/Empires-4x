@@ -65,6 +65,7 @@ class GameAction {
 		}
 		if (typeof fn === 'function') {
 			CloseUnitActionMenu();
+			CloseTileMenu();
 			return fn(context);
 		}
 		console.warn(`No executor for action ${this.key}`);
@@ -99,6 +100,7 @@ const ActionValidators = {
 	},
 	isFarmBuildable({ hex, unit }) {
 		if (hex !== unit.hex) return false;
+		if (!ActionValidators.hexTileValid({ hex })) return false;
 		return unit.unitType === 'farmer' && hex.tile.isValidImprovement('farm');
 	},
 	isHexControlled({ hex, faction }) {
@@ -338,16 +340,51 @@ export function DoAction(evt, hex = null) {
 }
 //*/
 
-function CloseUnitActionMenu() {
-	if (typeof Element !== 'undefined' && currentGame.domContainer instanceof Element) {
-		currentGame.domContainer.querySelector('.menu')?.remove();
-	}
+if (typeof globalThis.document === 'undefined') {
+	globalThis.document = {
+		add() {
+			return this;
+		},
+		addEventListener() {
+			return this;
+		},
+		appendChild() {
+			return this;
+		},
+		createElement() {
+			return this;
+		},
+		getElementById() {
+			return this;
+		},
+		querySelector() {
+			return this;
+		},
+		querySelectorAll() {
+			return [];
+		},
+		remove() {
+			return this;
+		},
+		removeAttribute() {
+			return this;
+		},
+		setAttribute() {
+			return this;
+		},
+	};
+	globalThis.document.classList = globalThis.document;
+	globalThis.document.style = globalThis.document;
 }
-currentGame.events.on('esc-pressed', CloseUnitActionMenu);
+
+let dom = null;
 
 currentGame.events.on('unit-activated', (evt) => {
 	const unit = evt.detail?.unit;
 	if (!Unit.isUnit(unit) || currentGame.activeUnit !== unit) return;
+	if (typeof Element === 'undefined' || !(currentGame.domContainer instanceof Element)) {
+		return;
+	}
 
 	// Build menu
 	// TODO: Move this to the Scene or View
@@ -380,10 +417,24 @@ currentGame.events.on('unit-activated', (evt) => {
 	currentGame.domContainer.style.zIndex = 1;
 });
 
+function CloseUnitActionMenu() {
+	currentGame.domContainer.innerHTML = '';
+	currentGame.domContainer.style.zIndex = 0;
+}
+currentGame.events.on('unit-deactivated', CloseUnitActionMenu);
+currentGame.events.on('unit-moving', CloseUnitActionMenu);
+
+function CloseTileMenu(evt) {
+	dom ??= document.getElementById('side-panel');
+	dom.setAttribute('hidden', true);
+}
+currentGame.events.on('esc-pressed', CloseTileMenu);
+
 // TODO: Move this to the Scene or View
 function OpenTileMenu(evt) {
 	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) return;
+	dom ??= document.getElementById('side-panel');
 
 	const unit = currentGame.activeUnit;
 	const faction = currentGame.currentPlayer;
@@ -398,7 +449,6 @@ function OpenTileMenu(evt) {
 
 	// No valid actions
 	if (possibleActions.length === 0) {
-		CloseUnitActionMenu();
 		return;
 	}
 
@@ -409,7 +459,7 @@ function OpenTileMenu(evt) {
 	}
 
 	// Build menu
-	currentGame.domContainer.querySelector('.menu')?.remove();
+	dom.setAttribute('hidden', true);
 	const div = document.createElement('div');
 	div.classList.add('menu');
 
@@ -429,12 +479,13 @@ function OpenTileMenu(evt) {
 	// Add cancel button
 	const cancel = document.createElement('button');
 	cancel.innerHTML = 'Cancel';
-	cancel.addEventListener('click', CloseUnitActionMenu);
+	cancel.addEventListener('click', CloseTileMenu);
 	cancel.style.pointerEvents = 'auto';
 	div.appendChild(cancel);
 
-	currentGame.domContainer.appendChild(div);
-	currentGame.domContainer.style.zIndex = 1;
+	dom.appendChild(div);
+	dom.style.zIndex = 1;
+	dom.removeAttribute('hidden');
 }
 
 /*

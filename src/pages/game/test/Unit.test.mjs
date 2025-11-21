@@ -109,8 +109,8 @@ describe('Unit class', () => {
 		unit.deactivate(true);
 		assert.false(Unit.isMovableUnit(unit));
 
-		assert.equal(spy.mock.callCount(), 2); // unit-created + end-turn
-		assert.equal(spy.mock.calls[1].arguments[0], 'end-turn');
+		assert.equal(spy.mock.callCount(), 3); // unit-created + unit-deactivated + end-turn
+		assert.equal(spy.mock.calls[2].arguments[0], 'end-turn');
 	});
 
 	let unitOptions;
