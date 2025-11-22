@@ -156,6 +156,7 @@ export default class InputManager {
 					// TODO: Help
 					break;
 				case 'F2':
+					break;
 					// TODO: Remove all layers, return to main map
 					currentGame.graphics.gfxClaims.destroy();
 					break;
@@ -188,13 +189,6 @@ export default class InputManager {
 					break;
 				case 'F5':
 					break;
-				case 'ContextMenu':
-				case ' ':
-					if (Unit.isUnit(currentGame.activeUnit)) {
-						// TODO: Also open unit action menu on right-click of active unit
-						currentGame.events.emit('open-unit-menu', { unit: currentGame.activeUnit });
-					}
-					return;
 			}
 
 			if (['u', 'i', 'o', 'j', 'k', 'l'].includes(evt.key)) {

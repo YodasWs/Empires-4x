@@ -1,3 +1,4 @@
+import World from '../../../json/world.mjs';
 import * as GameConfig from '../modules/Config.mjs';
 
 import City from '../modules/City.mjs';
@@ -96,19 +97,19 @@ export default {
 	autoStart: true,
 	preload() {
 		// Load World Tile Images
-		Object.entries(json.world.terrains).forEach(([key, terrain]) => {
+		Object.entries(World.terrains).forEach(([key, terrain]) => {
 			this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
 		});
 		this.load.spritesheet('cities', 'img/tiles/cities.png', {
 			frameHeight: 200,
 			frameWidth: 200,
 		});
-		Object.entries(json.world.improvements).forEach(([key, improvement]) => {
+		Object.entries(World.improvements).forEach(([key, improvement]) => {
 			if (typeof improvement.tile === 'string' && improvement.tile.length > 0) {
 				this.load.image(`improvements.${key}`, `img/improvements/${improvement.tile}.png`);
 			}
 		});
-		Object.entries(json.world.goods).forEach(([key, resource]) => {
+		Object.entries(World.goods).forEach(([key, resource]) => {
 			if (typeof resource.tile === 'string' && resource.tile.length > 0) {
 				this.load.image(`goods.${key}`, `img/resources/${resource.tile}.png`);
 			}
@@ -117,7 +118,7 @@ export default {
 		// Load images for player's action
 		this.load.image('activeUnit', 'img/activeUnit.png');
 		// Load Unit Images
-		Object.keys(json.world.units).forEach((unitType) => {
+		Object.keys(World.units).forEach((unitType) => {
 			this.load.image(`unit.${unitType}`, `img/units/${unitType}.png`);
 		});
 	},
@@ -133,13 +134,13 @@ export default {
 
 		// Build World from Honeycomb Grid
 		Hex.Grid.forEach((hex) => {
-			const tile = json.world.world[hex.row][hex.col];
+			const tile = World.world[hex.row][hex.col];
 			Object.assign(hex, tile, {
 				tile: new Tile({
 					hex,
 				}),
 				terrain: {
-					...json.world.terrains[tile.terrain],
+					...World.terrains[tile.terrain],
 					terrain: tile.terrain,
 				},
 				sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(GameConfig.depths.map).setInteractive(

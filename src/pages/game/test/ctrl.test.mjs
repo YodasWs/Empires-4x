@@ -5,6 +5,7 @@ import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
 import World from '../../../json/world.mjs';
 
+import * as Actions from '../modules/Actions.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import Movable from '../modules/Movable.mjs';
 import City from '../modules/City.mjs';

@@ -60,12 +60,13 @@
 		}
 	}
 
-	div.menu {
+	div#tile-menu {
 		background: white;
 		position: fixed;
 		bottom: 0;
 		left: math.div($max-left-menu-width, 2);
 		right: 400px;
+		top: auto;
 		margin: 0;
 		padding: 0.5em 2em;
 		border: 5px solid black;
@@ -95,6 +96,10 @@
 			&:not([disabled]) {
 				cursor: pointer;
 			}
+		}
+
+		&[hidden] {
+			display: none;
 		}
 	}
 

@@ -1,7 +1,7 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './modules/Config.mjs';
 
-import { DoAction } from './modules/Actions.mjs';
+import './modules/Actions.mjs';
 import City from './modules/City.mjs';
 import Faction from './modules/Faction.mjs';
 import Goods from './modules/Goods.mjs';
@@ -11,7 +11,9 @@ import Tile from './modules/Tile.mjs';
 import Unit from './modules/Unit.mjs';
 import * as Hex from './modules/Hex.mjs';
 import { currentGame } from './modules/Game.mjs';
+
 import Scenes from './scenes/scenes.mjs';
+import './views/ActionsView.mjs';
 
 yodasws.page('pageGame').setRoute({
 	template: 'pages/game/game.html',
@@ -64,6 +66,8 @@ yodasws.page('pageGame').setRoute({
 		}
 		return true;
 	})).then(() => {
+		currentGame.events.emit('phaser-ready');
+	}).then(() => {
 		game.scene.moveAbove('mainGameScene', 'mainControls');
 		if (game.scene.isActive('mainGameScene') && game.scene.isActive('mainControls')) {
 			currentGame.startRound();
