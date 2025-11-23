@@ -30,23 +30,27 @@ export default class InputManager {
 	}
 
 	disableKeyboardInput() {
-		if (typeof this.#scene.input?.keyboard?.enabled === 'boolean') {
-			this.#scene.input.keyboard.enabled = false;
+		const kbd = this.#scene.input?.keyboard;
+		if (typeof (kbd ?? false) !== 'object') {
+			return;
 		}
-		this.#scene.input.keyboard.removeCapture('SPACE');
-		this.#scene.input.keyboard.removeCapture('UP');
-		this.#scene.input.keyboard.removeCapture('DOWN');
-		this.#scene.input.keyboard.removeCapture('LEFT');
-		this.#scene.input.keyboard.removeCapture('RIGHT');
+		kbd.enabled = false;
+		kbd.removeCapture('SPACE');
+		kbd.removeCapture('UP');
+		kbd.removeCapture('DOWN');
+		kbd.removeCapture('LEFT');
+		kbd.removeCapture('RIGHT');
 	}
 
 	enableKeyboardInput() {
-		if (typeof this.#scene.input?.keyboard?.enabled === 'boolean') {
-			this.#scene.input.keyboard.enabled = true;
+		const kbd = this.#scene.input?.keyboard;
+		if (typeof (kbd ?? false) !== 'object') {
+			return;
 		}
+		kbd.enabled = true;
 		switch (this.#sceneKey) {
 			case 'mainGameScene':
-				this.#cursors = this.#scene.input.keyboard.createCursorKeys();
+				this.#cursors = kbd.createCursorKeys();
 				break;
 		}
 	}
@@ -87,9 +91,9 @@ export default class InputManager {
 		});
 
 		// Set event listeners
-		this.input.keyboard.on('keydown', (evt) => {
+		this.#scene.input.keyboard.on('keydown', (evt) => {
 			if (evt.key === 'Escape') {
-				this.scene.stop('tile-view');
+				this.#scene.scene.stop('tile-view');
 			}
 		});
 
