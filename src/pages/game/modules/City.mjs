@@ -1,3 +1,4 @@
+import World from '../../../json/world.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
@@ -27,6 +28,7 @@ function City({
 	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', nation.frame).setDepth(GameConfig.depths.cities).setScale(0.8);
 	thisHex.city = this;
 	const laborers = new Set();
+	const queue = [];
 
 	// Claim this tile and adjacent tiles
 	Grid.traverse(Honeycomb.spiral({
@@ -74,9 +76,23 @@ function City({
 			enumerable: true,
 			get: () => level,
 		},
+		queue: {
+			enumerable: true,
+			get: () => queue,
+		},
 	});
 }
 Object.assign(City.prototype, {
+	addToQueue({ faction, unitType }) {
+		if (!(unitType in World.units)) {
+			console.warn(`City production queue: Unknown unit key ${unitType}`);
+			return;
+		}
+		this.queue.push({
+			unitType,
+			faction,
+		});
+	},
 });
 City.isCity = function isCity(city) {
 	return city instanceof City;

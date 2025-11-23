@@ -208,6 +208,7 @@
 	},
 	"units": {
 		"builder": {
+			"name": "Builder",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -221,6 +222,7 @@
 			}
 		},
 		"farmer": {
+			"name": "Farmer",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -234,6 +236,7 @@
 			}
 		},
 		"miner": {
+			"name": "Miner",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -247,6 +250,7 @@
 			}
 		},
 		"rancher": {
+			"name": "Rancher",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -260,6 +264,7 @@
 			}
 		},
 		"settler": {
+			"name": "Settler",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -273,6 +278,7 @@
 			}
 		},
 		"warrior": {
+			"name": "Warrior",
 			"attack": 1,
 			"attackCities": true,
 			"defense": 1,

@@ -218,7 +218,6 @@ export default {
 		this.inputManager = new InputManager(this);
 
 		this.events.on('pause', () => {
-			console.log('Sam, mainGameScene paused');
 			currentGame.scenes.pause('mainControls');
 			hideActionSprites();
 			currentGame.domContainer.style.zIndex = 0;
@@ -229,12 +228,10 @@ export default {
 			this.inputManager.disableKeyboardInput();
 		});
 		this.events.on('resume', () => {
-			console.log('Sam, mainGameScene resumed');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
 			this.inputManager.enableKeyboardInput();
 		}).on('wake', () => {
-			console.log('Sam, mainGameScene woken');
 			currentGame.scenes.wake('mainControls');
 			currentGame.currentPlayer.activateUnit();
 			this.inputManager.enableKeyboardInput();

@@ -104,14 +104,6 @@ export default {
 		// Show Tile View
 		dom.removeAttribute('hidden');
 
-		// Set event listeners
-		this.input.keyboard.enabled = true;
-		this.input.keyboard.on('keydown', (evt) => {
-			if (evt.key === 'Escape') {
-				this.scene.stop('tile-view');
-			}
-		});
-
 		this.inputManager = new InputManager(this);
 
 		this.events.on('sleep', () => {

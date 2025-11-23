@@ -44,7 +44,7 @@ export function IsLegalMove(targetHex, movable) {
 
 	if (Unit.isUnit(movable)) {
 		// TODO: Check move into City
-		if (targetHex.city instanceof City && targetHex.city.nation !== movable.faction.nation) {
+		if (City.isCity(targetHex.city) && targetHex.city.nation !== movable.faction.nation) {
 			if (!movable.attack || !movable.attackCities) return false;
 		}
 

@@ -1,23 +1,77 @@
+import World from '../../../json/world.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
 
+import City from '../modules/City.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 import { currentGame } from '../modules/Game.mjs';
+
+import InputManager from '../modules/InputManager.mjs';
+
+let thisCity = null;
+let domProductionQueue = null;
+
+function hideProductionQueue() {
+	if (domProductionQueue) {
+		domProductionQueue.setAttribute('hidden', 'true');
+		domProductionQueue.innerHTML = '';
+	}
+}
 
 export default {
 	key: 'city-view',
 	preload() {
 	},
 	create(data) {
-		if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile)) {
+		if (!Hex.isHex(data.hex) || !Tile.isTile(data.hex.tile) || !City.isCity(data.hex.city)) {
 			this.scene.resume('mainGameScene');
 			return;
 		}
-		console.log('Sam, city-view created');
 		this.scene.pause('mainGameScene');
 		this.scene.moveAbove('mainControls', 'city-view');
 		const windowConfig = GameConfig.getWindowConfig();
+
+		thisCity = data.hex.city;
+		domProductionQueue ??= document.getElementById('production-queue');
+
+		{
+			domProductionQueue.innerHTML = '';
+			const select = document.createElement('select');
+			{
+				const option = document.createElement('option');
+				option.text = '-- Select Unit Type --';
+				option.value = '';
+				select.appendChild(option);
+			}
+			Object.keys(World.units).forEach((unitKey) => {
+				const option = document.createElement('option');
+				option.value = unitKey;
+				option.text = World.units[unitKey].name;
+				select.appendChild(option);
+			});
+			domProductionQueue.appendChild(select);
+
+			const button = document.createElement('button');
+			button.innerText = 'Add to Queue';
+			button.addEventListener('click', () => {
+				thisCity.addToQueue({
+					faction: currentGame.currentPlayer,
+					unitType: select.options[select.selectedIndex].value,
+				});
+			});
+			button.disabled = true;
+			domProductionQueue.appendChild(button);
+
+			select.addEventListener('change', () => {
+				button.disabled = select.options[select.selectedIndex].value === '';
+			});
+
+			domProductionQueue.appendChild(document.createElement('ul'));
+
+			domProductionQueue.removeAttribute('hidden');
+			domProductionQueue.style.zIndex = 1;
+		}
 
 		// Start building graphics scene
 		{
@@ -95,22 +149,25 @@ export default {
 			}
 		});
 
-		// Set event listeners
-		this.input.keyboard.enabled = true;
-		this.input.keyboard.on('keydown', (evt) => {
-			if (evt.key === 'Escape') {
-				this.scene.stop('city-view');
-			}
-		});
+		this.inputManager = new InputManager(this);
 
 		this.events.on('sleep', () => {
-			console.log('Sam, city-view sleep');
+			hideProductionQueue();
 			this.scene.wake('mainGameScene');
 		}).on('shutdown', () => {
-			console.log('Sam, city-view shutdown');
+			hideProductionQueue();
 			this.scene.wake('mainGameScene');
 		});
 	},
 	update() {
+		const queueList = document.querySelector('#production-queue > ul');
+		if (queueList.querySelectorAll('li').length !== thisCity.queue.length) {
+			queueList.innerHTML = '';
+			thisCity.queue.forEach(({ faction, unitType }) => {
+				const listItem = document.createElement('li');
+				listItem.innerText = `${faction.name}: ${World.units[unitType].name}`;
+				queueList.appendChild(listItem);
+			});
+		}
 	},
 }

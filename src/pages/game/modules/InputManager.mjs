@@ -14,10 +14,12 @@ export default class InputManager {
 			throw new Error('InputManager requires a Phaser.Scene instance');
 		}
 
-        this.#scene = scene;
-        this.#cursors = scene.input.keyboard.createCursorKeys();
+		this.#scene = scene;
 		this.#shiftKey = scene.input.keyboard.addKey(globalThis.Phaser.Input.Keyboard.KeyCodes.SHIFT);
 		switch (this.#sceneKey = this.#scene.scene.key) {
+			case 'city-view':
+				this.#listenOnCityViewScene();
+				break;
 			case 'tile-view':
 				this.#listenOnTileViewScene();
 				break;
@@ -31,11 +33,21 @@ export default class InputManager {
 		if (typeof this.#scene.input?.keyboard?.enabled === 'boolean') {
 			this.#scene.input.keyboard.enabled = false;
 		}
+		this.#scene.input.keyboard.removeCapture('SPACE');
+		this.#scene.input.keyboard.removeCapture('UP');
+		this.#scene.input.keyboard.removeCapture('DOWN');
+		this.#scene.input.keyboard.removeCapture('LEFT');
+		this.#scene.input.keyboard.removeCapture('RIGHT');
 	}
 
 	enableKeyboardInput() {
 		if (typeof this.#scene.input?.keyboard?.enabled === 'boolean') {
 			this.#scene.input.keyboard.enabled = true;
+		}
+		switch (this.#sceneKey) {
+			case 'mainGameScene':
+				this.#cursors = this.#scene.input.keyboard.createCursorKeys();
+				break;
 		}
 	}
 
@@ -60,10 +72,28 @@ export default class InputManager {
 		}
 	}
 
+	#listenOnCityViewScene() {
+		// Set event listeners
+		this.#scene.input.keyboard.on('keydown', (evt) => {
+			if (evt.key === 'Escape') {
+				this.#scene.scene.stop('city-view');
+			}
+		});
+	}
+
 	#listenOnTileViewScene() {
 		document.querySelector('#tile-view').addEventListener('contextmenu', (e) => {
 			e.preventDefault();
 		});
+
+		// Set event listeners
+		this.input.keyboard.on('keydown', (evt) => {
+			if (evt.key === 'Escape') {
+				this.scene.stop('tile-view');
+			}
+		});
+
+		this.enableKeyboardInput();
 	}
 
 	#listenOnMainGameScene() {
