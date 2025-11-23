@@ -5,8 +5,5 @@
 	"pages": [
 		"blog",
 		"game"
-	],
-	"json": {
-		"world": "json/world"
-	}
+	]
 }

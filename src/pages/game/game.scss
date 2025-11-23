@@ -17,26 +17,69 @@
 		}
 	}
 
-	div.menu {
+	$max-left-menu-width: 0;
+
+	@media (orientation: landscape) {
+		$max-left-menu-width: 200px;
+
+		div.unit-actions-menu {
+			max-width: $max-left-menu-width;
+		}
+	}
+
+	div.unit-actions-menu {
+		position: fixed;
+
+		bottom: 0;
+		right: 800px;
+		left: 0;
+		background: forestgreen;
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: space-evenly;
+		padding: 20px 0;
+
+		@media (orientation: landscape) {
+			flex-flow: column nowrap;
+			bottom: 0;
+			right: auto;
+			left: 0;
+			top: 110px;
+			padding: 0 20px;
+		}
+
+		> button {
+			font-family: "Trebuchet MS", "Open Sans", "Helvetica Neue", sans-serif;
+			font-size: 40px;
+			border-radius: 100px;
+			padding: 5px 15px;
+
+			&:not([disabled]) {
+				cursor: pointer;
+			}
+		}
+	}
+
+	div#tile-menu {
 		background: white;
 		position: fixed;
-		left: 50%;
-		top: 50%;
-		translate: -50% -50%;
+		bottom: 0;
+		left: math.div($max-left-menu-width, 2);
+		right: 400px;
+		top: auto;
 		margin: 0;
 		padding: 0.5em 2em;
 		border: 5px solid black;
-		max-height: calc(200vh - 2em);
-		max-width: calc(200vw - 2em);
 		border-radius: 50px;
+		display: flex;
+		flex-flow: row nowrap;
+		justify-content: space-evenly;
 
 		> button {
-			display: block;
-			margin: 1em 0;
 			padding: 2px 5px;
-			width: 100%;
 			text-align: left;
 			font-family: "Trebuchet MS", "Open Sans", "Helvetica Neue", sans-serif;
+			font-size: 20px;
 
 			> kbd {
 				font-size: 20pt;
@@ -49,6 +92,14 @@
 					content: ")";
 				}
 			}
+
+			&:not([disabled]) {
+				cursor: pointer;
+			}
+		}
+
+		&[hidden] {
+			display: none;
 		}
 	}
 
@@ -60,6 +111,7 @@
 		height: 100%;
 		width: 100%;
 		background: rgba(0, 0, 0, 0.5);
+		z-index: 10;
 
 		&[hidden] {
 			display: none;
@@ -85,5 +137,15 @@
 				border-radius: 0.5em;
 			}
 		}
+
+		&:not([hidden]) + .game .unit-actions-menu {
+			display: none;
+		}
+	}
+	
+	#production-queue {
+		right: auto;
+		width: 200px;
+		background: white;
 	}
 }

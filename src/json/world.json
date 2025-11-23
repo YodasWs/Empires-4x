@@ -1,4 +1,72 @@
 {
+	"actions": [
+		{
+			"key": "move",
+			"label": "Move here",
+			"description": "Move to target location",
+			"icon": "move-to-tile.png",
+			"showIn": ["tile-menu"],
+			"isValid": "isLegalMove",
+			"execute": "startMoveTo"
+		},
+		{
+			"key": "wait",
+			"label": "Wait",
+			"description": "Wait and come back later this turn",
+			"icon": "wait.png",
+			"showIn": ["unit-actions-menu"],
+			"isValid": true,
+			"execute": "wait"
+		},
+		{
+			"key": "skip",
+			"label": "Skip",
+			"description": "Skip this unit's turn",
+			"icon": "skip.png",
+			"showIn": ["unit-actions-menu"],
+			"isValid": true,
+			"execute": "skip"
+		},
+		{
+			"key": "tile",
+			"label": "Information on space",
+			"description": "View information about this tile",
+			"icon": "about-tile.png",
+			"showIn": ["tile-menu"],
+			"isValid": "hexTileValid",
+			"execute": "startTileView"
+		},
+		{
+			"key": "city-view",
+			"label": "View City",
+			"description": "View information about this city",
+			"icon": "city-view.png",
+			"showIn": ["tile-menu"],
+			"isValid": "isCityTile",
+			"execute": "startCityView"
+		},
+		{
+			"key": "build-farm",
+			"label": "Build Farm",
+			"description": "Construct a farm on this tile. The farmer unit will be consumed and become a laborer to work the farm.",
+			"icon": "farm.png",
+			"unitTypes": [
+				"farmer"
+			],
+			"showIn": ["unit-actions-menu"],
+			"isValid": "isFarmBuildable",
+			"execute": "buildFarm"
+		},
+		{
+			"key": "end-turn",
+			"label": "End Turn",
+			"description": "End Turn",
+			"icon": "end-turn.png",
+			"showIn": ["unit-actions-menu"],
+			"isValid": "currentPlayerTurn",
+			"execute": "endTurn"
+		}
+	],
 	"improvements": {
 		"farm": {
 			"title": "Subsistence Farm",
@@ -33,19 +101,44 @@
 	"NationNames": [
 		"Roman Empire"
 	],
+	"StandardMovable": {
+		"crossCreeks": 1.25,
+		"crossStreams": 1.5,
+		"moveOnLand": true,
+		"moveOnWater": false,
+		"movementPoints": 12,
+		"movementCosts": {
+			"canal": 12,
+			"stream": 12,
+			"river": 24,
+			"desert": 12,
+			"grass": 12,
+			"hill": 18,
+			"marsh": 18,
+			"moor": 12,
+			"mountain": 24,
+			"oceans": 12,
+			"swamp": 24
+		}
+	},
 	"ResourceTransporter": {
-		"moves": 12,
-		"base": {
-			"moveOnWater": false,
-			"movementPoints": 12,
-			"movementCosts": {
-				"desert": 12,
-				"grass": 12,
-				"hill": 12,
-				"moor": 12,
-				"mountain": 24,
-				"swamp": 24
-			}
+		"crossCreeks": 1.25,
+		"crossStreams": 2,
+		"moveOnLand": true,
+		"moveOnWater": false,
+		"movementPoints": 12,
+		"movementCosts": {
+			"canal": 3,
+			"stream": 6,
+			"river": 3,
+			"desert": 12,
+			"grass": 12,
+			"hill": 18,
+			"marsh": 18,
+			"moor": 12,
+			"mountain": 24,
+			"oceans": 12,
+			"swamp": 24
 		}
 	},
 	"goods": {
@@ -115,6 +208,7 @@
 	},
 	"units": {
 		"builder": {
+			"name": "Builder",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -127,7 +221,8 @@
 				"swamp": 24
 			}
 		},
-		"homesteader": {
+		"farmer": {
+			"name": "Farmer",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -141,6 +236,7 @@
 			}
 		},
 		"miner": {
+			"name": "Miner",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -154,6 +250,7 @@
 			}
 		},
 		"rancher": {
+			"name": "Rancher",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -167,6 +264,7 @@
 			}
 		},
 		"settler": {
+			"name": "Settler",
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
@@ -180,6 +278,7 @@
 			}
 		},
 		"warrior": {
+			"name": "Warrior",
 			"attack": 1,
 			"attackCities": true,
 			"defense": 1,
