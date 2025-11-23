@@ -34,6 +34,7 @@ export function generateRomanBritishName() {
 
 function Laborer({
 	city,
+	faction,
 	hex,
 	sprite = 'laborers.farmer',
 	tile,

@@ -3,6 +3,7 @@ import * as Honeycomb from 'honeycomb-grid';
 
 import * as Hex from './Hex.mjs';
 import City from './City.mjs';
+import Laborer from './Laborer.mjs';
 import Tile from './Tile.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
@@ -102,6 +103,11 @@ const ActionValidators = {
 const ActionExecutors = {
 	buildFarm({ unit, hex }) {
 		hex.tile.setImprovement('farm', unit.faction);
+		hex.tile.laborers = new Laborer({
+			hex,
+			faction: unit.faction,
+			sprite: 'laborers.farmer',
+		});
 		unit.destroy();
 	},
 	endTurn() {

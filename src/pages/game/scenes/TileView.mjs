@@ -41,7 +41,7 @@ export default {
 			htmlElementId: 'terrain',
 			scene: this,
 		});
-		const elTerrain = document.getElementById('terrain');
+		const elTerrain = dom.querySelector('#terrain');
 		if (elTerrain instanceof Element) {
 			const div = document.createElement('div');
 			div.classList.add('name');
@@ -52,7 +52,7 @@ export default {
 
 		// Display Improvement Information
 		if (hex.tile.improvement?.image instanceof Phaser.GameObjects.Image) {
-			const elImprovement = document.getElementById('improvements');
+			const elImprovement = dom.querySelector('#improvements');
 			if (elImprovement instanceof Element) {
 				// Create new Phaser canvas
 				const canvas = (() => {
@@ -99,6 +99,18 @@ export default {
 				elImprovement.appendChild(div);
 			}
 			console.log('Sam, improvement:', hex.tile.improvement);
+		}
+
+		if (hex.tile.laborers instanceof Set) {
+			console.log('Sam, we have a laborers set!', hex.tile.laborers.size);
+			const elLaborers = dom.querySelector('#laborers');
+			hex.tile.laborers.forEach((laborer) => {
+				const img = document.createElement('img');
+				img.src = this.textures.get(laborer.sprite).getSourceImage().src;
+				elLaborers.appendChild(img);
+			});
+		} else {
+			console.log('Sam, no laborers set…');
 		}
 
 		// Show Tile View
