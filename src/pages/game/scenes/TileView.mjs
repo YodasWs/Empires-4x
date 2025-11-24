@@ -60,7 +60,6 @@ export default {
 			div.innerHTML = hex.terrain.name;
 			elTerrain.appendChild(div);
 		}
-		console.log('Sam, terrain:', hex.terrain);
 
 		// Display Improvement Information
 		if (hex.tile.improvement) {
@@ -137,13 +136,11 @@ export default {
 		this.events.on('sleep', () => {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
-			console.log('Sam, tile-view sleep');
 			this.scene.wake('mainGameScene');
 			this.inputManager.disableKeyboardInput();
 		}).on('shutdown', () => {
 			dom.setAttribute('hidden', true);
 			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
-			console.log('Sam, tile-view shutdown');
 			this.scene.wake('mainGameScene');
 		});
 	},
