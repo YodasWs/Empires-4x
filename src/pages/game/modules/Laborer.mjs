@@ -36,8 +36,8 @@ function Laborer({
 	city,
 	faction,
 	hex,
-	sprite = 'laborers.farmer',
 	tile,
+	type,
 } = {}) {
 	const name = generateRomanBritishName();
 	if (City.isCity(city)) {
@@ -63,9 +63,9 @@ function Laborer({
 			enumerable: true,
 			get: () => name,
 		},
-		sprite: {
+		type: {
 			enumerable: true,
-			get: () => sprite,
+			get: () => type,
 		},
 	});
 }

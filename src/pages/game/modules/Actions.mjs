@@ -106,7 +106,7 @@ const ActionExecutors = {
 		hex.tile.laborers = new Laborer({
 			hex,
 			faction: unit.faction,
-			sprite: 'laborers.farmer',
+			type: 'farmer',
 		});
 		unit.destroy();
 	},

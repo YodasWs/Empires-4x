@@ -114,7 +114,10 @@ export default {
 				this.load.image(`goods.${key}`, `img/resources/${resource.tile}.png`);
 			}
 		});
-		this.load.image('laborers.farmer', 'img/laborers/farmer.png');
+		// Load images for Laborers
+		Object.keys(World.laborers).forEach((laborerType) => {
+			this.load.image(`laborers.${laborerType}`, `img/laborers/${laborerType}.png`);
+		});
 		// Load images for player's action
 		this.load.image('activeUnit', 'img/activeUnit.png');
 		// Load Unit Images

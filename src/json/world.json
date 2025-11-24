@@ -206,6 +206,17 @@
 			"tile": "swamp"
 		}
 	},
+	"laborers": {
+		"farmer": {
+			"name": "Farmer"
+		},
+		"miner": {
+			"name": "Miner"
+		},
+		"rancher": {
+			"name": "Rancher"
+		}
+	},
 	"units": {
 		"builder": {
 			"name": "Builder",
