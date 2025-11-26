@@ -150,6 +150,7 @@ export default class Tile {
 		if (isValidImprovement(this.#hex, val, this.#builtImprovement)) {
 			this.#objImprovement = {
 				...World.improvements[val],
+				...World.improvements[val].terrains[this.#hex.terrain.terrain],
 				key: val,
 			};
 			if (faction instanceof Faction) {

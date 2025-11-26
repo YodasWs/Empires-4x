@@ -75,15 +75,15 @@
 			"terrains": {
 				"grass": {
 					"food": 2,
-					"turns": 1
+					"turnsForProduction": 1
 				},
 				"moor": {
 					"food": 1,
-					"turns": 1
+					"turnsForProduction": 1
 				},
 				"swamp": {
 					"food": 2,
-					"turns": 6
+					"turnsForProduction": 6
 				}
 			}
 		}

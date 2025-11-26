@@ -2,6 +2,8 @@ import World from '../../../json/world.mjs';
 
 import * as Hex from './Hex.mjs';
 import Movable from './Movable.mjs';
+import City from './City.mjs';
+import { currentGame } from '../modules/Game.mjs';
 
 export default class Goods extends Movable {
 	#goodsType;
@@ -24,6 +26,17 @@ export default class Goods extends Movable {
 		this.#goodsType = goodsType;
 		this.#num = num;
 		this.#start = hex;
+
+		currentGame.events.on('goods-moved', (evt) => {
+			const { goods, promise } = evt.detail;
+			if (goods !== this) return;
+			if (City.isCity(goods.hex.city)) {
+				// TODO: Deliver Food to City
+				promise.then(() => {
+					this.destroy();
+				});
+			}
+		});
 	}
 
 	get goodsType() {

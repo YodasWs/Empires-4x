@@ -3,6 +3,7 @@ import * as GameConfig from './Config.mjs';
 
 import City from './City.mjs';
 import Faction from './Faction.mjs';
+import Goods from './Goods.mjs';
 import Laborer from './Laborer.mjs';
 import Tile from './Tile.mjs';
 import * as Hex from './Hex.mjs';
@@ -40,7 +41,6 @@ export const currentGame = {
 			// Reset each player's units array to remove deleted units
 			player.units = player.units;
 		});
-		const scene = currentGame.scenes.getScene('mainGameScene');
 		Hex.Grid.forEach((hex) => {
 			// Adjust each Nations' and Factions' claims on Territory
 			this.nations.forEach((nation) => {
@@ -66,24 +66,24 @@ export const currentGame = {
 
 			// Produce Food
 			if (hex.tile.laborers.size > 0) {
-				return; // TODO: Move this code somewhere else
 				let food = 0;
 				food += hex.terrain.food || 0;
 				food += hex.tile.improvement.food || 0;
 				if (food > 0) {
 					// TODO: Add some particle effect to show food being generated and not stacked
-					GoodsOnBoard.push(new Goods({
-						type: 'food',
+					const goods = new Goods('food', {
 						num: food,
 						hex,
-					}));
+					});
+					GoodsOnBoard.push(goods);
+					this.events.emit('goods-created', { goods });
 				}
 			}
 		});
 
 		// Check Cities
 		Hex.Grid.forEach((hex) => {
-			if (hex.city instanceof City) {
+			if (City.isCity(hex.city)) {
 				const city = hex.city;
 				Hex.Grid.traverse(Honeycomb.spiral({
 					start: [ hex.q, hex.r ],
@@ -159,37 +159,28 @@ export const currentGame = {
 	},
 	endRound() {
 		console.log('Sam, endRound!');
-		const scene = currentGame.scenes.getScene('mainGameScene');
 		const delaysForEndRound = [];
 		currentGame.uiDisplays.faction.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
 			.setText('End of Round')
 			.setColor('lightgrey');
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 
-		// Collect list of villages and cities
+		// TODO: Collect list of villages and cities
 		const cities = [];
 		Hex.Grid.forEach((hex) => {
-			if (hex.city instanceof City) {
+			if (City.isCity(hex.city)) {
 				cities.push(hex);
 			}
 		});
 
-		// Remove any GoodsOnBoard that have no items or have been destroyed
-		// TODO: Use GoodsView.removeGoods() instead
-		GoodsOnBoard = GoodsOnBoard.filter(({ num, sprite }) => {
-			return num > 0 && sprite instanceof Phaser.GameObjects.Sprite && sprite.active;
-		});
-
 		// Move Food towards nearest City
 		GoodsOnBoard.forEach((GoodsItem, i) => {
-			return; // TODO: This should be handled by Movable.mjs
-			let { faction, hex, num: food, sprite, type } = GoodsItem;
-			if (type !== 'food') {
+			let { faction, hex, num: food, goodsType } = GoodsItem;
+			if (goodsType !== 'food') {
 				return;
 			}
 			if (food <= 0) {
-				sprite.setActive(false);
-				sprite.destroy();
+				GoodsItem.destroy();
 				return;
 			}
 
@@ -201,8 +192,7 @@ export const currentGame = {
 				hex.tile.food += takeFood;
 
 				if (food <= 0) {
-					sprite.setActive(false);
-					sprite.destroy();
+					GoodsItem.destroy();
 					return;
 				}
 			}
@@ -218,50 +208,17 @@ export const currentGame = {
 				}
 			});
 
-			if (Hex.isHex(closestHex) && closestHex.city instanceof City) {
-				const path = Hex.FindPath(hex, closestHex);
-				if (Array.isArray(path) && path.length > 0) {
-					const nextHex = path.shift();
-					if (nextHex.city instanceof City) {
-						delaysForEndRound.push(new Promise((resolve) => {
-							scene.tweens.add({
-								targets: sprite,
-								x: nextHex.x,
-								y: nextHex.y,
-								...GoodsSpriteOptions,
-								onComplete(tween) {
-									faction.money += food * 10;
-									currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
-									sprite.setActive(false);
-									sprite.destroy();
-									tween.destroy();
-									resolve();
-								},
-							});
-						}));
-					} else {
-						GoodsItem.hex = nextHex;
-						delaysForEndRound.push(new Promise((resolve) => {
-							scene.tweens.add({
-								targets: sprite,
-								x: nextHex.x,
-								y: nextHex.y,
-								...GoodsSpriteOptions,
-								onComplete(tween) {
-									tween.destroy();
-									resolve();
-								},
-							});
-						}));
-					}
+			if (Hex.isHex(closestHex) && City.isCity(closestHex.city)) {
+				if (GoodsItem.setPath(closestHex) !== null) {
+					GoodsItem.prepareForNewTurn();
+					GoodsItem.moveOneTurn();
 				}
 				// TODO: What if there's no path?!
 			}
 
 			// TODO: Limit lifespan of Food goods on the board
-			if (type === 'food' && ++GoodsItem.rounds > 5) {
-				sprite.setActive(false);
-				sprite.destroy();
+			if (goodsType === 'food' && ++GoodsItem.rounds > 5) {
+				GoodsItem.destroy();
 			}
 		});
 

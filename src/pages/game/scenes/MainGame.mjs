@@ -9,7 +9,7 @@ import { currentGame, GoodsOnBoard } from '../modules/Game.mjs';
 
 import InputManager from '../modules/InputManager.mjs';
 
-import { renderGoods } from '../views/GoodsView.mjs';
+import { registerGoodsToView, renderGoods } from '../views/GoodsView.mjs';
 import { registerUnitToView, renderUnits } from '../views/UnitView.mjs';
 import { removeImprovement, renderImprovement } from '../views/TileView.mjs';
 
@@ -92,13 +92,19 @@ currentGame.events.on('unit-created', (evt) => {
 	registerUnitToView(evt.detail.unit, MainGameScene);
 });
 
+currentGame.events.on('goods-created', (evt) => {
+	registerGoodsToView(evt.detail.goods, MainGameScene);
+});
+
 export default {
 	key: sceneKey,
 	autoStart: true,
 	preload() {
 		// Load World Tile Images
 		Object.entries(World.terrains).forEach(([key, terrain]) => {
-			this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
+			if (typeof terrain.tile === 'string' && terrain.tile.length > 0) {
+				this.load.image(`tile.${key}`, `img/tiles/${terrain.tile}.png`);
+			}
 		});
 		this.load.spritesheet('cities', 'img/tiles/cities.png', {
 			frameHeight: 200,
@@ -245,8 +251,7 @@ export default {
 	update() {
 		this.inputManager.update();
 		renderUnits();
-		// TODO: Optimize by only updating changed goods
-		GoodsOnBoard.forEach(item => renderGoods(item, this));
+		renderGoods();
 		Hex.Grid.forEach((hex) => {
 			// TODO: Optimize by only updating changed tiles
 			if (hex.tile.improvement.key) {
