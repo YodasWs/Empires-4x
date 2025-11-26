@@ -35,7 +35,6 @@ export const currentGame = {
 	currentPlayer: null,
 	intCurrentPlayer: null,
 	graphics: {},
-	uiDisplays: {},
 	startRound() {
 		this.players.forEach((player) => {
 			// Reset each player's units array to remove deleted units
@@ -95,7 +94,6 @@ export const currentGame = {
 
 		// Start Round
 		this.turn++;
-		currentGame.uiDisplays.round.setText(`Round ${this.turn}`);
 		this.startTurn(0);
 	},
 	startTurn(intPlayer) {
@@ -108,9 +106,7 @@ export const currentGame = {
 		}
 
 		// Sam, TODO: Show message to User whose turn it is
-		currentGame.uiDisplays.faction.setText(`${this.currentPlayer.name}'s Turn`)
-			.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
-			.setColor(intPlayer === 0 ? 'goldenrod' : 'lightgrey');
+
 		this.intCurrentPlayer = intPlayer;
 
 		// Reset each unit's movement points
@@ -160,9 +156,7 @@ export const currentGame = {
 	endRound() {
 		console.log('Sam, endRound!');
 		const delaysForEndRound = [];
-		currentGame.uiDisplays.faction.setX(14 + currentGame.uiDisplays.round.displayWidth + 10)
-			.setText('End of Round')
-			.setColor('lightgrey');
+		this.betweenRounds = true;
 		// TODO: Check each tile's Food reserves to feed Citizens and Laborers!
 
 		// TODO: Collect list of villages and cities
@@ -232,6 +226,7 @@ export const currentGame = {
 		});
 
 		Promise.all(delaysForEndRound).then(() => {
+			this.betweenRounds = false;
 			this.startRound();
 		});
 	},
