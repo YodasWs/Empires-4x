@@ -121,6 +121,9 @@
 			"swamp": 24
 		}
 	},
+	"ResourceValues": {
+		"food": 10
+	},
 	"ResourceTransporter": {
 		"crossCreeks": 1.25,
 		"crossStreams": 2,

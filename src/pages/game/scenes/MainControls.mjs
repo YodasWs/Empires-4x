@@ -6,6 +6,16 @@ import { currentGame } from '../modules/Game.mjs';
 
 const sceneKey = 'mainControls';
 
+const imgs = { // key: resource type → Phaser.Image;
+	money: null,
+};
+
+function updateMoney() {
+	if (imgs.money.oldValue === currentGame.players[0].money) return;
+	currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
+	imgs.money.oldValue = currentGame.players[0].money;
+}
+
 export default {
 	key: sceneKey,
 	autoStart: true,
@@ -40,11 +50,11 @@ export default {
 		// Money
 		{
 			lineY -= 15;
-			const img = this.add.image(0, lineY, 'coins').setDepth(2);
-			img.setScale(32 / img.width);
-			img.x = 20 + img.displayWidth / 2;
-			img.y = lineY += 20 + img.displayHeight / 2;
-			currentGame.uiDisplays.money = this.add.text(img.x + img.displayWidth / 2 + 6, img.y - img.displayHeight / 2 - 4, currentGame.players[0].money.toLocaleString('en-Us'), {
+			imgs.money = this.add.image(0, lineY, 'coins').setDepth(2);
+			imgs.money.setScale(32 / imgs.money.width);
+			imgs.money.x = 20 + imgs.money.displayWidth / 2;
+			imgs.money.y = lineY += 20 + imgs.money.displayHeight / 2;
+			currentGame.uiDisplays.money = this.add.text(imgs.money.x + imgs.money.displayWidth / 2 + 6, imgs.money.y - imgs.money.displayHeight / 2 - 4, currentGame.players[0].money.toLocaleString('en-Us'), {
 				fontFamily: 'Trebuchet MS',
 				fontSize: '28px',
 				color: 'gold',
@@ -62,5 +72,6 @@ export default {
 		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
 	update() {
+		updateMoney();
 	},
 };

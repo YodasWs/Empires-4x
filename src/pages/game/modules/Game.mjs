@@ -232,7 +232,6 @@ export const currentGame = {
 		});
 
 		Promise.all(delaysForEndRound).then(() => {
-			currentGame.uiDisplays.money.setText(currentGame.players[0].money.toLocaleString('en-Us'));
 			this.startRound();
 		});
 	},

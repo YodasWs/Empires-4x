@@ -1,5 +1,6 @@
 import World from '../../../json/world.mjs';
 
+import City from './City.mjs';
 import Unit from './Unit.mjs';
 import { currentGame } from './Game.mjs';
 
@@ -31,6 +32,19 @@ function Faction({
 	const name = World?.FactionNames[index];
 	let money = 0;
 	let units = [];
+
+	currentGame.events.on('goods-moved', (evt) => {
+		const { goods, promise } = evt.detail;
+		if (goods.faction !== this || !City.isCity(goods.hex.city)) return;
+		// TODO: Deliver Food to City
+		promise.then(() => {
+			console.log('Sam, Faction received', goods.num, 'goods for', World.ResourceValues[goods.goodsType], 'each');
+			this.money += World.ResourceValues[goods.goodsType] * goods.num;
+			console.log('Sam, Faction new money total:', this.money);
+			goods.destroy();
+		});
+	});
+
 	Object.defineProperties(this, {
 		color: {
 			enumerable: true,
