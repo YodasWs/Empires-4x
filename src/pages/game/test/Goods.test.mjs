@@ -5,6 +5,8 @@ import Goods from '../modules/Goods.mjs';
 import * as GameConfig from '../modules/Config.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 import * as Hex from '../modules/Hex.mjs';
+import { currentGame } from '../modules/Game.mjs';
+import Movable from '../modules/Movable.mjs';
 
 // Minimal mockHex compatible with Hex.Grid
 class mockHex extends Honeycomb.defineHex({
@@ -43,6 +45,13 @@ describe('Goods class', () => {
 		});
 	});
 
+	test('Goods is also a Movable', () => {
+		const goods = new Goods('food', { hex });
+		assert.true(goods instanceof Movable);
+		assert.true(Movable.isInstanceofMovable(goods));
+		assert.true(Movable.isActivatableMovable(goods));
+	});
+
 	it('constructs with valid goodsType and hex', () => {
 		const goods = new Goods('food', { hex, num: 3 });
 		assert.equal(goods.goodsType, 'food');
@@ -55,6 +64,21 @@ describe('Goods class', () => {
 			name: 'TypeError',
 			message: "Unknown Goods type 'not-real'",
 		});
+	});
+
+	it('destroys itself on goods-moved event', async () => {
+		const goods = new Goods('food', { hex });
+		let destroyed = false;
+		goods.destroy = () => {
+			console.log('Sam, destroy called');
+			destroyed = true;
+		};
+
+		const promise = Promise.resolve();
+		currentGame.events.emit('goods-moved', { goods, promise });
+
+		await promise; // wait for finally()
+		assert.true(destroyed);
 	});
 
 	test('num setter accepts zero integer', () => {
@@ -87,6 +111,11 @@ describe('Goods class', () => {
 			name: 'TypeError',
 			message: 'Goods.num expects to be assigned a nonnegative integer!',
 		});
+	});
+
+	test('start getter returns the initial hex', () => {
+		const goods = new Goods('food', { hex });
+		assert.equal(goods.start, hex);
 	});
 
 	test('rounds setter accepts valid nonnegative integer', () => {
@@ -124,6 +153,11 @@ describe('Goods class', () => {
 	test('Goods.isGoods returns true for Goods instance', () => {
 		const goods = new Goods('food', { hex });
 		assert.true(Goods.isGoods(goods));
+	});
+
+	test('Goods.isGoods returns false for non-Goods', () => {
+		assert.false(Goods.isGoods({}));
+		assert.false(Goods.isGoods(null));
 	});
 
 	test('Goods.isValidGoodsType returns true for known type', () => {
