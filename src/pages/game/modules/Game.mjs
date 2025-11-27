@@ -210,10 +210,7 @@ export const currentGame = {
 				// TODO: What if there's no path?!
 			}
 
-			// TODO: Limit lifespan of Food goods on the board
-			if (goodsType === 'food' && ++GoodsItem.rounds > 5) {
-				GoodsItem.destroy();
-			}
+			++GoodsItem.rounds;
 		});
 
 		// Feed Laborers

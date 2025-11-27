@@ -57,6 +57,10 @@ export default class Goods extends Movable {
 			throw new TypeError('Goods.rounds expects to be assigned a nonnegative integer!');
 		}
 		this.#rounds = val;
+		// Limit lifespan of Food goods on the board
+		if (this.#goodsType === 'food' && this.#rounds > Goods.MaxFoodRounds) {
+			this.destroy();
+		}
 	}
 
 	get start() {
@@ -70,4 +74,6 @@ export default class Goods extends Movable {
 	static isValidGoodsType(type) {
 		return typeof (World.goods[type] ?? false) === 'object';
 	}
+
+	static MaxFoodRounds = 5;
 }

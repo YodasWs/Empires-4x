@@ -20,22 +20,29 @@ class mockHex extends Honeycomb.defineHex({
 
 	constructor(options) {
 		super(options);
-		this.terrain = {
+		this.tile = {
+			setImprovement: () => {},
+			claimTerritory: () => {},
+			improvement: null,
+			laborers: new Set(),
+		};
+	}
+
+	get terrain() {
+		return {
 			terrain: 'grass',
 			movementCost: 1,
 			isWater: false,
 		};
-		this.tile = {};
 	}
 }
 
-let hex;
-
-beforeEach(() => {
-	hex = new mockHex({ row: 1, col: 1 });
-});
-
 describe('Goods class', () => {
+	let hex;
+	beforeEach(() => {
+		hex = new mockHex({ row: 1, col: 1 });
+	});
+
 	it('throws on invalid hex', (t) => {
 		assert.throws(() => new Goods('food', {
 			hex: { row: 0, col: 0, tile: {} },
@@ -166,5 +173,51 @@ describe('Goods class', () => {
 
 	test('Goods.isValidGoodsType returns false for unknown type', () => {
 		assert.false(Goods.isValidGoodsType('not-real'));
+	});
+});
+
+describe('Food production and delivery', () => {
+	let testGrid;
+	beforeEach(() => {
+		// Inject a small test grid
+		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.spiral({
+			start: { row: 0, col: 0 },
+			radius: 2,
+		}));
+	});
+
+	test('Farm produces food goods each turn', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Farmer Laborer consumes food each turn', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Excess food from Farm moves towards nearest City', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Food continues multiple turns to nearest City', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Food is consumed by Laborer on path', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Food is delivered to City for money', (t) => {
+		t.skip('Not yet implemented');
+	});
+
+	test('Food spoils before reaching City', (t) => {
+		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 6, height: 1 }));
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const goods = new Goods('food', { hex, num: 3 });
+		do {
+			goods.rounds++;
+		} while (goods.rounds <= Goods.MaxFoodRounds + 1);
+		assert.equal(goods.goodsType, 'food');
+		assert.true(goods.deleted);
 	});
 });
