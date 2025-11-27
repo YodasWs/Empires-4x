@@ -10,20 +10,6 @@ import Nation from '../modules/Nation.mjs';
 import * as GameConfig from '../modules/Config.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
-// Helpers to create valid objects
-function makeHex() {
-	// Minimal stub hex with tile + terrain
-	return testGrid.getHex({ row: 0, col: 0 });
-	hex.tile = {
-		setImprovement: () => {},
-		claimTerritory: () => {},
-		improvement: null,
-		laborers: new Set(),
-	};
-	hex.terrain = { isWater: false, terrain: 'grass', name: 'Grassland' };
-	return hex;
-}
-
 let testGrid;
 
 beforeEach(() => {
@@ -69,7 +55,7 @@ function makeFaction(nation) {
 }
 
 test('City constructor assigns hex and nation', () => {
-	const hex = makeHex();
+	const hex = testGrid.getHex({ row: 0, col: 0 });
 	const nation = makeNation();
 	const city = new City({ hex, nation, Grid: testGrid });
 
@@ -79,7 +65,7 @@ test('City constructor assigns hex and nation', () => {
 });
 
 test('City.addToQueue pushes valid unit', () => {
-	const hex = makeHex();
+	const hex = testGrid.getHex({ row: 0, col: 0 });
 	const nation = makeNation();
 	const faction = makeFaction(nation);
 	const city = new City({ hex, nation, Grid: testGrid });
@@ -89,25 +75,35 @@ test('City.addToQueue pushes valid unit', () => {
 	assert.equal(city.queue[0].faction, faction);
 });
 
+test('City.addToQueue rejects invalid unit type', () => {
+	const hex = testGrid.getHex({ row: 0, col: 0 });
+	const nation = makeNation();
+	const faction = makeFaction(nation);
+	const city = new City({ hex, nation, Grid: testGrid });
+
+	city.addToQueue({ faction, unitType: 'not-valid-unit' });
+	assert.equal(city.queue.length, 0);
+});
+
 test('City.addToQueue rejects invalid faction', () => {
-	const hex = makeHex();
+	const hex = testGrid.getHex({ row: 0, col: 0 });
 	const nation = makeNation();
 	const city = new City({ hex, nation, Grid: testGrid });
 
 	assert.throws(() => {
-		city.addToQueue({ faction: {}, unitType: 'warrior' });
+		city.addToQueue({ faction: {}, unitType: Object.keys(World.units)[0] });
 	}, /Faction/);
 });
 
 test('City.processFood consumes stored food and produces units', () => {
-	const hex = makeHex();
+	const hex = testGrid.getHex({ row: 0, col: 0 });
 	const nation = makeNation();
 	const faction = makeFaction(nation);
 	const city = new City({ hex, nation, Grid: testGrid });
 
 	// Add a unit to the queue
-	const unitType = Object.keys(World.units)[0];
-	city.addToQueue({ faction, unitType });
+	city.addToQueue({ faction, unitType: Object.keys(World.units)[0] });
+	assert.equal(city.queue.length, 1);
 
 	// Give enough food
 	const promise = Promise.resolve();
@@ -127,7 +123,7 @@ test('City.processFood consumes stored food and produces units', () => {
 });
 
 test('City.isCity works correctly', () => {
-	const hex = makeHex();
+	const hex = testGrid.getHex({ row: 0, col: 0 });
 	const nation = makeNation();
 	const city = new City({ hex, nation, Grid: testGrid });
 

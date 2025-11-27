@@ -8,7 +8,6 @@ import World from '../../../json/world.mjs';
 import * as Actions from '../modules/Actions.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import Movable from '../modules/Movable.mjs';
-import City from '../modules/City.mjs';
 import Faction, * as FactionUtils from '../modules/Faction.mjs';
 import Laborer, * as LaborerUtils from '../modules/Laborer.mjs';
 import Nation from '../modules/Nation.mjs';
@@ -32,9 +31,6 @@ describe('Game Configuration', () => {
 		assert.equal(GameConfig.tileWidth, 200);
 		assert.equal(GameConfig.unitWidth, 80);
 	});
-});
-
-describe('City class', () => {
 });
 
 describe('Faction class', () => {
