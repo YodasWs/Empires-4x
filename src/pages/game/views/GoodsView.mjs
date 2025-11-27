@@ -1,14 +1,6 @@
 import { depths as Depths } from '../modules/Config.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
-export function removeGoods(goods) {
-	const sprite = goodsSprites.get(goods);
-	if (sprite) {
-		sprite.destroy();
-		goodsSprites.delete(goods);
-	}
-}
-
 const goodsSprites = new Map(); // key: Goods instance → GoodsViewDetail
 const GoodsSpriteOptions = {
 	ease: 'Linear',

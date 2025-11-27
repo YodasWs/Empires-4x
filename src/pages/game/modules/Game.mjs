@@ -216,6 +216,7 @@ export const currentGame = {
 			}
 		});
 
+		// Feed Laborers
 		Hex.Grid.forEach((hex) => {
 			if (hex.tile.laborers.size > 0 && hex.tile.food < hex.tile.laborers.size * Laborer.FOOD_CONSUMPTION) {
 				// TODO: Laborer Starves!

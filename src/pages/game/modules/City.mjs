@@ -2,99 +2,114 @@ import World from '../../../json/world.mjs';
 import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from './Config.mjs';
 
+import * as Hex from './Hex.mjs';
+import Housing from './Housing.mjs';
+import Faction from './Faction.mjs';
 import Laborer from './Laborer.mjs';
 import Nation from './Nation.mjs';
-import { Grid } from './Hex.mjs';
 import { currentGame } from './Game.mjs';
 
-let scene = null;
-function City({
-	col,
-	row,
-	level = 1,
-	nation,
-} = {}) {
-	if (scene === null) {
-		scene = currentGame.scenes.getScene('mainGameScene');
-	}
-	if (!Nation.isNation(nation)) {
-		throw new TypeError('City expects to be assigned a Nation!');
-	}
+export default class City {
+	#hex;
+	#housing;
+	#nation;
+	#queue = [];
+	#storedFood = 0;
 
-	// Tie to hex
-	const thisHex = Grid.getHex({ row, col });
-	thisHex.tile.setImprovement('destroy');
-
-	const sprite = scene.add.image(thisHex.x, thisHex.y, 'cities', nation.frame).setDepth(GameConfig.depths.cities).setScale(0.8);
-	thisHex.city = this;
-	const laborers = new Set();
-	const queue = [];
-
-	// Claim this tile and adjacent tiles
-	Grid.traverse(Honeycomb.spiral({
-		start: [ thisHex.q, thisHex.r ],
-		radius: 1,
-	})).forEach((hex) => {
-		hex.tile.claimTerritory(nation, 100);
-	});
-
-	// Claim water territory
-	Grid.traverse(Honeycomb.ring({
-		center: [ thisHex.q, thisHex.r ],
-		radius: 2,
-	})).forEach((hex) => {
-		if (hex.terrain.isWater) {
-			hex.tile.claimTerritory(nation, 50);
+	constructor({
+		hex,
+		nation,
+	}) {
+		if (!Nation.isNation(nation)) {
+			throw new TypeError('City expects to be assigned object instance of Nation!');
 		}
-	});
+		this.#nation = nation;
 
-	// Properties
-	Object.defineProperties(this, {
-		hex: {
-			enumerable: true,
-			get: () => thisHex,
-		},
-		laborers: {
-			enumerable: true,
-			get: () => laborers,
-			set(val) {
-				if (!(val instanceof Laborer)) {
-					throw new TypeError('City.laborers expects to be assigned object instance of Laborer!');
-				}
-				laborers.add(val);
-				return true;
-			},
-		},
-		nation: {
-			enumerable: true,
-			get: () => nation,
-		},
-		sprite: {
-			get: () => sprite,
-		},
-		level: {
-			enumerable: true,
-			get: () => level,
-		},
-		queue: {
-			enumerable: true,
-			get: () => queue,
-		},
-	});
-}
-Object.assign(City.prototype, {
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('City expects to be assigned object instance of Hex!');
+		}
+		this.#hex = hex;
+		hex.tile.setImprovement('destroy');
+		hex.city = this;
+
+		// Claim this tile and adjacent tiles
+		Hex.Grid.traverse(Honeycomb.spiral({
+			start: [ hex.q, hex.r ],
+			radius: 1,
+		})).forEach((adjacentHex) => {
+			adjacentHex.tile.claimTerritory(nation, 100);
+		});
+
+		// Claim water territory
+		Hex.Grid.traverse(Honeycomb.ring({
+			center: [ hex.q, hex.r ],
+			radius: 2,
+		})).forEach((waterHex) => {
+			waterHex.tile.claimTerritory(nation, waterHex.terrain.isWater ? 50 : 0);
+		});
+
+		this.#housing = new Housing({
+			hex,
+			numUnits: 6,
+		});
+
+		currentGame.events.on('goods-moved', (evt) => {
+			const { goods, promise } = evt.detail;
+			if (goods.hex.city !== this) return;
+			// TODO: Deliver Food to City
+			promise.then(() => {
+				this.#storedFood += goods.num;
+				this.processFood();
+			});
+		});
+	}
+
+	processFood() {
+		while (this.#storedFood >= GameConfig.cityFoodPerUnit) {
+			this.#storedFood -= GameConfig.cityFoodPerUnit;
+			const newUnit = this.#queue.shift();
+			newUnit.faction.addUnit(newUnit.unitType, this.#hex);
+		}
+	}
+
+	get hex() {
+		return this.#hex;
+	}
+
+	get housing() {
+		return this.#housing.numUnits;
+	}
+
+	get laborers() {
+		return this.#housing.laborers;
+	}
+	set laborers(val) {
+		this.#housing.laborers = val;
+	}
+
+	get nation() {
+		return this.#nation;
+	}
+
+	get queue() {
+		return this.#queue;
+	}
+
 	addToQueue({ faction, unitType }) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('City.addToQueue expects to be assigned object instance of Faction!');
+		}
 		if (!(unitType in World.units)) {
 			console.warn(`City production queue: Unknown unit key ${unitType}`);
 			return;
 		}
-		this.queue.push({
+		this.#queue.push({
 			unitType,
 			faction,
 		});
-	},
-});
-City.isCity = function isCity(city) {
-	return city instanceof City;
+	}
+
+	static isCity(city) {
+		return city instanceof City;
+	}
 }
-export default City;

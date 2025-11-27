@@ -165,13 +165,15 @@ export default {
 			});
 		}).forEach((hex) => {
 			// Build City
-			if (typeof hex.city === 'object' && hex.city !== null) {
-				hex.city = new City({
+			if (typeof (hex.city ?? false) === 'object') {
+				new City({
 					...hex.city,
-					col: hex.col,
-					row: hex.row,
+					hex,
 					nation: currentGame.nations[hex.city.nation],
 				});
+				const sprite = this.add.image(hex.x, hex.y, 'cities', hex.city.nation.frame)
+					.setDepth(GameConfig.depths.cities)
+					.setScale(0.8);
 			}
 			// Build Improvement
 			if (typeof hex.improvement === 'string') {

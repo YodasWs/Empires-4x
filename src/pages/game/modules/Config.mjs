@@ -40,3 +40,5 @@ export function lineShift(point1, point2, t = 0.9) {
 		y: m * x + b,
 	};
 }
+
+export const cityFoodPerUnit = 10;
