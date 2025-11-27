@@ -10,3 +10,4 @@ Except where otherwise stated, all images here are Copyright © 2025 Samuel B Gr
 * [Rome icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/rome)
 * [Sheep icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/sheep)
 * [Wagon icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/wagon)
+* [Warrior icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/warrior)
