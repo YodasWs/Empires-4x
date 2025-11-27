@@ -226,6 +226,14 @@
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 50
+				},
+				"removeFromQueue": {
+					"food": 25
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -240,6 +248,14 @@
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 10
+				},
+				"removeFromQueue": {
+					"food": 10
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -254,6 +270,14 @@
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 40
+				},
+				"removeFromQueue": {
+					"food": 20
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -268,6 +292,14 @@
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 10
+				},
+				"removeFromQueue": {
+					"food": 15
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -282,6 +314,14 @@
 			"defense": 0,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 30
+				},
+				"removeFromQueue": {
+					"food": 50
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,
@@ -298,6 +338,14 @@
 			"defense": 1,
 			"moveOnWater": false,
 			"movementPoints": 12,
+			"productionCosts": {
+				"addToQueue": {
+					"money": 50
+				},
+				"removeFromQueue": {
+					"food": 30
+				}
+			},
 			"movementCosts": {
 				"desert": 12,
 				"grass": 12,

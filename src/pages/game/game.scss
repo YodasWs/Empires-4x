@@ -153,6 +153,10 @@
 		display: flex;
 		flex-flow: column nowrap;
 
+		ul {
+			overflow: auto;
+		}
+
 		> h2 {
 			font-size: 1.4rem;
 			margin-bottom: 1rem;

@@ -59,16 +59,30 @@ export default {
 			const button = document.createElement('button');
 			button.innerText = 'Add to Queue';
 			button.addEventListener('click', () => {
+				const unitType = select.options[select.selectedIndex].value;
+				if (!(unitType in World.units)) {
+					console.error(`City View: Unknown unit type selected: ${unitType}`);
+					return;
+				}
+				const newUnitData = World.units[unitType];
+				try {
+					currentGame.currentPlayer.money -= newUnitData.productionCosts.addToQueue.money || 0;
+				} catch (e) {
+					// TODO: Notify Player they can't afford this unit
+					return;
+				}
 				thisCity.addToQueue({
 					faction: currentGame.currentPlayer,
-					unitType: select.options[select.selectedIndex].value,
+					unitType,
 				});
 			});
 			button.disabled = true;
 			domProductionQueue.appendChild(button);
 
 			select.addEventListener('change', () => {
-				button.disabled = select.options[select.selectedIndex].value === '';
+				const unitType = select.options[select.selectedIndex].value;
+				button.disabled = currentGame.currentPlayer.money < (World.units?.[unitType]?.productionCosts?.addToQueue?.money || 0)
+					|| unitType === '';
 			});
 
 			domProductionQueue.appendChild(document.createElement('ul'));
