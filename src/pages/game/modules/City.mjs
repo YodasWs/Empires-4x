@@ -68,11 +68,26 @@ export default class City {
 	}
 
 	processFood() {
-		while (this.#storedFood >= GameConfig.cityFoodPerUnit) {
-			this.#storedFood -= GameConfig.cityFoodPerUnit;
+		do {
+			if (this.#queue.length <= 0) return;
+			console.log('Sam, in processFood');
+			const { faction, unitType } = this.#queue[0];
+			const foodCost = World.units?.[unitType]?.productionCosts?.removeFromQueue?.food || 0;
+			// TODO: Don't let a faction that cannot afford the unit continue to block the queue
+			const moneyCost = World.units?.[unitType]?.productionCosts?.removeFromQueue?.money || 0;
+			if (faction.money < moneyCost) {
+				// TODO: This is here only for development/testing purposes until we have a proper queue management system
+				this.#queue.shift();
+				break;
+			}
+			if (this.#storedFood < foodCost) {
+				break;
+			}
+			this.#storedFood -= foodCost;
+			faction.money -= moneyCost;
 			const newUnit = this.#queue.shift();
 			newUnit.faction.addUnit(newUnit.unitType, this.#hex);
-		}
+		} while (this.#storedFood > 0 && this.#queue.length > 0);
 	}
 
 	get hex() {

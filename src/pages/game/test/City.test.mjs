@@ -54,79 +54,87 @@ function makeFaction(nation) {
 	return new Faction({ nation, index: 0 });
 }
 
-test('City constructor assigns hex and nation', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const city = new City({ hex, nation, Grid: testGrid });
+describe('City class', () => {
+	test('City constructor assigns hex and nation', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const city = new City({ hex, nation, Grid: testGrid });
 
-	assert.equal(city.hex, hex);
-	assert.equal(city.nation, nation);
-	assert.equal(hex.city, city);
-});
-
-test('City.addToQueue pushes valid unit', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const faction = makeFaction(nation);
-	const city = new City({ hex, nation, Grid: testGrid });
-
-	city.addToQueue({ faction, unitType: Object.keys(World.units)[0] });
-	assert.equal(city.queue.length, 1);
-	assert.equal(city.queue[0].faction, faction);
-});
-
-test('City.addToQueue rejects invalid unit type', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const faction = makeFaction(nation);
-	const city = new City({ hex, nation, Grid: testGrid });
-
-	city.addToQueue({ faction, unitType: 'not-valid-unit' });
-	assert.equal(city.queue.length, 0);
-});
-
-test('City.addToQueue rejects invalid faction', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const city = new City({ hex, nation, Grid: testGrid });
-
-	assert.throws(() => {
-		city.addToQueue({ faction: {}, unitType: Object.keys(World.units)[0] });
-	}, /Faction/);
-});
-
-test('City.processFood consumes stored food and produces units', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const faction = makeFaction(nation);
-	const city = new City({ hex, nation, Grid: testGrid });
-
-	// Add a unit to the queue
-	city.addToQueue({ faction, unitType: Object.keys(World.units)[0] });
-	assert.equal(city.queue.length, 1);
-
-	// Give enough food
-	const promise = Promise.resolve();
-	currentGame.events.emit('goods-moved', {
-		goods: {
-			faction,
-			goodsType: 'food',
-			hex: city.hex,
-			num: GameConfig.cityFoodPerUnit + 2,
-		},
-		promise,
+		assert.equal(city.hex, hex);
+		assert.equal(city.nation, nation);
+		assert.equal(hex.city, city);
 	});
 
-	return promise.finally(() => {
+	test('City.addToQueue pushes valid unit', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const faction = makeFaction(nation);
+		const city = new City({ hex, nation, Grid: testGrid });
+
+		city.addToQueue({ faction, unitType: Object.keys(World.units)[0] });
+		assert.equal(city.queue.length, 1);
+		assert.equal(city.queue[0].faction, faction);
+	});
+
+	test('City.addToQueue rejects invalid unit type', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const faction = makeFaction(nation);
+		const city = new City({ hex, nation, Grid: testGrid });
+
+		city.addToQueue({ faction, unitType: 'not-valid-unit' });
 		assert.equal(city.queue.length, 0);
 	});
-});
 
-test('City.isCity works correctly', () => {
-	const hex = testGrid.getHex({ row: 0, col: 0 });
-	const nation = makeNation();
-	const city = new City({ hex, nation, Grid: testGrid });
+	test('City.addToQueue rejects invalid faction', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const city = new City({ hex, nation, Grid: testGrid });
 
-	assert.true(City.isCity(city));
-	assert.true(!City.isCity({}));
+		assert.throws(() => {
+			city.addToQueue({ faction: {}, unitType: Object.keys(World.units)[0] });
+		}, /Faction/);
+	});
+
+	test('City.processFood consumes stored food and produces units', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const faction = makeFaction(nation);
+		const city = new City({ hex, nation, Grid: testGrid });
+
+		const unitType = Object.keys(World.units)[0];
+		const unit = World.units[unitType];
+		faction.money = (unit.productionCosts.addToQueue.money || 0)
+			+ (unit.productionCosts.removeFromQueue.money || 0)
+			+ 10;
+
+		// Add a unit to the queue
+		city.addToQueue({ faction, unitType });
+		assert.equal(city.queue.length, 1);
+
+		// Give enough food
+		const promise = Promise.resolve();
+		currentGame.events.emit('goods-moved', {
+			goods: {
+				faction,
+				goodsType: 'food',
+				hex: city.hex,
+				num: (unit.productionCosts.addToQueue.food || 0) + (unit.productionCosts.removeFromQueue.food || 0) + 2,
+			},
+			promise,
+		});
+
+		return promise.finally(() => {
+			assert.equal(city.queue.length, 0);
+		});
+	});
+
+	test('City.isCity works correctly', () => {
+		const hex = testGrid.getHex({ row: 0, col: 0 });
+		const nation = makeNation();
+		const city = new City({ hex, nation, Grid: testGrid });
+
+		assert.true(City.isCity(city));
+		assert.true(!City.isCity({}));
+	});
 });
