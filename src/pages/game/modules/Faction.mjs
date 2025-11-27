@@ -58,7 +58,7 @@ function Faction({
 			get: () => money,
 			set(val) {
 				if (!Number.isFinite(val) || val < 0) {
-					throw new TypeError('Faction.money expects to be assigned a positive number!');
+					throw new TypeError('Faction.money expects to be assigned a nonnegative number!');
 				}
 				money = val;
 			},

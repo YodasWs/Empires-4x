@@ -19,6 +19,7 @@ export default class City {
 	constructor({
 		hex,
 		nation,
+		Grid = Hex.Grid,
 	}) {
 		if (!Nation.isNation(nation)) {
 			throw new TypeError('City expects to be assigned object instance of Nation!');
@@ -33,18 +34,20 @@ export default class City {
 		hex.city = this;
 
 		// Claim this tile and adjacent tiles
-		Hex.Grid.traverse(Honeycomb.spiral({
+		Grid.traverse(Honeycomb.spiral({
 			start: [ hex.q, hex.r ],
 			radius: 1,
 		})).forEach((adjacentHex) => {
+			if (!Hex.isHex(adjacentHex)) return;
 			adjacentHex.tile.claimTerritory(nation, 100);
 		});
 
 		// Claim water territory
-		Hex.Grid.traverse(Honeycomb.ring({
+		Grid.traverse(Honeycomb.ring({
 			center: [ hex.q, hex.r ],
 			radius: 2,
 		})).forEach((waterHex) => {
+			if (!Hex.isHex(waterHex)) return;
 			waterHex.tile.claimTerritory(nation, waterHex.terrain.isWater ? 50 : 0);
 		});
 
