@@ -9,6 +9,7 @@ export default class Goods extends Movable {
 	#num;
 	#rounds = 0;
 	#start;
+	#target;
 
 	constructor(goodsType, {
 		hex,
@@ -29,6 +30,7 @@ export default class Goods extends Movable {
 		currentGame.events.on('goods-moved', (evt) => {
 			const { goods, promise } = evt.detail;
 			if (goods !== this) return;
+			if (Hex.isHex(this.#target) && this.hex !== this.#target) return;
 			promise.finally(() => {
 				this.destroy();
 			});
@@ -58,13 +60,17 @@ export default class Goods extends Movable {
 		}
 		this.#rounds = val;
 		// Limit lifespan of Food goods on the board
-		if (this.#goodsType === 'food' && this.#rounds > Goods.MaxFoodRounds) {
+		if (this.#goodsType === 'food' && this.#rounds >= Goods.MaxFoodRounds) {
 			this.destroy();
 		}
 	}
 
 	get start() {
 		return this.#start;
+	}
+
+	setPath(targetHex, Grid = Hex.Grid) {
+		this.#target = super.setPath(targetHex, Grid) !== null && targetHex;
 	}
 
 	static isGoods(goods) {

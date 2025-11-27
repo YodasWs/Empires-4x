@@ -73,19 +73,44 @@ describe('Goods class', () => {
 		});
 	});
 
-	it('destroys itself on goods-moved event', async () => {
-		const goods = new Goods('food', { hex });
-		let destroyed = false;
-		goods.destroy = () => {
-			console.log('Sam, destroy called');
-			destroyed = true;
-		};
+	it('does not destroy itself on goods-moved event if it did not reach destination', async (t) => {
+		const testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 3, height: 1 }));
+		const targetHex = testGrid.getHex({ row: 0, col: 2 });
+		const goods = new Goods('food', { hex: testGrid.getHex({ row: 0, col: 0 }) });
+
+		const spy = t.mock.fn();
+		t.mock.method(goods, 'destroy', spy);
+
+		assert.notEqual(goods.setPath(targetHex, testGrid), null);
+		goods.prepareForNewTurn();
+		goods.moveOneTurn();
 
 		const promise = Promise.resolve();
 		currentGame.events.emit('goods-moved', { goods, promise });
 
 		await promise; // wait for finally()
-		assert.true(destroyed);
+		assert.equal(spy.mock.callCount(), 0, 'Goods.destroy was called');
+	});
+
+	it('destroys itself on goods-moved event if it reached destination', async (t) => {
+		const testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 3, height: 1 }));
+		const targetHex = testGrid.getHex({ row: 0, col: 1 });
+		const goods = new Goods('food', { hex: testGrid.getHex({ row: 0, col: 0 }) });
+
+		let destroyed = false;
+		goods.destroy = () => {
+			destroyed = true;
+		};
+
+		assert.notEqual(goods.setPath(targetHex, testGrid), null);
+		goods.prepareForNewTurn();
+		goods.moveOneTurn();
+
+		const promise = Promise.resolve();
+		currentGame.events.emit('goods-moved', { goods, promise });
+
+		await promise; // wait for finally()
+		assert.true(destroyed, 'Goods not destroyed');
 	});
 
 	test('num setter accepts zero integer', () => {
@@ -210,13 +235,21 @@ describe('Food production and delivery', () => {
 		t.skip('Not yet implemented');
 	});
 
-	test('Food spoils before reaching City', (t) => {
-		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 6, height: 1 }));
-		const hex = testGrid.getHex({ row: 0, col: 0 });
-		const goods = new Goods('food', { hex, num: 3 });
+	test('Food spoils before reaching City', async (t) => {
+		testGrid = new Honeycomb.Grid(mockHex, Honeycomb.rectangle({ width: 8, height: 1 }));
+		const startHex = testGrid.getHex({ row: 0, col: 0 });
+		const endHex = testGrid.getHex({ row: 0, col: 7 });
+		const goods = new Goods('food', { hex: startHex, num: 3 });
+		goods.setPath(endHex, testGrid);
 		do {
+			goods.prepareForNewTurn();
+			goods.moveOneTurn();
 			goods.rounds++;
-		} while (goods.rounds <= Goods.MaxFoodRounds + 1);
+		} while (goods.rounds < Goods.MaxFoodRounds + 1);
+		assert.equal(goods.rounds, 6);
+		assert.equal(goods.hex.row, 0);
+		assert.equal(goods.hex.col, 5);
+		assert.notEqual(goods.hex, endHex);
 		assert.equal(goods.goodsType, 'food');
 		assert.true(goods.deleted);
 	});

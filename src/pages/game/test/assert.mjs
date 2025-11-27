@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 // Expand assert with convenience methods
-assert.false = (val) => assert.equal(val, false);
-assert.true = (val) => assert.equal(val, true);
+assert.false = (val, message = undefined) => assert.equal(val, false, message);
+assert.true = (val, message = undefined) => assert.equal(val, true, message);
 
 export default assert;
