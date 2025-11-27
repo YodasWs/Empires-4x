@@ -61,7 +61,7 @@ export default class Tile {
 	}
 
 	get improvement() {
-		return this.#objImprovement || {};
+		return this.#objImprovement || false;
 	}
 
 	get laborers() {

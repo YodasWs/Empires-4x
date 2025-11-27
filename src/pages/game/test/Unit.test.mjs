@@ -5,6 +5,7 @@ import * as Honeycomb from 'honeycomb-grid';
 import * as GameConfig from '../modules/Config.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
 import Faction from '../modules/Faction.mjs';
+import Movable from '../modules/Movable.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
@@ -45,6 +46,14 @@ describe('Unit class', () => {
 		assert.equal(unit.row, 1);
 		assert.equal(unit.col, 1);
 		assert.equal(unit.faction.index, 0);
+	});
+
+	it('is also a Movable', () => {
+		const hex = testGrid.getHex({ row: 1, col: 1 });
+		const unit = new Unit('farmer', { hex, faction });
+		assert.true(unit instanceof Movable);
+		assert.true(Movable.isInstanceofMovable(unit));
+		assert.true(Movable.isActivatableMovable(unit));
 	});
 
 	it('throws on unknown unitType', () => {
