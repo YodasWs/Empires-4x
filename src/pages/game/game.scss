@@ -144,8 +144,19 @@
 	}
 	
 	#production-queue {
-		right: auto;
+		position: fixed;
+		left: 0;
+		top: 50%;
+		bottom: 0;
 		width: 200px;
 		background: white;
+		display: flex;
+		flex-flow: column nowrap;
+
+		> h2 {
+			font-size: 1.4rem;
+			margin-bottom: 1rem;
+			text-align: center;
+		}
 	}
 }

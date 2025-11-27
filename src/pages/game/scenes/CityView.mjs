@@ -10,12 +10,15 @@ import { currentGame } from '../modules/Game.mjs';
 import InputManager from '../modules/InputManager.mjs';
 
 let thisCity = null;
-let domProductionQueue = null;
+let domCityView = null;
 
-function hideProductionQueue() {
-	if (domProductionQueue) {
-		domProductionQueue.setAttribute('hidden', 'true');
-		domProductionQueue.innerHTML = '';
+function hideCityHTML() {
+	if (domCityView) {
+		domCityView.setAttribute('hidden', 'true');
+		domCityView.style.zIndex = -1;
+		Array.from(domCityView.children).forEach((child) => {
+			child.innerHTML = '';
+		});
 	}
 }
 
@@ -33,10 +36,11 @@ export default {
 		const windowConfig = GameConfig.getWindowConfig();
 
 		thisCity = data.hex.city;
-		domProductionQueue ??= document.getElementById('production-queue');
+		domCityView ??= document.getElementById('city-view');
 
 		{
-			domProductionQueue.innerHTML = '';
+			const domProductionQueue = domCityView.querySelector('#production-queue');
+			domProductionQueue.innerHTML = '<h2>Production Queue</h2>';
 			const select = document.createElement('select');
 			{
 				const option = document.createElement('option');
@@ -68,10 +72,10 @@ export default {
 			});
 
 			domProductionQueue.appendChild(document.createElement('ul'));
-
-			domProductionQueue.removeAttribute('hidden');
-			domProductionQueue.style.zIndex = 1;
 		}
+
+		domCityView.removeAttribute('hidden');
+		domCityView.style.zIndex = 1;
 
 		// Start building graphics scene
 		{
@@ -152,10 +156,10 @@ export default {
 		this.inputManager = new InputManager(this);
 
 		this.events.on('sleep', () => {
-			hideProductionQueue();
+			hideCityHTML();
 			this.scene.wake('mainGameScene');
 		}).on('shutdown', () => {
-			hideProductionQueue();
+			hideCityHTML();
 			this.scene.wake('mainGameScene');
 		});
 	},
