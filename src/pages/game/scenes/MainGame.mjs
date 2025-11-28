@@ -226,6 +226,7 @@ export default {
 		currentGame.players[0].addUnit('miner', Hex.Grid.getHex({ row: 2, col: 2 }), this);
 		currentGame.players[0].addUnit('settler', Hex.Grid.getHex({ row: 3, col: 3 }), this);
 		currentGame.players[0].addUnit('builder', Hex.Grid.getHex({ row: 1, col: 3 }), this);
+		TileView.setTileVisibility();
 
 		this.inputManager = new InputManager(this);
 

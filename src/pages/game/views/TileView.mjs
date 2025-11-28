@@ -49,8 +49,21 @@ export class FogOfWar {
 	}
 }
 
+export function setTileVisibility() {
+	currentGame.players[0].units.forEach((unit) => {
+		Hex.Grid.traverse(Honeycomb.spiral({
+			start: unit.hex,
+			radius: unit.sightDistance,
+		})).forEach((hex) => {
+			if (!Hex.isHex(hex)) return;
+			FogOfWar.viewTileForFaction(unit.faction, hex);
+		});
+	});
+}
+
 currentGame.events.on('unit-moving', (evt) => {
 	const { unit, priorHex } = evt.detail;
+	if (unit.faction.index !== 0) return;
 	Hex.Grid.traverse(Honeycomb.spiral({
 		start: priorHex,
 		radius: unit.sightDistance,
@@ -58,13 +71,7 @@ currentGame.events.on('unit-moving', (evt) => {
 		if (!Hex.isHex(hex)) return;
 		FogOfWar.exploreTileForFaction(unit.faction, hex);
 	});
-	Hex.Grid.traverse(Honeycomb.spiral({
-		start: unit.hex,
-		radius: unit.sightDistance,
-	})).forEach((hex) => {
-		if (!Hex.isHex(hex)) return;
-		FogOfWar.viewTileForFaction(unit.faction, hex);
-	});
+	setTileVisibility();
 });
 
 // Display Improvement on the Tile (or do that in ImprovementView.mjs?)
