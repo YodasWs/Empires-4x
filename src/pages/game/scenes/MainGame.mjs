@@ -11,7 +11,7 @@ import InputManager from '../modules/InputManager.mjs';
 
 import { registerGoodsToView, renderGoods } from '../views/GoodsView.mjs';
 import { registerUnitToView, renderUnits } from '../views/UnitView.mjs';
-import { removeImprovement, renderImprovement } from '../views/TileView.mjs';
+import * as TileView from '../views/TileView.mjs';
 
 const sceneKey = 'mainGameScene';
 
@@ -152,16 +152,17 @@ export default {
 					...World.terrains[tile.terrain],
 					terrain: tile.terrain,
 				},
-				sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`).setDepth(GameConfig.depths.map).setInteractive(
-					new Phaser.Geom.Polygon(Hex.Grid.getHex({ row: 0, col: 0}).corners),
-					Phaser.Geom.Polygon.Contains
-				),
+				sprite: this.add.image(hex.x, hex.y, `tile.${tile.terrain}`),
 				text: this.add.text(hex.x - GameConfig.tileWidth / 2, hex.y + GameConfig.tileWidth / 3.6, hex.row + '×' + hex.col, {
 					fixedWidth: GameConfig.tileWidth,
 					font: '12pt Trebuchet MS',
 					align: 'center',
 					color: 'white',
 				}).setOrigin(0),
+			});
+			// Fog of War
+			currentGame.players.forEach((faction) => {
+				TileView.FogOfWar.startTileFogState(faction, hex, 'unexplored');
 			});
 		}).forEach((hex) => {
 			// Build City
@@ -257,9 +258,9 @@ export default {
 		Hex.Grid.forEach((hex) => {
 			// TODO: Optimize by only updating changed tiles
 			if (hex.tile.improvement.key) {
-				renderImprovement(hex.tile, this);
+				TileView.renderImprovement(hex.tile, this);
 			} else {
-				removeImprovement(hex.tile);
+				TileView.removeImprovement(hex.tile);
 			}
 		});
 	},

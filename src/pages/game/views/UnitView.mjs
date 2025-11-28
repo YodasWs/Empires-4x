@@ -4,17 +4,21 @@ import { currentGame } from '../modules/Game.mjs';
 const unitSprites = new Map(); // key: Unit instance → UnitViewDetail
 
 class UnitViewDetail {
-	#position
+	#hex
 	#scene
 	#sprite
 
 	constructor(unit, scene) {
-		this.#position = { x: unit.hex.x, y: unit.hex.y };
+		this.#hex = unit.hex;
 		this.#scene = scene;
-		this.#sprite = scene.add.sprite(this.#position.x, this.#position.y, `unit.${unit.unitType}`)
+		this.#sprite = scene.add.sprite(this.#hex.x, this.#hex.y, `unit.${unit.unitType}`)
 			.setTint(0x383838)
 			.setDepth(GameConfig.depths.inactiveUnits);
 		this.#sprite.setScale(GameConfig.unitWidth / this.#sprite.width);
+	}
+
+	get hex() {
+		return this.#hex;
 	}
 
 	get scene() {
@@ -26,15 +30,14 @@ class UnitViewDetail {
 	}
 
 	get x() {
-		return this.#position.x;
+		return this.#hex.x;
 	}
 	get y() {
-		return this.#position.y;
+		return this.#hex.y;
 	}
 
 	update(hex) {
-		this.#position.x = hex.x;
-		this.#position.y = hex.y;
+		this.#hex = hex;
 	}
 }
 
@@ -53,7 +56,7 @@ export function renderUnits() {
 		}
 
 		if (detail.x !== unit.hex.x || detail.y !== unit.hex.y) {
-			const promise = moveUnitSprite(unit, unit.hex);
+			const promise = moveUnitSprite(unit, detail.hex);
 			detail.update(unit.hex);
 			promise.then(() => {
 				console.log('Sam, emitting unit-moved');
@@ -71,16 +74,16 @@ export function renderUnits() {
 	});
 }
 
-function moveUnitSprite(unit, targetHex) {
+function moveUnitSprite(unit, priorHex) {
 	const detail = unitSprites.get(unit);
 	if (!detail) return;
 
 	return new Promise((resolve) => {
-		currentGame.events.emit('unit-moving', { unit });
+		currentGame.events.emit('unit-moving', { unit, priorHex });
 		detail.scene.tweens.add({
 			targets: detail.sprite,
-			x: targetHex.x,
-			y: targetHex.y,
+			x: unit.hex.x,
+			y: unit.hex.y,
 			ease: 'Quad.out',
 			duration: 800,
 			yoyo: false,

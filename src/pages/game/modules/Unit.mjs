@@ -42,6 +42,7 @@ function throwTypeError(message) {
 }
 
 export default class Unit extends Movable {
+	#sightDistance
 	#unitType
 
 	constructor(unitType, {
@@ -54,8 +55,13 @@ export default class Unit extends Movable {
 		const base = World.units[unitType] ?? throwTypeError(`Unknown unit '${unitType}'`)
 
 		super({ base, hex, faction });
+		this.#sightDistance = base.sightDistance || 1;
 		this.#unitType = unitType;
 		currentGame.events.emit('unit-created', { unit: this });
+	}
+
+	get sightDistance() {
+		return this.#sightDistance;
 	}
 
 	get unitType() {
