@@ -41,7 +41,7 @@ yodasws.page('pageGame').setRoute({
 		type: Phaser.AUTO,
 		...GameConfig.getWindowConfig(),
 		zoom: GameConfig.scale,
-		backgroundColor: '#71ABFF',
+		backgroundColor: '#000000',
 		scene: {
 			key: 'title-screen',
 			preload() {

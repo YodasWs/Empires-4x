@@ -95,7 +95,7 @@ function moveUnitSprite(unit, priorHex) {
 	});
 }
 
-export function destroyUnitSprite(unit) {
+function destroyUnitSprite(unit) {
 	if (!unitSprites.has(unit)) {
 		return;
 	}
@@ -104,3 +104,6 @@ export function destroyUnitSprite(unit) {
 	detail.sprite.destroy();
 	unitSprites.delete(unit);
 }
+currentGame.events.on('unit-destroyed', (evt) => {
+	destroyUnitSprite(evt.detail.unit);
+});

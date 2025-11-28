@@ -51,6 +51,7 @@ export class FogOfWar {
 
 export function setTileVisibility() {
 	currentGame.players[0].units.forEach((unit) => {
+		if (unit.deleted) return;
 		Hex.Grid.traverse(Honeycomb.spiral({
 			start: unit.hex,
 			radius: unit.sightDistance,
@@ -61,8 +62,7 @@ export function setTileVisibility() {
 	});
 }
 
-currentGame.events.on('unit-moving', (evt) => {
-	const { unit, priorHex } = evt.detail;
+function removeTileVisibility(unit, priorHex = unit.hex) {
 	if (unit.faction.index !== 0) return;
 	Hex.Grid.traverse(Honeycomb.spiral({
 		start: priorHex,
@@ -71,6 +71,16 @@ currentGame.events.on('unit-moving', (evt) => {
 		if (!Hex.isHex(hex)) return;
 		FogOfWar.exploreTileForFaction(unit.faction, hex);
 	});
+}
+currentGame.events.on('unit-destroyed', (evt) => {
+	removeTileVisibility(evt.detail.unit);
+	setTileVisibility();
+});
+
+currentGame.events.on('unit-moving', (evt) => {
+	const { unit, priorHex } = evt.detail;
+	if (unit.faction.index !== 0) return;
+	removeTileVisibility(unit, priorHex);
 	setTileVisibility();
 });
 
