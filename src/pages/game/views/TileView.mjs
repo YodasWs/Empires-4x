@@ -16,8 +16,10 @@ export class FogOfWar {
 		}
 		const factionFogMap = fogOfWarMaps.get(faction);
 		factionFogMap.set(hex, 'unexplored');
-		hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
-			.setDepth(GameConfig.depths.unexplored);
+		if (faction.index === 0) {
+			hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
+				.setDepth(GameConfig.depths.unexplored);
+		}
 	}
 
 	static exploreTileForFaction(faction, hex) {
@@ -26,12 +28,14 @@ export class FogOfWar {
 		}
 		const factionFogMap = fogOfWarMaps.get(faction);
 		factionFogMap.set(hex, 'explored');
-		hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
-			.setDepth(GameConfig.depths.map)
-			.setInteractive(
-				new Phaser.Geom.Polygon(hex.corners),
-				Phaser.Geom.Polygon.Contains
-			);
+		if (faction.index === 0) {
+			hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
+				.setDepth(GameConfig.depths.map)
+				.setInteractive(
+					new Phaser.Geom.Polygon(hex.corners),
+					Phaser.Geom.Polygon.Contains
+				);
+		}
 	}
 
 	static viewTileForFaction(faction, hex) {
@@ -40,19 +44,21 @@ export class FogOfWar {
 		}
 		const factionFogMap = fogOfWarMaps.get(faction);
 		factionFogMap.set(hex, 'visible');
-		hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
-			.setDepth(GameConfig.depths.map)
-			.setInteractive(
-				new Phaser.Geom.Polygon(hex.corners),
-				Phaser.Geom.Polygon.Contains
-			);
+		if (faction.index === 0) {
+			hex.sprite.setTint(fogOfWarTints[factionFogMap.get(hex)])
+				.setDepth(GameConfig.depths.map)
+				.setInteractive(
+					new Phaser.Geom.Polygon(hex.corners),
+					Phaser.Geom.Polygon.Contains
+				);
+		}
 	}
 }
 
-export function setTileVisibility() {
+export function setTileVisibility(Grid = Hex.Grid) {
 	currentGame.players[0].units.forEach((unit) => {
 		if (unit.deleted) return;
-		Hex.Grid.traverse(Honeycomb.spiral({
+		Grid.traverse(Honeycomb.spiral({
 			start: unit.hex,
 			radius: unit.sightDistance,
 		})).forEach((hex) => {
@@ -62,9 +68,9 @@ export function setTileVisibility() {
 	});
 }
 
-function removeTileVisibility(unit, priorHex = unit.hex) {
+function removeTileVisibility(unit, priorHex = unit.hex, Grid = Hex.Grid) {
 	if (unit.faction.index !== 0) return;
-	Hex.Grid.traverse(Honeycomb.spiral({
+	Grid.traverse(Honeycomb.spiral({
 		start: priorHex,
 		radius: unit.sightDistance,
 	})).forEach((hex) => {
@@ -88,6 +94,7 @@ currentGame.events.on('unit-moving', (evt) => {
 const improvementSprites = new Map(); // key: Tile instance, value: Phaser.Sprite
 
 export function renderImprovement(tile, scene) {
+	// TODO: Need to show out-of-date information due to Fog of War
 	const key = tile.improvement?.key;
 	if (!key) return;
 
