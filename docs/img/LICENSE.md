@@ -4,20 +4,20 @@ Except where otherwise stated, all images here are Copyright © 2022 Samuel B Gr
 
 ## improvements
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/improvements/LICENSE.md).
+See [separate license](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/src/img/improvements/LICENSE.md).
 
 ## laborers
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/laborers/LICENSE.md).
+See [separate license](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/src/img/laborers/LICENSE.md).
 
 ## resources
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/resources/LICENSE.md).
+See [separate license](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/src/img/resources/LICENSE.md).
 
 ## tiles
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/tiles/LICENSE.md).
+See [separate license](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/src/img/tiles/LICENSE.md).
 
 ## units
 
-See [separate license](https://github.com/YodasWs/Empires-4x/blob/master/src/img/units/LICENSE.md).
+See [separate license](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/src/img/units/LICENSE.md).

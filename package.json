@@ -1,24 +1,24 @@
 {
-	"name": "@yodasws/empires-4x",
+	"name": "@yodasws/RomanLogisticsTycoon",
 	"version": "0.0.1-alpha",
 	"description": "Simple 4x game",
 	"private": true,
 	"main": "gulpfile.js",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/YodasWs/Empires-4x.git"
+		"url": "git+https://github.com/YodasWs/RomanLogisticsTycoon.git"
 	},
 	"author": "Samuel B Grundman (https://github.com/YodasWs/)",
 	"bugs": {
-		"url": "https://github.com/YodasWs/Empires-4x/issues"
+		"url": "https://github.com/YodasWs/RomanLogisticsTycoon/issues"
 	},
-	"homepage": "https://github.com/YodasWs/Empires-4x#readme",
+	"homepage": "https://github.com/YodasWs/RomanLogisticsTycoon#readme",
 	"scripts": {
 		"build": "gulp compile",
 		"dev": "gulp",
 		"lint": "gulp lint",
 		"start": "gulp serve",
-		"test": "gulp test:js"
+		"test": "node --test"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.20.2",

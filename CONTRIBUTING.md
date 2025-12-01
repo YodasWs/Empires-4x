@@ -8,7 +8,7 @@ This document outlines how you can contribute and what to expect.
 
 This project was started as a fun, open-source game. My goal is to build a fun and engaging game with the community.
 
-- [Our Roadmap](https://github.com/YodasWs/Empires-4x/blob/master/ROADMAP.md)
+- [Our Roadmap](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/ROADMAP.md)
 
 **Please be aware that if the game becomes successful, there is a possibility that it may transition to a commercial, closed-source project.** This is to help fund its continued development and to compensate for the significant investment of time required to bring it to a high-quality finished state.
 
@@ -18,15 +18,15 @@ To ensure that I can legally transition the project for commercial purposes in t
 
 *   By submitting a pull request, you will be asked to confirm your agreement to the CLA.
 *   The CLA grants me the necessary rights to use your contributions in a potential future commercial version of the game while you retain the copyright to your original work.
-*   You can read the full text of the CLA [here](https://github.com/YodasWs/Empires-4x/blob/master/CLA.md).
+*   You can read the full text of the CLA [here](https://github.com/YodasWs/RomanLogisticsTycoon/blob/master/CLA.md).
 
 ## How to Contribute
 
 We welcome contributions of all kinds! Code and non-code controbutions are needed.
 
-*   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/Empires-4x/issues) or [Kanban board](https://github.com/users/YodasWs/projects/3/) for areas where help is needed.
-*   **Ideas and Feedback:** Share your thoughts on gameplay, features, and design in the [Discussions section](https://github.com/YodasWs/Empires-4x/discussions).
-*   **Documentation:** Help us write and expand how-to guides over on our [wiki](https://github.com/YodasWs/Empires-4x/wiki).
+*   **Code:** If you're a developer, please check the [Issues](https://github.com/YodasWs/RomanLogisticsTycoon/issues) or [Kanban board](https://github.com/users/YodasWs/projects/3/) for areas where help is needed.
+*   **Ideas and Feedback:** Share your thoughts on gameplay, features, and design in the [Discussions section](https://github.com/YodasWs/RomanLogisticsTycoon/discussions).
+*   **Documentation:** Help us write and expand how-to guides over on our [wiki](https://github.com/YodasWs/RomanLogisticsTycoon/wiki).
 *   **UX/UI Design and Art:** If you have design or artistic skills, we'd love your help creating a better user experience and graphics.
 *   **Promote:** Please share the project on social media!
 
@@ -40,7 +40,7 @@ Then open http://localhost:3000/ in your browser.
 
 ## Found a bug?
 
-Please feel free to open a new [Issue](https://github.com/YodasWs/Empires-4x/issues) to report any bugs. Please include as much detail as possible and how to recreate it.
+Please feel free to open a new [Issue](https://github.com/YodasWs/RomanLogisticsTycoon/issues) to report any bugs. Please include as much detail as possible and how to recreate it.
 
 ## Have an idea to contribte?
 
@@ -69,7 +69,7 @@ If you start work on an Issue but get stuck on completing it or find you don't h
 
 ## Documentation
 
-This project has a [Wiki](https://github.com/YodasWs/Empires-4x/wiki). Please feel free to help expand the information there as we develop the game.
+This project has a [Wiki](https://github.com/YodasWs/RomanLogisticsTycoon/wiki). Please feel free to help expand the information there as we develop the game.
 
 Documentation added on the parts of the game and how to play the game will be incorporated into the game itself as the Player's Help resources. You will be contributing just by sharing your knowledge and love of the game.
 
