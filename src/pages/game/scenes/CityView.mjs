@@ -17,7 +17,7 @@ function hideCityHTML() {
 		domCityView.setAttribute('hidden', 'true');
 		domCityView.style.zIndex = -1;
 		Array.from(domCityView.children).forEach((child) => {
-			child.innerHTML = '';
+			if (child.hasAttribute('id')) child.innerHTML = '';
 		});
 	}
 }
@@ -101,19 +101,12 @@ export default {
 		const graphics = this.add.graphics({ x: 0, y: 0 }).setDepth(1);
 
 		// Close button
-		graphics.fillStyle(0x000000, 1);
-		graphics.fillRect(windowConfig.width - 100, 0, 100, 100);
-		this.add.text(windowConfig.width - 100, 0, '× ', {
-			fixedWidth: 100,
-			fixedHeight: 100,
-			font: '60pt Trebuchet MS',
-			align: 'right',
-			color: 'white',
-			stroke: 'black',
-			strokeThickness: 7,
-		}).setDepth(2).setInteractive().on('pointerdown', () => {
-			this.scene.stop('city-view');
-		});
+		const btnClose = domCityView.querySelector('.btn-close');
+		if (btnClose instanceof Element) {
+			btnClose.addEventListener('click', () => {
+				this.scene.stop('city-view');
+			});
+		}
 
 		// Important constants for translating city tiles locations
 		const [offsetX, offsetY] = [data.hex.x, data.hex.y];

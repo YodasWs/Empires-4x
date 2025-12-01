@@ -4,6 +4,7 @@ import { ActionHandler } from '../modules/Actions.mjs';
 import * as Hex from '../modules/Hex.mjs';
 import Tile from '../modules/Tile.mjs';
 import Unit, * as UnitUtils from '../modules/Unit.mjs';
+import { FogOfWar } from '../views/TileView.mjs';
 
 if (typeof globalThis.document === 'undefined') {
 	// Mock document for non-DOM environments
@@ -103,6 +104,7 @@ currentGame.events.on('doing-action', () => {
 function OpenTileMenu(evt) {
 	const hex = evt.detail?.hex || evt.detail?.unit?.hex;
 	if (!Hex.isHex(hex) || !Tile.isTile(hex.tile)) return;
+	if (!FogOfWar.isHexExplored(currentGame.players[0], hex)) return;
 
 	CloseTileMenu();
 

@@ -1,5 +1,6 @@
 import * as Honeycomb from 'honeycomb-grid';
 import * as Hex from '../modules/Hex.mjs';
+import Faction from '../modules/Faction.mjs';
 import * as GameConfig from '../modules/Config.mjs';
 import { currentGame } from '../modules/Game.mjs';
 
@@ -11,6 +12,12 @@ const fogOfWarTints = {
 const fogOfWarMaps = new Map(); // key: Faction instance, value: Map of Hex instance → fog state
 export class FogOfWar {
 	static startTileFogState(faction, hex) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+		}
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+		}
 		if (!fogOfWarMaps.has(faction)) {
 			fogOfWarMaps.set(faction, new Map());
 		}
@@ -23,6 +30,12 @@ export class FogOfWar {
 	}
 
 	static exploreTileForFaction(faction, hex) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+		}
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+		}
 		if (!fogOfWarMaps.has(faction)) {
 			fogOfWarMaps.set(faction, new Map());
 		}
@@ -39,6 +52,12 @@ export class FogOfWar {
 	}
 
 	static viewTileForFaction(faction, hex) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+		}
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+		}
 		if (!fogOfWarMaps.has(faction)) {
 			fogOfWarMaps.set(faction, new Map());
 		}
@@ -52,6 +71,23 @@ export class FogOfWar {
 					Phaser.Geom.Polygon.Contains
 				);
 		}
+	}
+
+	static isHexExplored(faction, hex) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+		}
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+		}
+		if (!Hex.isHex(hex)) {
+			return false;
+		}
+		if (!fogOfWarMaps.has(faction)) {
+			return false;
+		}
+		const factionFogMap = fogOfWarMaps.get(faction);
+		return factionFogMap.get(hex) !== 'unexplored';
 	}
 }
 

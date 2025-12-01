@@ -26,6 +26,8 @@ function displayImageInHTML({
 	}
 }
 
+let domTileView = null;
+
 export default {
 	key: 'tile-view',
 	preload() {
@@ -36,7 +38,7 @@ export default {
 			return;
 		}
 		this.scene.pause('mainGameScene');
-		const dom = document.getElementById('tile-view');
+		domTileView ??= document.getElementById('tile-view');
 
 		Object.keys(World.laborers).forEach((laborerType) => {
 			this.load.image(`laborers.${laborerType}`, `img/laborers/${laborerType}.png`);
@@ -47,13 +49,21 @@ export default {
 			}
 		});
 
+		// Close button
+		const btnClose = domTileView.querySelector('.btn-close');
+		if (btnClose instanceof Element) {
+			btnClose.addEventListener('click', () => {
+				this.scene.stop('tile-view');
+			});
+		}
+
 		// Display Terrain Information
 		displayImageInHTML({
 			imageKey: `tile.${hex.terrain.terrain}`,
 			htmlElementId: 'terrain',
 			scene: this,
 		});
-		const elTerrain = dom.querySelector('#terrain');
+		const elTerrain = domTileView.querySelector('#terrain');
 		if (elTerrain instanceof Element) {
 			const div = document.createElement('div');
 			div.classList.add('name');
@@ -63,7 +73,7 @@ export default {
 
 		// Display Improvement Information
 		if (hex.tile.improvement) {
-			const elImprovement = dom.querySelector('#improvements');
+			const elImprovement = domTileView.querySelector('#improvements');
 			// Create new Phaser canvas
 			const canvas = (() => {
 				if (this.textures.exists('tile-view-improvement')) {
@@ -116,7 +126,7 @@ export default {
 		}
 
 		if (hex.tile.laborers instanceof Set) {
-			const elLaborers = dom.querySelector('#laborers');
+			const elLaborers = domTileView.querySelector('#laborers');
 			hex.tile.laborers.forEach((laborer) => {
 				displayImageInHTML({
 					imageKey: `laborers.${laborer.type}`,
@@ -129,18 +139,18 @@ export default {
 		}
 
 		// Show Tile View
-		dom.removeAttribute('hidden');
+		domTileView.removeAttribute('hidden');
 
 		this.inputManager = new InputManager(this);
 
 		this.events.on('sleep', () => {
-			dom.setAttribute('hidden', true);
-			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
+			domTileView.setAttribute('hidden', true);
+			domTileView.querySelectorAll('div').forEach((div) => div.hasAttribute('id') && (div.innerHTML = ''));
 			this.scene.wake('mainGameScene');
 			this.inputManager.disableKeyboardInput();
 		}).on('shutdown', () => {
-			dom.setAttribute('hidden', true);
-			dom.querySelectorAll('div').forEach((div) => div.innerHTML = '');
+			domTileView.setAttribute('hidden', true);
+			domTileView.querySelectorAll('div').forEach((div) => div.hasAttribute('id') && (div.innerHTML = ''));
 			this.scene.wake('mainGameScene');
 		});
 	},

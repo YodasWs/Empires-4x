@@ -60,6 +60,22 @@
 		}
 	}
 
+	%btn-close {
+		position: fixed;
+		bottom: auto;
+		left: auto;
+		right: 0;
+		top: 0;
+		$square: 50px;
+		width: $square;
+		height: $square;
+		line-height: $square;
+		text-align: center;
+		vertical-align: middle;
+		color: white;
+		cursor: pointer;
+	}
+
 	div#tile-menu {
 		background: white;
 		position: fixed;
@@ -141,8 +157,18 @@
 		&:not([hidden]) + .game .unit-actions-menu {
 			display: none;
 		}
+
+		> .btn-close {
+			@extend %btn-close;
+		}
 	}
-	
+
+	#city-view {
+		> .btn-close {
+			@extend %btn-close;
+		}
+	}
+
 	#production-queue {
 		position: fixed;
 		left: 0;
