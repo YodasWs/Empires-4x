@@ -3,6 +3,8 @@ import { currentGame } from '../modules/Game.mjs';
 
 const unitSprites = new Map(); // key: Unit instance → UnitViewDetail
 
+const offsetY = -30;
+
 class UnitViewDetail {
 	#hex
 	#scene
@@ -11,7 +13,7 @@ class UnitViewDetail {
 	constructor(unit, scene) {
 		this.#hex = unit.hex;
 		this.#scene = scene;
-		this.#sprite = scene.add.sprite(this.#hex.x, this.#hex.y, `unit.${unit.unitType}`)
+		this.#sprite = scene.add.sprite(this.#hex.x, this.#hex.y + offsetY, `unit.${unit.unitType}`)
 			.setTint(0x383838)
 			.setDepth(GameConfig.depths.inactiveUnits);
 		this.#sprite.setScale(GameConfig.unitWidth / this.#sprite.width);
@@ -83,7 +85,7 @@ function moveUnitSprite(unit, priorHex) {
 		detail.scene.tweens.add({
 			targets: detail.sprite,
 			x: unit.hex.x,
-			y: unit.hex.y,
+			y: unit.hex.y + offsetY,
 			ease: 'Quad.out',
 			duration: 800,
 			yoyo: false,

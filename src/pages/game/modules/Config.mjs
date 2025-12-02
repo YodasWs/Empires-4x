@@ -1,6 +1,6 @@
 export const scale = 0.5;
 export const tileWidth = 200;
-export const unitWidth = 80;
+export const unitWidth = 110;
 export const depths = {
 	offscreen: 0,
 	map: 1,

@@ -29,7 +29,7 @@ class mockHex extends Honeycomb.defineHex({
 describe('Game Configuration', () => {
 	it('should have correct tile and unit sizes', () => {
 		assert.equal(GameConfig.tileWidth, 200);
-		assert.equal(GameConfig.unitWidth, 80);
+		assert.equal(GameConfig.unitWidth, 110);
 	});
 });
 
