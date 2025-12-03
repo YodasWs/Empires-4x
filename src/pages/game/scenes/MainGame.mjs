@@ -44,6 +44,32 @@ export function ShowActiveUnitHelpSprites(event) {
 	const hex = unit.hex;
 	ActionSprites.spriteOnActiveUnit.setActive(true).setVisible(true).setPosition(hex.x, hex.y).setDepth(GameConfig.depths.actionSprites);
 
+	const {
+		fontSize,
+		strokeThickness,
+		x,
+		y,
+	} = {
+		'1': {
+			fontSize: 25,
+			x: GameConfig.tileWidth / 2,
+			y: GameConfig.tileWidth / 6,
+			strokeThickness: 7,
+		},
+		'0.7': {
+			fontSize: 37.5,
+			x: GameConfig.tileWidth / 2,
+			y: GameConfig.tileWidth / 6,
+			strokeThickness: 7,
+		},
+		'0.5': {
+			fontSize: 55,
+			x: GameConfig.tileWidth / 2,
+			y: -10,
+			strokeThickness: 10,
+		},
+	}[MainGameScene.cameras.main.zoom.toString()];
+
 	// Set text and listeners on hexes to move unit
 	[
 		'L',
@@ -57,16 +83,16 @@ export function ShowActiveUnitHelpSprites(event) {
 		const hex = Hex.Grid.getHex({ row, col });
 		if (Hex.IsLegalMove(hex, unit)) {
 			const text = MainGameScene.add.text(
-				hex.x - GameConfig.tileWidth / 2,
-				hex.y + GameConfig.tileWidth / 6,
+				hex.x - x,
+				hex.y + y,
 				move,
 				{
 					fixedWidth: GameConfig.tileWidth,
-					font: '25pt Trebuchet MS',
+					font: `${fontSize}pt Trebuchet MS`,
 					align: 'center',
 					color: 'khaki',
 					stroke: 'black',
-					strokeThickness: 7,
+					strokeThickness,
 				}
 			).setOrigin(0).setDepth(GameConfig.depths.actionSprites);
 			ActionSprites.shortcutKeys.push(text);
@@ -212,7 +238,7 @@ export default {
 				width = 500;
 			}
 			const minimap = this.cameras.add(windowConfig.width - width, windowConfig.height - height, width, height);
-			minimap.setZoom(0.2).setName('mini').setBackgroundColor(0x000000);
+			minimap.setZoom(0.05).setName('mini').setBackgroundColor(0x000000);
 			minimap.centerOn(Hex.Grid.pixelWidth / 2, Hex.Grid.pixelHeight / 2);
 			minimap.ignore([
 				currentGame.graphics.territoryLines,
@@ -249,6 +275,8 @@ export default {
 			currentGame.currentPlayer.activateUnit();
 			this.inputManager.enableKeyboardInput();
 		});
+
+		this.cameras.main.setZoom(0.5);
 
 		this.game.events.emit(`scene-created-${sceneKey}`);
 	},
