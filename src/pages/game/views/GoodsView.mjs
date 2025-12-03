@@ -1,5 +1,7 @@
 import { depths as Depths } from '../modules/Config.mjs';
 import { currentGame } from '../modules/Game.mjs';
+import { FogOfWar } from './TileView.mjs';
+import * as Hex from '../modules/Hex.mjs';
 
 const goodsSprites = new Map(); // key: Goods instance → GoodsViewDetail
 const GoodsSpriteOptions = {
@@ -9,15 +11,20 @@ const GoodsSpriteOptions = {
 };
 
 class GoodsViewDetail {
-	#position
+	#hex
 	#scene
 	#sprite
 
 	constructor(goods, scene) {
-		this.#position = { x: goods.hex.x, y: goods.hex.y };
+		this.#hex = goods.hex;
 		this.#scene = scene;
-		this.#sprite = scene.add.sprite(this.#position.x, this.#position.y, `goods.${goods.goodsType}`)
+		this.#sprite = scene.add.sprite(this.#hex.x, this.#hex.y, `goods.${goods.goodsType}`)
 			.setDepth(Depths.goods);
+		this.#sprite.setVisible(FogOfWar.isHexExplored(currentGame.players[0], goods.hex));
+	}
+
+	get hex() {
+		return this.#hex;
 	}
 
 	get scene() {
@@ -29,15 +36,16 @@ class GoodsViewDetail {
 	}
 
 	get x() {
-		return this.#position.x;
+		return this.#hex.x;
 	}
 	get y() {
-		return this.#position.y;
+		return this.#hex.y;
 	}
 
 	update(hex) {
-		this.#position.x = hex.x;
-		this.#position.y = hex.y;
+		if (Hex.isHex(hex)) {
+			this.#hex = hex;
+		}
 	}
 }
 
@@ -56,28 +64,78 @@ export function renderGoods() {
 		}
 
 		if (detail.x !== goods.hex.x || detail.y !== goods.hex.y) {
-			const promise = moveGoodsSprite(goods, goods.hex);
+			const promise = moveGoodsSprite(goods, detail.hex);
 			detail.update(goods.hex);
 			promise.then(() => {
 				currentGame.events.emit('goods-moved', { goods, promise });
 			});
 		}
-
-		detail.sprite.setVisible(true);
 	});
 }
 
-function moveGoodsSprite(goods, targetHex) {
+function moveGoodsSprite(goods, oldHex) {
 	const detail = goodsSprites.get(goods);
 	if (!detail) return;
+	// oldHex = Hex.Grid.getHex({ x: oldHex.x, y: oldHex.y });
+
+	const duration = 800;
+
+	const oldVisible = FogOfWar.isHexExplored(currentGame.players[0], oldHex);
+	const newVisible = FogOfWar.isHexExplored(currentGame.players[0], goods.hex);
+
+	if (!oldVisible && !newVisible) {
+		detail.sprite.setVisible(false);
+		return Promise.resolve();
+	}
+
+	if (oldVisible && !newVisible) {
+		return new Promise((resolve) => {
+			detail.scene.tweens.add({
+				targets: detail.sprite,
+				x: (goods.hex.x + oldHex.x) / 2,
+				y: (goods.hex.y + oldHex.y) / 2,
+				ease: 'Quad.out',
+				duration: duration / 2,
+				yoyo: false,
+				onComplete(tween) {
+					detail.sprite.setVisible(false);
+					tween.destroy();
+					resolve();
+				},
+			});
+		});
+	}
+
+	if (!oldVisible && newVisible) {
+		return new Promise((resolve) => {
+			detail.sprite.setX((goods.hex.x + oldHex.x) / 2).setY((goods.hex.y + oldHex.y) / 2).setVisible(false);
+			setTimeout(resolve, duration / 2);
+		}).then(() => {
+			detail.sprite.setVisible(true);
+			return new Promise((resolve) => {
+				detail.scene.tweens.add({
+					targets: detail.sprite,
+					x: goods.hex.x,
+					y: goods.hex.y,
+					ease: 'Quad.out',
+					duration: duration / 2,
+					yoyo: false,
+					onComplete(tween) {
+						tween.destroy();
+						resolve();
+					},
+				});
+			});
+		});
+	}
 
 	return new Promise((resolve) => {
 		detail.scene.tweens.add({
 			targets: detail.sprite,
-			x: targetHex.x,
-			y: targetHex.y,
+			x: goods.hex.x,
+			y: goods.hex.y,
 			ease: 'Quad.out',
-			duration: 800,
+			duration,
 			yoyo: false,
 			onComplete(tween) {
 				tween.destroy();
