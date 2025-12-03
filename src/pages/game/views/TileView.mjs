@@ -13,10 +13,10 @@ const fogOfWarMaps = new Map(); // key: Faction instance, value: Map of Hex inst
 export class FogOfWar {
 	static startTileFogState(faction, hex) {
 		if (!Faction.isFaction(faction)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+			throw new TypeError('FogOfWar.startTileFogState expects to be assigned object instance of Faction!');
 		}
 		if (!Hex.isHex(hex)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+			throw new TypeError('FogOfWar.startTileFogState expects to be assigned object instance of Hex!');
 		}
 		if (!fogOfWarMaps.has(faction)) {
 			fogOfWarMaps.set(faction, new Map());
@@ -31,10 +31,10 @@ export class FogOfWar {
 
 	static exploreTileForFaction(faction, hex) {
 		if (!Faction.isFaction(faction)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+			throw new TypeError('FogOfWar.exploreTileForFaction expects to be assigned object instance of Faction!');
 		}
 		if (!Hex.isHex(hex)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+			throw new TypeError('FogOfWar.exploreTileForFaction expects to be assigned object instance of Hex!');
 		}
 		if (!fogOfWarMaps.has(faction)) {
 			fogOfWarMaps.set(faction, new Map());
@@ -48,6 +48,7 @@ export class FogOfWar {
 					new Phaser.Geom.Polygon(hex.corners),
 					Phaser.Geom.Polygon.Contains
 				);
+			currentGame.events.emit('hex-hidden', { hex });
 		}
 	}
 
@@ -70,15 +71,16 @@ export class FogOfWar {
 					new Phaser.Geom.Polygon(hex.corners),
 					Phaser.Geom.Polygon.Contains
 				);
+			currentGame.events.emit('hex-visible', { hex });
 		}
 	}
 
-	static isHexExplored(faction, hex) {
+	static isHexVisible(faction, hex) {
 		if (!Faction.isFaction(faction)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Faction!');
+			throw new TypeError('FogOfWar.isHexVisible expects to be assigned object instance of Faction!');
 		}
 		if (!Hex.isHex(hex)) {
-			throw new TypeError('FogOfWar expects to be assigned object instance of Hex!');
+			throw new TypeError('FogOfWar.isHexVisible expects to be assigned object instance of Hex!');
 		}
 		if (!Hex.isHex(hex)) {
 			return false;
@@ -86,8 +88,23 @@ export class FogOfWar {
 		if (!fogOfWarMaps.has(faction)) {
 			return false;
 		}
-		const factionFogMap = fogOfWarMaps.get(faction);
-		return factionFogMap.get(hex) !== 'unexplored';
+		return fogOfWarMaps.get(faction).get(hex) === 'visible';
+	}
+
+	static isHexExplored(faction, hex) {
+		if (!Faction.isFaction(faction)) {
+			throw new TypeError('FogOfWar.isHexExplored expects to be assigned object instance of Faction!');
+		}
+		if (!Hex.isHex(hex)) {
+			throw new TypeError('FogOfWar.isHexExplored expects to be assigned object instance of Hex!');
+		}
+		if (!Hex.isHex(hex)) {
+			return false;
+		}
+		if (!fogOfWarMaps.has(faction)) {
+			return false;
+		}
+		return fogOfWarMaps.get(faction).get(hex) !== 'unexplored';
 	}
 }
 

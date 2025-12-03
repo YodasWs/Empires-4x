@@ -20,7 +20,7 @@ class GoodsViewDetail {
 		this.#scene = scene;
 		this.#sprite = scene.add.sprite(this.#hex.x, this.#hex.y, `goods.${goods.goodsType}`)
 			.setDepth(Depths.goods);
-		this.#sprite.setVisible(FogOfWar.isHexExplored(currentGame.players[0], goods.hex));
+		this.#sprite.setVisible(FogOfWar.isHexVisible(currentGame.players[0], goods.hex));
 	}
 
 	get hex() {
@@ -73,22 +73,36 @@ export function renderGoods() {
 	});
 }
 
+currentGame.events.on('hex-visible', (evt) => {
+	const { hex } = evt.detail;
+	goodsSprites.forEach((detail, goods) => {
+		if (detail.hex === hex) detail.sprite.setVisible(true);
+	});
+});
+
+currentGame.events.on('hex-hidden', (evt) => {
+	const { hex } = evt.detail;
+	goodsSprites.forEach((detail, goods) => {
+		if (detail.hex === hex) detail.sprite.setVisible(false);
+	});
+});
+
 function moveGoodsSprite(goods, oldHex) {
 	const detail = goodsSprites.get(goods);
 	if (!detail) return;
-	// oldHex = Hex.Grid.getHex({ x: oldHex.x, y: oldHex.y });
 
 	const duration = 800;
 
-	const oldVisible = FogOfWar.isHexExplored(currentGame.players[0], oldHex);
-	const newVisible = FogOfWar.isHexExplored(currentGame.players[0], goods.hex);
+	const oldVisible = FogOfWar.isHexVisible(currentGame.players[0], oldHex);
+	const newVisible = FogOfWar.isHexVisible(currentGame.players[0], goods.hex);
 
 	if (!oldVisible && !newVisible) {
-		detail.sprite.setVisible(false);
+		detail.sprite.setX(goods.hex.x).setY(goods.hex.y).setVisible(false);
 		return Promise.resolve();
 	}
 
 	if (oldVisible && !newVisible) {
+		detail.sprite.setVisible(true);
 		return new Promise((resolve) => {
 			detail.scene.tweens.add({
 				targets: detail.sprite,
@@ -98,7 +112,7 @@ function moveGoodsSprite(goods, oldHex) {
 				duration: duration / 2,
 				yoyo: false,
 				onComplete(tween) {
-					detail.sprite.setVisible(false);
+					detail.sprite.setX(goods.hex.x).setY(goods.hex.y).setVisible(false);
 					tween.destroy();
 					resolve();
 				},
@@ -117,7 +131,7 @@ function moveGoodsSprite(goods, oldHex) {
 					targets: detail.sprite,
 					x: goods.hex.x,
 					y: goods.hex.y,
-					ease: 'Quad.out',
+					ease: 'Linear',
 					duration: duration / 2,
 					yoyo: false,
 					onComplete(tween) {
@@ -130,6 +144,7 @@ function moveGoodsSprite(goods, oldHex) {
 	}
 
 	return new Promise((resolve) => {
+		detail.sprite.setVisible(true);
 		detail.scene.tweens.add({
 			targets: detail.sprite,
 			x: goods.hex.x,
